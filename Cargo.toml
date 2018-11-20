@@ -5,3 +5,4 @@ authors = ["James Shi <jsjamesshi@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+fbx_direct = "0.6"
