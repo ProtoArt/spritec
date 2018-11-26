@@ -101,6 +101,7 @@ fn main() -> Result<(), AppError> {
 
     //TODO: Lookup "rust vecdeque"
     let mut found_objects = false;
+    // For reference of how FBX meshes are exported, see this function: https://developer.blender.org/diffusion/BA/browse/master/io_scene_fbx/export_fbx_bin.py;2532b96844c121b710e1a1973d2a5ff824ab3be4$815
     for event_res in reader {
         match event_res? {
             StartFbx(_) => {},
