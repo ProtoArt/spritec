@@ -1,8 +1,12 @@
 [package]
-name = "beaver"
+name = "spritec"
 version = "0.1.0"
-authors = ["James Shi <jsjamesshi@gmail.com>"]
+authors = [
+  "Sunjay Varma <varma.sunjay@gmail.com>",
+  "James Shi <jsjamesshi@gmail.com>",
+  "Bill Chen <bchen.tcu@gmail.com>",
+  "Mara Gagiu <mara.gagiu@gmail.com>",
+]
 edition = "2018"
 
 [dependencies]
-fbx_direct = "0.6"
