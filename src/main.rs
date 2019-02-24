@@ -5,7 +5,7 @@ use euc::{
     buffer::Buffer2d,
     Target,
 };
-use minifb;
+use minifb::{self, Key, KeyRepeat};
 use tobj;
 use vek::*;
 
@@ -88,8 +88,8 @@ fn main() {
                 &mut depth,
             );
 
-        if win.is_open() {
             win.update_with_buffer(color.as_ref()).unwrap();
+        if win.is_open() && !win.is_key_pressed(Key::Escape, KeyRepeat::No) {
         } else {
             break;
         }
