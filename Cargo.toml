@@ -10,3 +10,7 @@ authors = [
 edition = "2018"
 
 [dependencies]
+euc = "0.2"
+tobj = "0.1"
+vek = "0.9"
+minifb = "0.11"
