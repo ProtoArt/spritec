@@ -1,5 +1,6 @@
 mod cel;
 mod light;
+mod outline;
 
 use std::path::Path;
 use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
@@ -8,6 +9,7 @@ use tobj;
 use vek::{Mat4, Vec3, Rgba};
 
 use crate::cel::CelShader;
+use crate::outline::OutlineShader;
 use crate::light::DiffuseLight;
 
 /// Converts an Rgba color to a bgra u32 suitable for use in minifb
