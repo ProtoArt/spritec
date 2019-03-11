@@ -1,130 +1,14 @@
+mod cel;
+mod light;
+
 use std::path::Path;
-use euc::{
-    Pipeline,
-    rasterizer,
-    buffer::Buffer2d,
-    Target,
-};
+use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
 use minifb::{self, Key, KeyRepeat};
 use tobj;
-use vek::*;
+use vek::{Mat4, Vec3, Rgba};
 
-#[derive(Debug)]
-struct DiffuseLight {
-    /// The **normalized** direction of the diffuse light being cast on the model
-    direction: Vec3<f32>,
-    /// The color of the diffuse light
-    color: Rgba<f32>,
-    /// The intensity of the diffuse light
-    intensity: f32,
-}
-
-// Initial version of the toon shader is loosely based on this article:
-// http://rbwhitaker.wikidot.com/toon-shader
-//
-// Global assumptions:
-// * Color values (red, green, blue, alpha) are all between 0.0 and 1.0
-// * Direction vectors are normalized
-#[derive(Debug)]
-struct ToonShader<'a> {
-    // TRANSFORMATIONS
-
-    /// The model-view-projection matrix
-    mvp: Mat4<f32>,
-    /// The transpose of the inverse of the world transformation, used for transforming the
-    /// vertex's normal
-    model_inverse_transpose: Mat4<f32>,
-
-    // INPUT TO THE SHADER
-
-    /// The position of each vertex of the model, relative to the model's center
-    positions: &'a [Vec3<f32>],
-    /// The normal of each vertex of the model
-    normals: &'a [Vec3<f32>],
-
-    // DIFFUSE LIGHT PROPERTIES
-
-    light: DiffuseLight,
-
-    // TOON SHADER PROPERTIES
-
-    /// The color for drawing the outline
-    outline_color: Rgba<f32>,
-    /// The thickness of the outlines. This may need to change, depending on the scale of the
-    /// objects you are drawing.
-    outline_thickness: f32,
-
-    // TEXTURE PROPERTIES
-    //TODO
-}
-
-impl<'a> Pipeline for ToonShader<'a> {
-    type Vertex = u32; // Vertex index
-    type VsOut = Vec3<f32>; // Normal
-    type Pixel = u32; // BGRA
-
-    /// The vertex shader that does cel shading.
-    ///
-    /// It really only does the basic transformation of the vertex location, and normal, and copies
-    /// the texture coordinate over.
-    #[inline(always)]
-    fn vert(&self, v_index: &Self::Vertex) -> ([f32; 3], Self::VsOut) {
-        let v_index = *v_index as usize;
-        // Find vertex position
-        let v_pos = Vec4::from_point(self.positions[v_index]);
-        // Calculate vertex position in camera space
-        let v_pos_cam = Vec3::from(self.mvp * v_pos).into_array();
-        // Find vertex normal
-        let v_norm = self.normals[v_index];
-
-        //TODO: Pass along a texture coordinate calculated based on the v_index
-
-        (v_pos_cam, v_norm)
-    }
-
-    /// The fragment/pixel shader that does cel shading. Basically, it calculates the color like it
-    /// should, and then it discretizes the color into one of four colors.
-    #[inline(always)]
-    fn frag(&self, norm: &Self::VsOut) -> Self::Pixel {
-        // The amount of ambient light to include
-        let ambient_intensity = 0.2;
-
-        // Calculate diffuse light amount
-        // max() is used to bottom out at zero if the dot product is negative
-        let diffuse_intensity = norm.dot(self.light.direction).max(0.0);
-
-        let specular_intensity = self.light.direction
-            .reflected(Vec3::from(self.mvp * Vec4::from(*norm)).normalized())
-            .dot(-Vec3::unit_z())
-            .powf(20.0);
-
-        //TODO: Sample the color from the texture based on the texture coordinate or get it from a
-        // material via linear interpolation
-        let tex_color = Rgba::new(1.0, 0.7, 0.1, 1.0);
-
-        // Calculate what would normally be the final color, including texturing and diffuse lighting
-        let light_intensity = ambient_intensity + diffuse_intensity + specular_intensity;
-        let color = tex_color * self.light.intensity;
-
-        // Discretize the intensity, based on a few cutoff points
-        let alpha = color.a;
-        let mut final_color = match light_intensity {
-            intensity if intensity > 0.95 => color,
-            intensity if intensity > 0.5 => color * 0.7,
-            intensity if intensity > 0.05 => color * 0.35,
-            _ => color * 0.1,
-        };
-        final_color.a = alpha;
-        // Clamp the color values between 0.0 and 1.0
-        let final_color = final_color.clamped(Rgba::zero(), Rgba::one());
-
-        let bytes = (final_color * 255.0).map(|e| e as u8).into_array();
-        (bytes[2] as u32) << 0 |
-        (bytes[1] as u32) << 8 |
-        (bytes[0] as u32) << 16 |
-        (bytes[3] as u32) << 24
-    }
-}
+use crate::cel::CelShader;
+use crate::light::DiffuseLight;
 
 fn scale_buffer<T: Clone + Copy>(target: &mut Buffer2d<T>, source: &Buffer2d<T>) {
     let target_size = target.size();
@@ -202,7 +86,7 @@ fn main() {
         color.clear(0);
         depth.clear(1.0);
 
-        ToonShader {
+        CelShader {
             mvp,
             model_inverse_transpose: model.inverted().transposed(),
 
