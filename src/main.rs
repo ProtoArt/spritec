@@ -3,8 +3,11 @@ mod light;
 mod outline;
 mod scale;
 mod geometry;
+mod material;
 
 use std::path::Path;
+use std::rc::Rc;
+
 use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
 use minifb::{self, Key, KeyRepeat};
 use tobj;
@@ -15,6 +18,7 @@ use crate::outline::OutlineShader;
 use crate::light::DiffuseLight;
 use crate::scale::scale_buffer;
 use crate::geometry::Mesh;
+use crate::material::Material;
 
 /// Converts an Rgba color to a bgra u32 suitable for use in minifb
 #[inline(always)]
@@ -47,7 +51,8 @@ fn main() {
     ).unwrap();
 
     let (meshes, materials) = tobj::load_obj(&Path::new("samples/bigboi.obj")).unwrap();
-    let meshes: Vec<_> = meshes.into_iter().map(|model| Mesh::new(model.mesh)).collect();
+    let materials: Vec<_> = materials.into_iter().map(|mat| Rc::new(Material::from(mat))).collect();
+    let meshes: Vec<_> = meshes.into_iter().map(|model| Mesh::new(model.mesh, &materials)).collect();
 
     for i in 0.. {
         // The transformation that represents the center of the model, all points in the model are
@@ -80,7 +85,7 @@ fn main() {
 
                 mesh,
 
-                outline_color: Rgba {r: 0.0, g: 0.0, b: 0.0, a: 1.0},
+                outline_color: Rgba::black(),
                 outline_thickness: 0.15,
             }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), &mut color, &mut depth);
 
@@ -92,7 +97,7 @@ fn main() {
 
                 light: DiffuseLight {
                     direction: Vec3 {x: 1.0, y: 0.0, z: 0.0},
-                    color: Rgba {r: 1.0, g: 1.0, b: 1.0, a: 1.0},
+                    color: Rgba::white(),
                     intensity: 1.0,
                 },
             }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), &mut color, &mut depth);
