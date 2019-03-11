@@ -59,7 +59,9 @@ impl<'a> Pipeline for CelShader<'a> {
         // Calculate vertex position in camera space
         let v_pos_cam = Vec3::from(self.mvp * v_pos).into_array();
         // Find vertex normal
-        let v_norm = self.normals[v_index];
+        let v_norm = Vec4::from_point(self.normals[v_index]);
+        // Transform the normal
+        let v_norm = Vec3::from((self.model_inverse_transpose * v_norm).normalized());
 
         //TODO: Pass along a texture coordinate calculated based on the v_index
 
