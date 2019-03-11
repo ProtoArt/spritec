@@ -11,6 +11,7 @@ use crate::geometry::Mesh;
 /// Global assumptions:
 /// * Color values (red, green, blue, alpha) are all between 0.0 and 1.0
 /// * Direction vectors are normalized
+/// * Y-up, right-handed coordinate system
 #[derive(Debug)]
 pub struct CelShader<'a> {
     /// The model-view-projection matrix

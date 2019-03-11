@@ -12,7 +12,7 @@ use std::rc::Rc;
 use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
 use minifb::{self, Key, KeyRepeat};
 use tobj;
-use vek::{Mat4, Vec3, Rgba};
+use vek::{Mat4, Vec3, Rgba, FrustumPlanes};
 
 use crate::cel::CelShader;
 use crate::outline::OutlineShader;
@@ -34,20 +34,20 @@ fn rgba_to_bgra_u32(Rgba {r, g, b, a}: Rgba<f32>) -> u32 {
 }
 
 fn main() {
-    let width = 32;
-    let height = 32;
-    let scale = 32;
+    let image_width = 64;
+    let image_height = 64;
+    let image_scale = 16;
     let background = rgba_to_bgra_u32(Rgba {r: 0.62, g: 0.62, b: 0.62, a: 1.0});
 
-    let mut color = Buffer2d::new([width, height], background);
-    let mut depth = Buffer2d::new([width, height], 1.0);
+    let mut color = Buffer2d::new([image_width, image_height], background);
+    let mut depth = Buffer2d::new([image_width, image_height], 1.0);
     // Scaled screen buffer
-    let mut screen = Buffer2d::new([width * scale, height * scale], 0);
+    let mut screen = Buffer2d::new([image_width * image_scale, image_height * image_scale], 0);
 
     let mut win = minifb::Window::new(
         "Test Project",
-        width * scale,
-        height * scale,
+        image_width * image_scale,
+        image_height * image_scale,
         minifb::WindowOptions::default()
     ).unwrap();
 
@@ -61,18 +61,31 @@ fn main() {
         // Also known as the "world" transformation
         //
         // Model coordinates -> World coordinates
-        let model = Mat4::rotation_x((i as f32 * 0.0004).sin() * 8.0)
-            * Mat4::rotation_y((i as f32 * 0.0008).cos() * 4.0)
-            * Mat4::rotation_z((i as f32 * 0.0016).sin() * 2.0);
+        //let model = Mat4::rotation_x((i as f32 * 0.0004).sin() * 8.0)
+        //    * Mat4::rotation_y((i as f32 * 0.0008).cos() * 4.0)
+        //    * Mat4::rotation_z((i as f32 * 0.0016).sin() * 2.0);
+        let model = Mat4::identity();
         // The transformation that represents the position and orientation of the camera
         //
         // World coordinates -> Camera coordinates
-        let view = Mat4::identity();
+        let view = Mat4::model_look_at(
+            Vec3 {x: 0.0, y: 0.0, z: -2.5},
+            Vec3 {x: 0.0, y: 0.0, z: 0.0},
+            Vec3::up(),
+        );
         // The perspective/orthographic/etc. projection of the camera
         //
         // Camera coordinates -> Homogenous coordinates
-        let projection = Mat4::perspective_rh_no(0.3*PI, (width as f32)/(height as f32), 0.01, 100.0)
-            * Mat4::<f32>::scaling_3d(0.50);
+        let width = 11.0;
+        let height = 11.0;
+        let projection = Mat4::orthographic_without_depth_planes(FrustumPlanes {
+            left: -width/2.0,
+            right: width/2.0,
+            bottom: -height/2.0,
+            top: height/2.0,
+            near: 10.00,
+            far: 100.0,
+        });
 
         // Must be multiplied backwards since each point to be multiplied will be on the right
         let mvp = projection * view * model;
