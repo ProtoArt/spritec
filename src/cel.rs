@@ -28,9 +28,6 @@ pub struct CelShader<'a> {
     // DIFFUSE LIGHT PROPERTIES
 
     pub light: DiffuseLight,
-
-    // TEXTURE PROPERTIES
-    //TODO
 }
 
 impl<'a> Pipeline for CelShader<'a> {
@@ -54,8 +51,6 @@ impl<'a> Pipeline for CelShader<'a> {
         // Transform the normal
         let v_norm = Vec3::from((self.model_inverse_transpose * v_norm).normalized());
 
-        //TODO: Pass along a texture coordinate calculated based on the v_index
-
         (v_pos_cam, v_norm)
     }
 
@@ -70,13 +65,12 @@ impl<'a> Pipeline for CelShader<'a> {
         // max() is used to bottom out at zero if the dot product is negative
         let diffuse_intensity = norm.dot(self.light.direction).max(0.0);
 
-        //TODO: Sample the color from the texture based on the texture coordinate or get it from a
-        // material via linear interpolation
-        let tex_color = Rgba::new(1.0, 0.7, 0.1, 1.0);
+        // The color of the material for this mesh
+        let mat_color = self.mesh.material().diffuse_color;
 
         // Calculate what would normally be the final color, including texturing and diffuse lighting
         let light_intensity = ambient_intensity + diffuse_intensity;
-        let color = tex_color * self.light.intensity;
+        let color = mat_color * self.light.intensity;
 
         // Discretize the intensity, based on a few cutoff points
         let alpha = color.a;
