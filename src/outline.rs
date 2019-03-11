@@ -1,5 +1,5 @@
 use vek::{Mat4, Vec3, Vec4, Rgba};
-use euc::Pipeline;
+use euc::{Pipeline, DepthStrategy};
 
 use crate::rgba_to_bgra_u32;
 use crate::light::DiffuseLight;
@@ -77,5 +77,9 @@ impl<'a> Pipeline for OutlineShader<'a> {
         let color = self.outline_color;
 
         rgba_to_bgra_u32(color)
+    }
+
+    fn get_depth_strategy(&self) -> DepthStrategy {
+        DepthStrategy::IfLessNoWrite
     }
 }
