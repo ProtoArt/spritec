@@ -13,21 +13,19 @@ use crate::geometry::Mesh;
 /// * Direction vectors are normalized
 #[derive(Debug)]
 pub struct CelShader<'a> {
-    // TRANSFORMATIONS
-
     /// The model-view-projection matrix
     pub mvp: Mat4<f32>,
     /// The transpose of the inverse of the world transformation, used for transforming the
     /// vertex's normal
     pub model_inverse_transpose: Mat4<f32>,
 
-    // INPUT TO THE SHADER
-
+    /// The input to the shader
     pub mesh: &'a Mesh,
 
-    // DIFFUSE LIGHT PROPERTIES
-
+    // Diffuse light properties
     pub light: DiffuseLight,
+    // Ambient light properties
+    pub ambient_intensity: f32,
 }
 
 impl<'a> Pipeline for CelShader<'a> {
@@ -58,9 +56,6 @@ impl<'a> Pipeline for CelShader<'a> {
     /// should, and then it discretizes the color into one of four colors.
     #[inline(always)]
     fn frag(&self, norm: &Self::VsOut) -> Self::Pixel {
-        // The amount of ambient light to include
-        let ambient_intensity = 0.05;
-
         // Calculate diffuse light amount
         // max() is used to bottom out at zero if the dot product is negative
         let diffuse_intensity = norm.dot(self.light.direction).max(0.0);
@@ -69,7 +64,7 @@ impl<'a> Pipeline for CelShader<'a> {
         let mat_color = self.mesh.material().diffuse_color;
 
         // Calculate what would normally be the final color, including texturing and diffuse lighting
-        let light_intensity = ambient_intensity + diffuse_intensity;
+        let light_intensity = self.ambient_intensity + diffuse_intensity;
         let color = mat_color * self.light.intensity;
 
         // Discretize the intensity, based on a few cutoff points

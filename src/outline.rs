@@ -12,16 +12,11 @@ use crate::geometry::Mesh;
 /// * Direction vectors are normalized
 #[derive(Debug)]
 pub struct OutlineShader<'a> {
-    // TRANSFORMATIONS
-
     /// The model-view-projection matrix
     pub mvp: Mat4<f32>,
 
-    // INPUT TO THE SHADER
-
+    /// The input to the shader
     pub mesh: &'a Mesh,
-
-    // TOON SHADER PROPERTIES
 
     /// The color for drawing the outline
     pub outline_color: Rgba<f32>,
