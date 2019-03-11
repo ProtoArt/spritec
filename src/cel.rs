@@ -1,6 +1,7 @@
 use vek::{Mat4, Vec3, Vec4, Rgba, Clamp};
 use euc::Pipeline;
 
+use crate::rgba_to_bgra_u32;
 use crate::light::DiffuseLight;
 
 /// A Cel/Toon shader implementation
@@ -104,10 +105,6 @@ impl<'a> Pipeline for CelShader<'a> {
         // Clamp the color values between 0.0 and 1.0
         let final_color = final_color.clamped(Rgba::zero(), Rgba::one());
 
-        let bytes = (final_color * 255.0).map(|e| e as u8).into_array();
-        (bytes[2] as u32) << 0 |
-        (bytes[1] as u32) << 8 |
-        (bytes[0] as u32) << 16 |
-        (bytes[3] as u32) << 24
+        rgba_to_bgra_u32(final_color)
     }
 }
