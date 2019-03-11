@@ -74,23 +74,18 @@ impl<'a> Pipeline for CelShader<'a> {
     #[inline(always)]
     fn frag(&self, norm: &Self::VsOut) -> Self::Pixel {
         // The amount of ambient light to include
-        let ambient_intensity = 0.2;
+        let ambient_intensity = 0.05;
 
         // Calculate diffuse light amount
         // max() is used to bottom out at zero if the dot product is negative
         let diffuse_intensity = norm.dot(self.light.direction).max(0.0);
-
-        let specular_intensity = self.light.direction
-            .reflected(Vec3::from(self.mvp * Vec4::from(*norm)).normalized())
-            .dot(-Vec3::unit_z())
-            .powf(20.0);
 
         //TODO: Sample the color from the texture based on the texture coordinate or get it from a
         // material via linear interpolation
         let tex_color = Rgba::new(1.0, 0.7, 0.1, 1.0);
 
         // Calculate what would normally be the final color, including texturing and diffuse lighting
-        let light_intensity = ambient_intensity + diffuse_intensity + specular_intensity;
+        let light_intensity = ambient_intensity + diffuse_intensity;
         let color = tex_color * self.light.intensity;
 
         // Discretize the intensity, based on a few cutoff points
