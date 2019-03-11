@@ -2,6 +2,7 @@ use vek::{Mat4, Vec3, Vec4, Rgba};
 use euc::{Pipeline, DepthStrategy};
 
 use crate::rgba_to_bgra_u32;
+use crate::geometry::Mesh;
 
 /// An outline shader
 /// Initial version based on this article: http://rbwhitaker.wikidot.com/toon-shader
@@ -18,10 +19,7 @@ pub struct OutlineShader<'a> {
 
     // INPUT TO THE SHADER
 
-    /// The position of each vertex of the model, relative to the model's center
-    pub positions: &'a [Vec3<f32>],
-    /// The normal of each vertex of the model
-    pub normals: &'a [Vec3<f32>],
+    pub mesh: &'a Mesh,
 
     // TOON SHADER PROPERTIES
 
@@ -42,11 +40,11 @@ impl<'a> Pipeline for OutlineShader<'a> {
     fn vert(&self, v_index: &Self::Vertex) -> ([f32; 3], Self::VsOut) {
         let v_index = *v_index as usize;
         // Find vertex position
-        let v_pos = Vec4::from_point(self.positions[v_index]);
+        let v_pos = Vec4::from_point(self.mesh.position(v_index));
         // Calculate vertex position in camera space
         let v_pos_cam = Vec3::from(self.mvp * v_pos);
         // Find vertex normal
-        let v_norm = Vec4::from_point(self.normals[v_index]);
+        let v_norm = Vec4::from_point(self.mesh.normal(v_index));
         // Transform the normal
         let v_norm_cam = Vec3::from(self.mvp * v_norm);
 

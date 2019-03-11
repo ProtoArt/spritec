@@ -2,6 +2,7 @@ mod cel;
 mod light;
 mod outline;
 mod scale;
+mod geometry;
 
 use std::path::Path;
 use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
@@ -13,6 +14,7 @@ use crate::cel::CelShader;
 use crate::outline::OutlineShader;
 use crate::light::DiffuseLight;
 use crate::scale::scale_buffer;
+use crate::geometry::Mesh;
 
 /// Converts an Rgba color to a bgra u32 suitable for use in minifb
 #[inline(always)]
@@ -44,10 +46,8 @@ fn main() {
         minifb::WindowOptions::default()
     ).unwrap();
 
-    let obj = tobj::load_obj(&Path::new("samples/bigboi.obj")).unwrap();
-    let indices = &obj.0[0].mesh.indices;
-    let positions = obj.0[0].mesh.positions.chunks(3).map(|sl| Vec3::from_slice(sl)).collect::<Vec<_>>();
-    let normals = obj.0[0].mesh.normals.chunks(3).map(|sl| Vec3::from_slice(sl)).collect::<Vec<_>>();
+    let (meshes, materials) = tobj::load_obj(&Path::new("samples/bigboi.obj")).unwrap();
+    let meshes: Vec<_> = meshes.into_iter().map(|model| Mesh::new(model.mesh)).collect();
 
     for i in 0.. {
         // The transformation that represents the center of the model, all points in the model are
@@ -66,7 +66,7 @@ fn main() {
         //
         // Camera coordinates -> Homogenous coordinates
         let projection = Mat4::perspective_rh_no(2.3, 1.00, 0.01, 100.0)
-            * Mat4::<f32>::scaling_3d(0.50);;
+            * Mat4::<f32>::scaling_3d(0.50);
 
         // Must be multiplied backwards since each point to be multiplied will be on the right
         let mvp = projection * view * model;
@@ -74,29 +74,29 @@ fn main() {
         color.clear(background);
         depth.clear(1.0);
 
-        OutlineShader {
-            mvp,
+        for mesh in &meshes {
+            OutlineShader {
+                mvp,
 
-            positions: &positions,
-            normals: &normals,
+                mesh,
 
-            outline_color: Rgba {r: 0.0, g: 0.0, b: 0.0, a: 1.0},
-            outline_thickness: 0.15,
-        }.draw::<rasterizer::Triangles<_>, _>(indices, &mut color, &mut depth);
+                outline_color: Rgba {r: 0.0, g: 0.0, b: 0.0, a: 1.0},
+                outline_thickness: 0.15,
+            }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), &mut color, &mut depth);
 
-        CelShader {
-            mvp,
-            model_inverse_transpose: model.inverted().transposed(),
+            CelShader {
+                mvp,
+                model_inverse_transpose: model.inverted().transposed(),
 
-            positions: &positions,
-            normals: &normals,
+                mesh,
 
-            light: DiffuseLight {
-                direction: Vec3 {x: 1.0, y: 0.0, z: 0.0},
-                color: Rgba {r: 1.0, g: 1.0, b: 1.0, a: 1.0},
-                intensity: 1.0,
-            },
-        }.draw::<rasterizer::Triangles<_>, _>(indices, &mut color, &mut depth);
+                light: DiffuseLight {
+                    direction: Vec3 {x: 1.0, y: 0.0, z: 0.0},
+                    color: Rgba {r: 1.0, g: 1.0, b: 1.0, a: 1.0},
+                    intensity: 1.0,
+                },
+            }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), &mut color, &mut depth);
+        }
 
         scale_buffer(&mut screen, &color);
 

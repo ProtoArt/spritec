@@ -3,6 +3,7 @@ use euc::Pipeline;
 
 use crate::rgba_to_bgra_u32;
 use crate::light::DiffuseLight;
+use crate::geometry::Mesh;
 
 /// A Cel/Toon shader implementation
 /// Initial version based on this article: http://rbwhitaker.wikidot.com/toon-shader
@@ -22,10 +23,7 @@ pub struct CelShader<'a> {
 
     // INPUT TO THE SHADER
 
-    /// The position of each vertex of the model, relative to the model's center
-    pub positions: &'a [Vec3<f32>],
-    /// The normal of each vertex of the model
-    pub normals: &'a [Vec3<f32>],
+    pub mesh: &'a Mesh,
 
     // DIFFUSE LIGHT PROPERTIES
 
@@ -48,11 +46,11 @@ impl<'a> Pipeline for CelShader<'a> {
     fn vert(&self, v_index: &Self::Vertex) -> ([f32; 3], Self::VsOut) {
         let v_index = *v_index as usize;
         // Find vertex position
-        let v_pos = Vec4::from_point(self.positions[v_index]);
+        let v_pos = Vec4::from_point(self.mesh.position(v_index));
         // Calculate vertex position in camera space
         let v_pos_cam = Vec3::from(self.mvp * v_pos).into_array();
         // Find vertex normal
-        let v_norm = Vec4::from_point(self.normals[v_index]);
+        let v_norm = Vec4::from_point(self.mesh.normal(v_index));
         // Transform the normal
         let v_norm = Vec3::from((self.model_inverse_transpose * v_norm).normalized());
 
