@@ -1,6 +1,7 @@
 mod cel;
 mod light;
 mod outline;
+mod scale;
 
 use std::path::Path;
 use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
@@ -11,6 +12,7 @@ use vek::{Mat4, Vec3, Rgba};
 use crate::cel::CelShader;
 use crate::outline::OutlineShader;
 use crate::light::DiffuseLight;
+use crate::scale::scale_buffer;
 
 /// Converts an Rgba color to a bgra u32 suitable for use in minifb
 #[inline(always)]
@@ -22,35 +24,6 @@ fn rgba_to_bgra_u32(Rgba {r, g, b, a}: Rgba<f32>) -> u32 {
     (to_u8(g) as u32) << 8 |
     (to_u8(r) as u32) << 16 |
     (to_u8(a) as u32) << 24
-}
-
-fn scale_buffer<T: Clone + Copy>(target: &mut Buffer2d<T>, source: &Buffer2d<T>) {
-    let target_size = target.size();
-    let source_size = source.size();
-    let scale_x = target_size[0] / source_size[0];
-    let scale_y = target_size[1] / source_size[1];
-
-    // Check for truncating division
-    assert_eq!(source_size[0] * scale_x, target_size[0]);
-    assert_eq!(source_size[1] * scale_y, target_size[1]);
-
-    // Blit the pixels with no anti-aliasing
-    for i in 0..source_size[0] {
-        for j in 0..source_size[1] {
-            // Unsafe because we are guaranteeing that these indexes are not out of bounds
-            let color = unsafe { *source.get([i, j]) };
-
-            // Copy the color to every pixel in the scaled box
-            for sx in 0..scale_x {
-                for sy in 0..scale_y {
-                    // Unsafe because we are guaranteeing that these indexes are not out of bounds
-                    unsafe {
-                        target.set([i * scale_x + sx, j * scale_y + sy], color);
-                    }
-                }
-            }
-        }
-    }
 }
 
 fn main() {
