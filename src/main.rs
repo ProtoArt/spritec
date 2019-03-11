@@ -100,6 +100,8 @@ fn main() {
                     color: Rgba::white(),
                     intensity: 1.0,
                 },
+
+                ambient_intensity: 0.5,
             }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), &mut color, &mut depth);
         }
 
