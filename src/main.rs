@@ -101,6 +101,23 @@ fn main() {
         color.clear(background);
         depth.clear(1.0);
 
+        OutlineShader {
+            mvp,
+            model_inverse_transpose: model.inverted().transposed(),
+
+            positions: &positions,
+            normals: &normals,
+
+            light: DiffuseLight {
+                direction: Vec3 {x: 1.0, y: 0.0, z: 0.0},
+                color: Rgba {r: 1.0, g: 1.0, b: 1.0, a: 1.0},
+                intensity: 1.0,
+            },
+
+            outline_color: Rgba {r: 0.0, g: 0.0, b: 0.0, a: 1.0},
+            outline_thickness: 0.15,
+        }.draw::<rasterizer::Triangles<_>, _>(indices, &mut color, &mut depth);
+
         CelShader {
             mvp,
             model_inverse_transpose: model.inverted().transposed(),
