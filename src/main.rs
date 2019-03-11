@@ -5,6 +5,7 @@ mod scale;
 mod geometry;
 mod material;
 
+use std::f32::consts::PI;
 use std::path::Path;
 use std::rc::Rc;
 
@@ -70,7 +71,7 @@ fn main() {
         // The perspective/orthographic/etc. projection of the camera
         //
         // Camera coordinates -> Homogenous coordinates
-        let projection = Mat4::perspective_rh_no(2.3, (width as f32)/(height as f32), 0.01, 100.0)
+        let projection = Mat4::perspective_rh_no(0.3*PI, (width as f32)/(height as f32), 0.01, 100.0)
             * Mat4::<f32>::scaling_3d(0.50);
 
         // Must be multiplied backwards since each point to be multiplied will be on the right
