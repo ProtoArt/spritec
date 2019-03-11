@@ -2,7 +2,6 @@ use vek::{Mat4, Vec3, Vec4, Rgba};
 use euc::{Pipeline, DepthStrategy};
 
 use crate::rgba_to_bgra_u32;
-use crate::light::DiffuseLight;
 
 /// An outline shader
 /// Initial version based on this article: http://rbwhitaker.wikidot.com/toon-shader
@@ -16,9 +15,6 @@ pub struct OutlineShader<'a> {
 
     /// The model-view-projection matrix
     pub mvp: Mat4<f32>,
-    /// The transpose of the inverse of the world transformation, used for transforming the
-    /// vertex's normal
-    pub model_inverse_transpose: Mat4<f32>,
 
     // INPUT TO THE SHADER
 
@@ -27,10 +23,6 @@ pub struct OutlineShader<'a> {
     /// The normal of each vertex of the model
     pub normals: &'a [Vec3<f32>],
 
-    // DIFFUSE LIGHT PROPERTIES
-
-    pub light: DiffuseLight,
-
     // TOON SHADER PROPERTIES
 
     /// The color for drawing the outline
@@ -38,9 +30,6 @@ pub struct OutlineShader<'a> {
     /// The thickness of the outlines. This may need to change, depending on the scale of the
     /// objects you are drawing.
     pub outline_thickness: f32,
-
-    // TEXTURE PROPERTIES
-    //TODO
 }
 
 impl<'a> Pipeline for OutlineShader<'a> {

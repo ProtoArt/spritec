@@ -31,14 +31,6 @@ pub struct CelShader<'a> {
 
     pub light: DiffuseLight,
 
-    // TOON SHADER PROPERTIES
-
-    /// The color for drawing the outline
-    pub outline_color: Rgba<f32>,
-    /// The thickness of the outlines. This may need to change, depending on the scale of the
-    /// objects you are drawing.
-    pub outline_thickness: f32,
-
     // TEXTURE PROPERTIES
     //TODO
 }
