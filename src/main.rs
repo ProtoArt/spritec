@@ -14,7 +14,7 @@ use std::rc::Rc;
 use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
 use minifb::{self, Key, KeyRepeat};
 use tobj;
-use vek::{Mat4, Vec3, Rgba, FrustumPlanes};
+use vek::{Mat4, Vec3, Rgba};
 
 use crate::cel::CelShader;
 use crate::outline::OutlineShader;
@@ -69,24 +69,12 @@ fn main() {
     // The transformation that represents the position and orientation of the camera
     //
     // World coordinates -> Camera coordinates
-    let view = Mat4::model_look_at(
-        Vec3 {x: 0.0, y: 0.0, z: -2.5},
-        Vec3 {x: 0.0, y: 0.0, z: 0.0},
-        Vec3::up(),
-    );
+    let view = Mat4::identity();
     // The perspective/orthographic/etc. projection of the camera
     //
     // Camera coordinates -> Homogenous coordinates
-    let width = 11.0;
-    let height = 11.0;
-    let projection = Mat4::orthographic_without_depth_planes(FrustumPlanes {
-        left: -width/2.0,
-        right: width/2.0,
-        bottom: -height/2.0,
-        top: height/2.0,
-        near: 10.00,
-        far: 100.0,
-    });
+    let projection = Mat4::perspective_rh_no(0.8*PI, (image_width as f32)/(image_height as f32), 0.01, 100.0)
+        * Mat4::<f32>::scaling_3d(0.6);
 
     // Must be multiplied backwards since each point to be multiplied will be on the right
     let mvp = projection * view * model;
