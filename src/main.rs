@@ -62,9 +62,6 @@ fn main() {
     // Also known as the "world" transformation
     //
     // Model coordinates -> World coordinates
-    //let model = Mat4::rotation_x((i as f32 * 0.0004).sin() * 8.0)
-    //    * Mat4::rotation_y((i as f32 * 0.0008).cos() * 4.0)
-    //    * Mat4::rotation_z((i as f32 * 0.0016).sin() * 2.0);
     let model = Mat4::identity();
     // The transformation that represents the position and orientation of the camera
     //
