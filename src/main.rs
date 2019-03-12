@@ -6,7 +6,9 @@ mod geometry;
 mod material;
 
 use std::f32::consts::PI;
+use std::time::Duration;
 use std::path::Path;
+use std::thread;
 use std::rc::Rc;
 
 use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
@@ -55,76 +57,76 @@ fn main() {
     let materials: Vec<_> = materials.into_iter().map(|mat| Rc::new(Material::from(mat))).collect();
     let meshes: Vec<_> = meshes.into_iter().map(|model| Mesh::new(model.mesh, &materials)).collect();
 
-    for i in 0.. {
-        // The transformation that represents the center of the model, all points in the model are
-        // relative to this
-        // Also known as the "world" transformation
-        //
-        // Model coordinates -> World coordinates
-        //let model = Mat4::rotation_x((i as f32 * 0.0004).sin() * 8.0)
-        //    * Mat4::rotation_y((i as f32 * 0.0008).cos() * 4.0)
-        //    * Mat4::rotation_z((i as f32 * 0.0016).sin() * 2.0);
-        let model = Mat4::identity();
-        // The transformation that represents the position and orientation of the camera
-        //
-        // World coordinates -> Camera coordinates
-        let view = Mat4::model_look_at(
-            Vec3 {x: 0.0, y: 0.0, z: -2.5},
-            Vec3 {x: 0.0, y: 0.0, z: 0.0},
-            Vec3::up(),
-        );
-        // The perspective/orthographic/etc. projection of the camera
-        //
-        // Camera coordinates -> Homogenous coordinates
-        let width = 11.0;
-        let height = 11.0;
-        let projection = Mat4::orthographic_without_depth_planes(FrustumPlanes {
-            left: -width/2.0,
-            right: width/2.0,
-            bottom: -height/2.0,
-            top: height/2.0,
-            near: 10.00,
-            far: 100.0,
-        });
+    // The transformation that represents the center of the model, all points in the model are
+    // relative to this
+    // Also known as the "world" transformation
+    //
+    // Model coordinates -> World coordinates
+    //let model = Mat4::rotation_x((i as f32 * 0.0004).sin() * 8.0)
+    //    * Mat4::rotation_y((i as f32 * 0.0008).cos() * 4.0)
+    //    * Mat4::rotation_z((i as f32 * 0.0016).sin() * 2.0);
+    let model = Mat4::identity();
+    // The transformation that represents the position and orientation of the camera
+    //
+    // World coordinates -> Camera coordinates
+    let view = Mat4::model_look_at(
+        Vec3 {x: 0.0, y: 0.0, z: -2.5},
+        Vec3 {x: 0.0, y: 0.0, z: 0.0},
+        Vec3::up(),
+    );
+    // The perspective/orthographic/etc. projection of the camera
+    //
+    // Camera coordinates -> Homogenous coordinates
+    let width = 11.0;
+    let height = 11.0;
+    let projection = Mat4::orthographic_without_depth_planes(FrustumPlanes {
+        left: -width/2.0,
+        right: width/2.0,
+        bottom: -height/2.0,
+        top: height/2.0,
+        near: 10.00,
+        far: 100.0,
+    });
 
-        // Must be multiplied backwards since each point to be multiplied will be on the right
-        let mvp = projection * view * model;
+    // Must be multiplied backwards since each point to be multiplied will be on the right
+    let mvp = projection * view * model;
 
-        color.clear(background);
-        depth.clear(1.0);
+    color.clear(background);
+    depth.clear(1.0);
 
-        for mesh in &meshes {
-            OutlineShader {
-                mvp,
+    for mesh in &meshes {
+        OutlineShader {
+            mvp,
 
-                mesh,
+            mesh,
 
-                outline_color: Rgba::black(),
-                outline_thickness: 0.15,
-            }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), &mut color, &mut depth);
+            outline_color: Rgba::black(),
+            outline_thickness: 0.15,
+        }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), &mut color, &mut depth);
 
-            CelShader {
-                mvp,
-                model_inverse_transpose: model.inverted().transposed(),
+        CelShader {
+            mvp,
+            model_inverse_transpose: model.inverted().transposed(),
 
-                mesh,
+            mesh,
 
-                light: DiffuseLight {
-                    direction: Vec3 {x: 1.0, y: 0.0, z: 0.0},
-                    color: Rgba::white(),
-                    intensity: 1.0,
-                },
+            light: DiffuseLight {
+                direction: Vec3 {x: 1.0, y: 0.0, z: 0.0},
+                color: Rgba::white(),
+                intensity: 1.0,
+            },
 
-                ambient_intensity: 0.5,
-            }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), &mut color, &mut depth);
-        }
+            ambient_intensity: 0.5,
+        }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), &mut color, &mut depth);
+    }
 
-        scale_buffer(&mut screen, &color);
+    scale_buffer(&mut screen, &color);
 
-        if win.is_open() && !win.is_key_pressed(Key::Escape, KeyRepeat::No) {
-            win.update_with_buffer(screen.as_ref()).unwrap();
-        } else {
-            break;
-        }
+    // Keep the program from ending
+    while win.is_open() && !win.is_key_pressed(Key::Escape, KeyRepeat::No) {
+        win.update_with_buffer(screen.as_ref()).unwrap();
+
+        // No need to use 100% CPU for no reason
+        thread::sleep(Duration::from_millis(1000 / 10));
     }
 }
