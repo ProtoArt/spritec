@@ -14,7 +14,7 @@ use std::rc::Rc;
 use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
 use minifb::{self, Key, KeyRepeat};
 use tobj;
-use vek::{Mat4, Vec3, Rgba};
+use vek::{Mat4, Vec3, Vec4, Rgba};
 
 use crate::cel::CelShader;
 use crate::outline::OutlineShader;
@@ -69,7 +69,7 @@ fn main() {
     // The transformation that represents the position and orientation of the camera
     //
     // World coordinates -> Camera coordinates
-    let view = Mat4::identity();
+    let view = Mat4::rotation_y(0.0*PI/2.0);
     // The perspective/orthographic/etc. projection of the camera
     //
     // Camera coordinates -> Homogenous coordinates
@@ -99,7 +99,7 @@ fn main() {
             mesh,
 
             light: DiffuseLight {
-                direction: Vec3 {x: 1.0, y: 0.0, z: 0.0},
+                direction: Vec3::from(view * Vec4::forward_lh()),
                 color: Rgba::white(),
                 intensity: 1.0,
             },
