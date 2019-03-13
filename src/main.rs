@@ -38,20 +38,6 @@ fn rgba_to_bgra_u32(Rgba {r, g, b, a}: Rgba<f32>) -> u32 {
 fn main() {
     let image_width = 64;
     let image_height = 64;
-    let image_scale = 16;
-    let background = rgba_to_bgra_u32(Rgba {r: 0.62, g: 0.62, b: 0.62, a: 1.0});
-
-    let mut color = Buffer2d::new([image_width, image_height], background);
-    let mut depth = Buffer2d::new([image_width, image_height], 1.0);
-    // Scaled screen buffer
-    let mut screen = Buffer2d::new([image_width * image_scale, image_height * image_scale], 0);
-
-    let mut win = minifb::Window::new(
-        "Test Project",
-        image_width * image_scale,
-        image_height * image_scale,
-        minifb::WindowOptions::default()
-    ).unwrap();
 
     let load_frame = |filename: &str| {
         let (meshes, materials) = tobj::load_obj(&Path::new(filename)).unwrap();
@@ -80,13 +66,40 @@ fn main() {
     let projection = Mat4::perspective_rh_no(0.8*PI, (image_width as f32)/(image_height as f32), 0.01, 100.0)
         * Mat4::<f32>::scaling_3d(0.6);
 
+    preview_window(image_width, image_height, model, view, projection, &frames);
+}
+
+fn preview_window(
+    image_width: usize,
+    image_height: usize,
+    model: Mat4<f32>,
+    view: Mat4<f32>,
+    projection: Mat4<f32>,
+    frames: &[Vec<Mesh>],
+) {
+    let scale = 16;
+    let background = rgba_to_bgra_u32(Rgba {r: 0.62, g: 0.62, b: 0.62, a: 1.0});
+
+    let mut color = Buffer2d::new([image_width, image_height], background);
+    let mut depth = Buffer2d::new([image_width, image_height], 1.0);
+
+    // Scaled screen buffer
+    let mut screen = Buffer2d::new([image_width * scale, image_height * scale], 0);
+
+    let mut win = minifb::Window::new(
+        "Test Project",
+        image_width * scale,
+        image_height * scale,
+        minifb::WindowOptions::default()
+    ).unwrap();
+
     // Keep the program from ending
     let mut i = 0;
     while win.is_open() && !win.is_key_pressed(Key::Escape, KeyRepeat::No) {
         color.clear(background);
         depth.clear(1.0);
 
-        let meshes = &frames[i % frames.len()];
+        let meshes = &frames[i];
         render(&mut color, &mut depth, model, view, projection, meshes);
 
         scale_buffer(&mut screen, &color);
@@ -96,7 +109,7 @@ fn main() {
         // No need to use 100% CPU for no reason
         thread::sleep(Duration::from_millis(1000 / 10));
 
-        i += 1;
+        i = (i + 1) % frames.len();
     }
 }
 
