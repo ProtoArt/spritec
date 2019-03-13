@@ -58,7 +58,7 @@ fn main() {
         * Mat4::<f32>::scaling_3d(0.6);
 
     save_poses(image_width, image_height, model, view, projection, &frames);
-
+    save_spritesheet(image_width, image_height, model, view, projection, &frames);
     preview_window(image_width, image_height, model, view, projection, &frames);
 }
 
@@ -88,6 +88,51 @@ fn save_poses(
         color.clear(0);
         depth.clear(1.0);
     }
+}
+
+fn save_spritesheet(
+    image_width: usize,
+    image_height: usize,
+    model: Mat4<f32>,
+    view: Mat4<f32>,
+    projection: Mat4<f32>,
+    frames: &[Vec<Mesh>],
+) {
+    let rows = 2;
+    let columns = 4;
+    assert!(frames.len() <= rows * columns, "not enough room on spritesheet for all sprites");
+
+    let mut img = ImageBuffer::new((image_width * columns) as u32, (image_height * rows) as u32);
+
+    let mut color = Buffer2d::new([image_width, image_height], 0);
+    let mut depth = Buffer2d::new([image_width, image_height], 1.0);
+
+    for (i, frame) in frames.into_iter().enumerate() {
+        render(&mut color, &mut depth, model, view, projection, frame);
+
+        let column = i % columns;
+        let row = i / columns;
+
+        for x in 0..image_width {
+            for y in 0..image_height {
+                // Unsafe because we are guaranteeing that these indexes are not out of bounds
+                let color = unsafe { color.get([x, y]) };
+                let rgba = bgra_u32_to_rgba(*color);
+
+                let pixel = img.get_pixel_mut(
+                    (column * image_width + x) as u32,
+                    (row * image_height + y) as u32,
+                );
+
+                *pixel = vek_rgba_to_image_rgba(rgba);
+            }
+        }
+
+        color.clear(0);
+        depth.clear(1.0);
+    }
+
+    img.save("spritesheet.png").expect("unable to write image");
 }
 
 fn preview_window(
