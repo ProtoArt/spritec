@@ -73,7 +73,7 @@ fn main() {
     // The transformation that represents the position and orientation of the camera
     //
     // World coordinates -> Camera coordinates
-    let view = Mat4::rotation_y(0.0*PI/2.0) * Mat4::rotation_x(PI/8.0);
+    let view = Mat4::rotation_x(PI/8.0) * Mat4::rotation_y(0.0*PI/2.0);
     // The perspective/orthographic/etc. projection of the camera
     //
     // Camera coordinates -> Homogenous coordinates
