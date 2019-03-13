@@ -38,7 +38,7 @@ fn main() {
     };
 
     let frames: Vec<_> = (1..=8).map(|i| {
-        load_frame(&format!("samples/bigboi_rigged_{:06}.obj", i))
+        load_frame(&format!("samples/bigboi/obj/bigboi_rigged_{:06}.obj", i))
     }).collect();
 
     // The transformation that represents the center of the model, all points in the model are
