@@ -53,7 +53,7 @@ fn main() {
         minifb::WindowOptions::default()
     ).unwrap();
 
-    let (meshes, materials) = tobj::load_obj(&Path::new("samples/bigboi.obj")).unwrap();
+    let (meshes, materials) = tobj::load_obj(&Path::new("samples/bigboi_rigged.obj")).unwrap();
     let materials: Vec<_> = materials.into_iter().map(|mat| Rc::new(Material::from(mat))).collect();
     let meshes: Vec<_> = meshes.into_iter().map(|model| Mesh::new(model.mesh, &materials)).collect();
 
