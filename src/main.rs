@@ -15,7 +15,7 @@ use std::rc::Rc;
 use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
 use minifb::{self, Key, KeyRepeat};
 use tobj;
-use vek::{Mat4, Vec3, Vec4, Rgba};
+use vek::{Mat4, Vec2, Vec3, Vec4, Rgba};
 use image::ImageBuffer;
 
 use crate::cel::CelShader;
@@ -29,13 +29,6 @@ use crate::color::{rgba_to_bgra_u32, bgra_u32_to_rgba, vek_rgba_to_image_rgba};
 fn main() {
     let image_width = 64;
     let image_height = 64;
-
-    let load_frame = |filename: &str| {
-        let (meshes, materials) = tobj::load_obj(&Path::new(filename)).unwrap();
-        let materials: Vec<_> = materials.into_iter().map(|mat| Rc::new(Material::from(mat))).collect();
-        let meshes: Vec<_> = meshes.into_iter().map(|model| Mesh::new(model.mesh, &materials)).collect();
-        meshes
-    };
 
     let frames: Vec<_> = (1..=8).map(|i| {
         load_frame(&format!("samples/bigboi/obj/bigboi_rigged_{:06}.obj", i))
@@ -74,7 +67,7 @@ fn save_poses(
     let mut depth = Buffer2d::new([image_width, image_height], 1.0);
 
     for (i, frame) in frames.into_iter().enumerate() {
-        render(&mut color, &mut depth, model, view, projection, frame);
+        render(&mut color, &mut depth, model, view, projection, frame, 0.15);
 
         let mut img = ImageBuffer::new(image_width as u32, image_height as u32);
         for (x, y, pixel) in img.enumerate_pixels_mut() {
@@ -108,7 +101,7 @@ fn save_spritesheet(
     let mut depth = Buffer2d::new([image_width, image_height], 1.0);
 
     for (i, frame) in frames.into_iter().enumerate() {
-        render(&mut color, &mut depth, model, view, projection, frame);
+        render(&mut color, &mut depth, model, view, projection, frame, 0.15);
 
         let column = i % columns;
         let row = i / columns;
@@ -150,7 +143,15 @@ fn preview_window(
     let mut depth = Buffer2d::new([image_width, image_height], 1.0);
 
     // Scaled screen buffer
-    let mut screen = Buffer2d::new([image_width * scale, image_height * scale], 0);
+    let (screen_width, screen_height) = (image_width * scale, image_height * scale);
+    let mut screen = Buffer2d::new([screen_width, screen_height], 0);
+
+    let (axis_width, axis_height) = (128, 128);
+    let axis = if screen_width > axis_width && screen_height > axis_height {
+        let mut axis_color = Buffer2d::new([axis_width, axis_height], background);
+        render_axis(&mut axis_color, view);
+        Some(axis_color)
+    } else { None };
 
     let mut win = minifb::Window::new(
         "Test Project",
@@ -166,9 +167,14 @@ fn preview_window(
         depth.clear(1.0);
 
         let meshes = &frames[i];
-        render(&mut color, &mut depth, model, view, projection, meshes);
+        render(&mut color, &mut depth, model, view, projection, meshes, 0.15);
 
         scale_buffer(&mut screen, &color);
+
+        if let Some(axis) = &axis {
+            // Unsafe because we are guaranteeing that the provided offset is not out of bounds
+            unsafe { copy(&mut screen, &axis, (0, screen_height - axis_height)); }
+        }
 
         win.update_with_buffer(screen.as_ref()).unwrap();
 
@@ -179,6 +185,41 @@ fn preview_window(
     }
 }
 
+/// Renders a set of axis that match the orientation of the given view matrix
+fn render_axis(
+    axis_color: &mut Buffer2d<u32>,
+    view: Mat4<f32>,
+) {
+    // Only want to load this once
+    thread_local! {
+        /// This is an example for using doc comment attributes
+        static AXIS_MESHES: Vec<Mesh> = load_frame("samples/axis/axis.obj");
+    }
+
+    let axis_size = axis_color.size();
+    let projection = Mat4::perspective_rh_no(0.35*PI, (axis_size[0] as f32)/(axis_size[1] as f32), 0.01, 100.0)
+        * Mat4::<f32>::scaling_3d(0.5);
+
+    let mut depth = Buffer2d::new(axis_color.size(), 1.0);
+    AXIS_MESHES.with(|meshes| {
+        render(axis_color, &mut depth, Mat4::identity(), view, projection, meshes, 0.0)
+    });
+}
+
+/// Copy the entire source buffer into the given target buffer starting at the given offset
+///
+/// Unsafe because no bounds checking is performed.
+unsafe fn copy(target: &mut Buffer2d<u32>, source: &Buffer2d<u32>, (x, y): (usize, usize)) {
+    let Vec2 {x: source_width, y: source_height} = Vec2::from(source.size());
+
+    for i in 0..source_width {
+        for j in 0..source_height {
+            let value = source.get([i, j]);
+            target.set([x + i, y + j], *value);
+        }
+    }
+}
+
 fn render(
     color: &mut Buffer2d<u32>,
     depth: &mut Buffer2d<f32>,
@@ -186,6 +227,7 @@ fn render(
     view: Mat4<f32>,
     projection: Mat4<f32>,
     meshes: &[Mesh],
+    outline_thickness: f32,
 ) {
     // Must be multiplied backwards since each point to be multiplied will be on the right
     let mvp = projection * view * model;
@@ -197,7 +239,7 @@ fn render(
             mesh,
 
             outline_color: Rgba::black(),
-            outline_thickness: 0.15,
+            outline_thickness,
         }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), color, depth);
 
         CelShader {
@@ -215,4 +257,11 @@ fn render(
             ambient_intensity: 0.5,
         }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), color, depth);
     }
+}
+
+fn load_frame(filename: &str) -> Vec<Mesh> {
+    let (meshes, materials) = tobj::load_obj(&Path::new(filename)).unwrap();
+    let materials: Vec<_> = materials.into_iter().map(|mat| Rc::new(Material::from(mat))).collect();
+    let meshes = meshes.into_iter().map(|model| Mesh::new(model.mesh, &materials)).collect();
+    meshes
 }
