@@ -53,9 +53,16 @@ fn main() {
         minifb::WindowOptions::default()
     ).unwrap();
 
-    let (meshes, materials) = tobj::load_obj(&Path::new("samples/bigboi_rigged.obj")).unwrap();
-    let materials: Vec<_> = materials.into_iter().map(|mat| Rc::new(Material::from(mat))).collect();
-    let meshes: Vec<_> = meshes.into_iter().map(|model| Mesh::new(model.mesh, &materials)).collect();
+    let load_frame = |filename: &str| {
+        let (meshes, materials) = tobj::load_obj(&Path::new(filename)).unwrap();
+        let materials: Vec<_> = materials.into_iter().map(|mat| Rc::new(Material::from(mat))).collect();
+        let meshes: Vec<_> = meshes.into_iter().map(|model| Mesh::new(model.mesh, &materials)).collect();
+        meshes
+    };
+
+    let frames: Vec<_> = (1..=8).map(|i| {
+        load_frame(&format!("samples/bigboi_rigged_{:06}.obj", i))
+    }).collect();
 
     // The transformation that represents the center of the model, all points in the model are
     // relative to this
@@ -66,26 +73,30 @@ fn main() {
     // The transformation that represents the position and orientation of the camera
     //
     // World coordinates -> Camera coordinates
-    let view = Mat4::rotation_y(0.0*PI/2.0);
+    let view = Mat4::rotation_y(0.0*PI/2.0) * Mat4::rotation_x(PI/8.0);
     // The perspective/orthographic/etc. projection of the camera
     //
     // Camera coordinates -> Homogenous coordinates
     let projection = Mat4::perspective_rh_no(0.8*PI, (image_width as f32)/(image_height as f32), 0.01, 100.0)
         * Mat4::<f32>::scaling_3d(0.6);
 
-    color.clear(background);
-    depth.clear(1.0);
-
-    render(&mut color, &mut depth, model, view, projection, &meshes);
-
-    scale_buffer(&mut screen, &color);
-
     // Keep the program from ending
+    let mut i = 0;
     while win.is_open() && !win.is_key_pressed(Key::Escape, KeyRepeat::No) {
+        color.clear(background);
+        depth.clear(1.0);
+
+        let meshes = &frames[i % frames.len()];
+        render(&mut color, &mut depth, model, view, projection, meshes);
+
+        scale_buffer(&mut screen, &color);
+
         win.update_with_buffer(screen.as_ref()).unwrap();
 
         // No need to use 100% CPU for no reason
         thread::sleep(Duration::from_millis(1000 / 10));
+
+        i += 1;
     }
 }
 
