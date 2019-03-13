@@ -1,4 +1,5 @@
 use vek::Rgba;
+use image::Pixel;
 
 /// Converts a Rgba color to a bgra u32 color
 ///
@@ -25,6 +26,16 @@ pub fn bgra_u32_to_rgba(value: u32) -> Rgba<f32> {
         b: to_rgba(value, 0),
         a: to_rgba(value, 24),
     }
+}
+
+#[inline(always)]
+pub fn vek_rgba_to_image_rgba(Rgba {r, g, b, a}: Rgba<f32>) -> image::Rgba<u8> {
+    image::Rgba::from_channels(
+        (r * 255.0) as u8,
+        (g * 255.0) as u8,
+        (b * 255.0) as u8,
+        (a * 255.0) as u8,
+    )
 }
 
 #[cfg(test)]

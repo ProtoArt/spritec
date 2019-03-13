@@ -16,6 +16,7 @@ use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
 use minifb::{self, Key, KeyRepeat};
 use tobj;
 use vek::{Mat4, Vec3, Vec4, Rgba};
+use image::ImageBuffer;
 
 use crate::cel::CelShader;
 use crate::outline::OutlineShader;
@@ -23,7 +24,7 @@ use crate::light::DiffuseLight;
 use crate::scale::scale_buffer;
 use crate::geometry::Mesh;
 use crate::material::Material;
-use crate::color::rgba_to_bgra_u32;
+use crate::color::{rgba_to_bgra_u32, bgra_u32_to_rgba, vek_rgba_to_image_rgba};
 
 fn main() {
     let image_width = 64;
@@ -56,7 +57,37 @@ fn main() {
     let projection = Mat4::perspective_rh_no(0.8*PI, (image_width as f32)/(image_height as f32), 0.01, 100.0)
         * Mat4::<f32>::scaling_3d(0.6);
 
+    save_poses(image_width, image_height, model, view, projection, &frames);
+
     preview_window(image_width, image_height, model, view, projection, &frames);
+}
+
+fn save_poses(
+    image_width: usize,
+    image_height: usize,
+    model: Mat4<f32>,
+    view: Mat4<f32>,
+    projection: Mat4<f32>,
+    frames: &[Vec<Mesh>],
+) {
+    let mut color = Buffer2d::new([image_width, image_height], 0);
+    let mut depth = Buffer2d::new([image_width, image_height], 1.0);
+
+    for (i, frame) in frames.into_iter().enumerate() {
+        render(&mut color, &mut depth, model, view, projection, frame);
+
+        let mut img = ImageBuffer::new(image_width as u32, image_height as u32);
+        for (x, y, pixel) in img.enumerate_pixels_mut() {
+            // Unsafe because we are guaranteeing that these indexes are not out of bounds
+            let color = unsafe { color.get([x as usize, y as usize]) };
+            let rgba = bgra_u32_to_rgba(*color);
+            *pixel = vek_rgba_to_image_rgba(rgba);
+        }
+        img.save(&format!("pose{:06}.png", i + 1)).expect("unable to write image");
+
+        color.clear(0);
+        depth.clear(1.0);
+    }
 }
 
 fn preview_window(
