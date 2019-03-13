@@ -73,13 +73,34 @@ fn main() {
     let projection = Mat4::perspective_rh_no(0.8*PI, (image_width as f32)/(image_height as f32), 0.01, 100.0)
         * Mat4::<f32>::scaling_3d(0.6);
 
-    // Must be multiplied backwards since each point to be multiplied will be on the right
-    let mvp = projection * view * model;
-
     color.clear(background);
     depth.clear(1.0);
 
-    for mesh in &meshes {
+    render(&mut color, &mut depth, model, view, projection, &meshes);
+
+    scale_buffer(&mut screen, &color);
+
+    // Keep the program from ending
+    while win.is_open() && !win.is_key_pressed(Key::Escape, KeyRepeat::No) {
+        win.update_with_buffer(screen.as_ref()).unwrap();
+
+        // No need to use 100% CPU for no reason
+        thread::sleep(Duration::from_millis(1000 / 10));
+    }
+}
+
+fn render(
+    color: &mut Buffer2d<u32>,
+    depth: &mut Buffer2d<f32>,
+    model: Mat4<f32>,
+    view: Mat4<f32>,
+    projection: Mat4<f32>,
+    meshes: &[Mesh],
+) {
+    // Must be multiplied backwards since each point to be multiplied will be on the right
+    let mvp = projection * view * model;
+
+    for mesh in meshes {
         OutlineShader {
             mvp,
 
@@ -87,7 +108,7 @@ fn main() {
 
             outline_color: Rgba::black(),
             outline_thickness: 0.15,
-        }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), &mut color, &mut depth);
+        }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), color, depth);
 
         CelShader {
             mvp,
@@ -102,16 +123,6 @@ fn main() {
             },
 
             ambient_intensity: 0.5,
-        }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), &mut color, &mut depth);
-    }
-
-    scale_buffer(&mut screen, &color);
-
-    // Keep the program from ending
-    while win.is_open() && !win.is_key_pressed(Key::Escape, KeyRepeat::No) {
-        win.update_with_buffer(screen.as_ref()).unwrap();
-
-        // No need to use 100% CPU for no reason
-        thread::sleep(Duration::from_millis(1000 / 10));
+        }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), color, depth);
     }
 }
