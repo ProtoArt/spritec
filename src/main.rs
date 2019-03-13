@@ -1,6 +1,7 @@
 mod cel;
 mod light;
 mod outline;
+mod color;
 mod scale;
 mod geometry;
 mod material;
@@ -22,18 +23,7 @@ use crate::light::DiffuseLight;
 use crate::scale::scale_buffer;
 use crate::geometry::Mesh;
 use crate::material::Material;
-
-/// Converts an Rgba color to a bgra u32 suitable for use in minifb
-#[inline(always)]
-fn rgba_to_bgra_u32(Rgba {r, g, b, a}: Rgba<f32>) -> u32 {
-    // Truncating conversion to u8 from f32 in range 0.0 to 1.0
-    let to_u8 = |x| (x * 255.0) as u8;
-
-    (to_u8(b) as u32) << 0 |
-    (to_u8(g) as u32) << 8 |
-    (to_u8(r) as u32) << 16 |
-    (to_u8(a) as u32) << 24
-}
+use crate::color::rgba_to_bgra_u32;
 
 fn main() {
     let image_width = 64;

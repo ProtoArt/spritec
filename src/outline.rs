@@ -1,7 +1,7 @@
 use vek::{Mat4, Vec3, Vec4, Rgba};
 use euc::{Pipeline, DepthStrategy};
 
-use crate::rgba_to_bgra_u32;
+use crate::color::rgba_to_bgra_u32;
 use crate::geometry::Mesh;
 
 /// An outline shader

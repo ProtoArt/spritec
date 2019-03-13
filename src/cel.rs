@@ -1,7 +1,7 @@
 use vek::{Mat4, Vec3, Vec4, Rgba, Clamp};
 use euc::Pipeline;
 
-use crate::rgba_to_bgra_u32;
+use crate::color::rgba_to_bgra_u32;
 use crate::light::DiffuseLight;
 use crate::geometry::Mesh;
 
