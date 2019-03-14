@@ -6,24 +6,6 @@ using our software.
 
 **To be notified of our progress, please sign up on our website: [protoart.me](https://protoart.me/)**
 
-## Project Goals
-
-The goal of our project is to make creating pixel art spritesheets easier and
-faster for indie game developers. Games that are made by a single developer or a
-very small team may not have the resources or skill to create the art they are
-going for right as they start their project. There are plenty of online game
-assets, but all of them are limited in how much they can be customized or added
-to.
-
-We want to make a suite of tools that make creating game art more accessible to
-programmers and developers who need help making their art. The art they create
-with our tools can either last throughout the development of their game or
-eventually get replaced if/when they hire a professional artist.
-
-While we do not aim to replace the role of artists in game development, we are
-hoping to create high quality art that can help developers who are starting
-their games get to their vision faster.
-
 ## Initial Prototype
 
 One of the hard parts of using hand-drawn assets is keeping them up to date. You
@@ -68,8 +50,8 @@ same walking animation turned into pixel art:
 
 ![bigboi pixel art walking](samples/bigboi/render/bigboi-walking.gif)
 
-You can then save that as either individual pixel art frames, or as a finished
-spritesheet:
+You can then export that from the software as either individual pixel art
+frames, or as a finished spritesheet:
 
 ![bigboi pixel art walking sprites](samples/bigboi/render/bigboi_spritesheet.png)
 
@@ -87,6 +69,24 @@ models to generate pixel art. Pixel art games usually use very small tile sizes
 like 32x32 or 64x64. There isn't a lot of room for detail there. That makes this
 art style perfect for this technique. The art is a little more crude, but the
 medium allows for that so it's okay.
+
+## Project Goals
+
+The goal of our project is to make creating pixel art spritesheets easier and
+faster for indie game developers. Games that are made by a single developer or a
+very small team may not have the resources or skill to create the art they are
+going for right as they start their project. There are plenty of online game
+assets, but all of them are limited in how much they can be customized or added
+to.
+
+We want to make a suite of tools that make creating game art more accessible to
+programmers and developers who need help making their art. The art they create
+with our tools can either last throughout the development of their game or
+eventually get replaced if/when they hire a professional artist.
+
+While we do not aim to replace the role of artists in game development, we are
+hoping to create high quality art that can help developers who are starting
+their games get to their vision faster.
 
 ## Subscribe
 
