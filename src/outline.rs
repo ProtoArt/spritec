@@ -40,7 +40,7 @@ impl<'a> Pipeline for OutlineShader<'a> {
         let v_pos_cam = Vec3::from(self.mvp * v_pos);
         // Find vertex normal
         let v_norm = Vec4::from_point(self.mesh.normal(v_index));
-        // Transform the normal
+        // Transform normals to preserve orthogonality after non-uniform transformation
         let v_norm_cam = Vec3::from(self.mvp * v_norm);
 
         // Take the correct "original" location and translate the vertex a little bit in the
