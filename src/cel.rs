@@ -47,7 +47,7 @@ impl<'a> Pipeline for CelShader<'a> {
         let v_pos_cam = Vec3::from(self.mvp * v_pos).into_array();
         // Find vertex normal
         let v_norm = Vec4::from_point(self.mesh.normal(v_index));
-        // Transform the normal
+        // Transform normals to preserve orthogonality after non-uniform transformations.
         let v_norm = Vec3::from((self.model_inverse_transpose * v_norm).normalized());
 
         (v_pos_cam, v_norm)
