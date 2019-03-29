@@ -25,6 +25,15 @@ impl Mesh {
         }
     }
 
+    pub fn from_gltf(indices: Vec<u32>, positions: Vec<[f32; 3]>, normals: Vec<[f32; 3]>) -> Self {
+        Self {
+            indices: indices,
+            positions: positions.iter().map(|data| Vec3::new(data[0], data[1], data[2])).collect(),
+            normals: normals.iter().map(|data| Vec3::new(data[0], data[1], data[2])).collect(),
+            material: Rc::new(Default::default()),  // TODO(daose): not supporting material yet
+        }
+    }
+
     /// Returns the indices of this mesh
     pub fn indices(&self) -> &[u32] {
         &self.indices
