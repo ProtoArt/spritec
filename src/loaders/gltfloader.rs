@@ -1,7 +1,10 @@
+use std::rc::Rc;
+
 use gltf::mesh;
 
 use crate::geometry::Mesh;
 use crate::loaders::fileloader::FileLoader;
+use crate::material::Material;
 
 pub struct GltfLoader {}
 
@@ -26,7 +29,14 @@ impl FileLoader for GltfLoader {
                     .map(|read_indices| read_indices.into_u32().collect::<Vec<_>>())
                     .expect("Failed to read indices");
 
-                ret.push(Mesh::from_gltf(indices, positions, normals));
+                let material = Material::from_gltf(&primitive.material());
+
+                ret.push(Mesh::from_gltf(
+                    indices,
+                    positions,
+                    normals,
+                    Rc::new(material),
+                ));
             }
         }
 
