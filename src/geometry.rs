@@ -16,7 +16,7 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn new(mesh: tobj::Mesh, materials: &[Rc<Material>]) -> Self {
+    pub fn from_obj(mesh: tobj::Mesh, materials: &[Rc<Material>]) -> Self {
         Self {
             indices: mesh.indices,
             positions: mesh.positions.chunks(3).map(|sl| Vec3::from_slice(sl)).collect(),
