@@ -20,7 +20,6 @@ use crate::cel::CelShader;
 use crate::color::{rgba_to_bgra_u32, bgra_u32_to_rgba, vek_rgba_to_image_rgba};
 use crate::geometry::Mesh;
 use crate::light::DiffuseLight;
-use crate::loaders::*;
 use crate::outline::OutlineShader;
 use crate::scale::scale_buffer;
 
@@ -30,7 +29,7 @@ fn main() {
 
     // let frames = [GltfLoader::load_file("samples/bigboi/gltf/bigboi_rigged.gltf")];
     let frames: Vec<_> = (1..=8).map(|i| {
-        ObjLoader::load_file(&format!("samples/bigboi/obj/bigboi_rigged_{:06}.obj", i))
+        loaders::obj::load_file(&format!("samples/bigboi/obj/bigboi_rigged_{:06}.obj", i))
     }).collect();
 
     // The transformation that represents the center of the model, all points in the model are
@@ -192,7 +191,7 @@ fn render_axis(
     // Only want to load this once
     thread_local! {
         /// This is an example for using doc comment attributes
-        static AXIS_MESHES: Vec<Mesh> = ObjLoader::load_file("samples/axis/axis.obj");
+        static AXIS_MESHES: Vec<Mesh> = loaders::obj::load_file("samples/axis/axis.obj");
     }
 
     let axis_size = axis_color.size();
