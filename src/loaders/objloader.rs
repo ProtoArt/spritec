@@ -17,7 +17,7 @@ impl FileLoader for ObjLoader {
             .collect();
         let meshes = meshes
             .into_iter()
-            .map(|model| Mesh::new(model.mesh, &materials))
+            .map(|model| Mesh::from_obj(model.mesh, &materials))
             .collect();
         meshes
     }
