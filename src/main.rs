@@ -27,7 +27,6 @@ fn main() {
     let image_width = 64;
     let image_height = 64;
 
-    // let frames = [GltfLoader::load_file("samples/bigboi/gltf/bigboi_rigged.gltf")];
     let frames: Vec<_> = (1..=8).map(|i| {
         loaders::obj::load_file(&format!("samples/bigboi/obj/bigboi_rigged_{:06}.obj", i))
     }).collect();
@@ -190,7 +189,6 @@ fn render_axis(
 ) {
     // Only want to load this once
     thread_local! {
-        /// This is an example for using doc comment attributes
         static AXIS_MESHES: Vec<Mesh> = loaders::obj::load_file("samples/axis/axis.obj");
     }
 
