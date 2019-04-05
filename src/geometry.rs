@@ -26,16 +26,29 @@ impl Mesh {
     }
 
     pub fn from_gltf(
-        indices: Vec<u32>,
-        positions: Vec<[f32; 3]>,
-        normals: Vec<[f32; 3]>,
-        material: Rc<Material>
-    ) -> Self {
+        buffers: &Vec<gltf::buffer::Data>,
+        primitive: &gltf::Primitive,
+        materials: &[Rc<Material>]) -> Self {
+
+        // We're only dealing with triangle meshes
+        assert_eq!(gltf::mesh::Mode::Triangles, primitive.mode());
+
+        let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+        let positions = reader.read_positions().unwrap().collect::<Vec<_>>();
+        let normals = reader.read_normals().unwrap().collect::<Vec<_>>();
+        let indices = reader
+            .read_indices()
+            .map(|read_indices| read_indices.into_u32().collect::<Vec<_>>())
+            .expect("Failed to read indices");
+
+        // Not handling optional normals yet
+        assert_eq!(positions.len(), normals.len());
+
         Self {
             indices: indices,
             positions: positions.iter().map(|data| Vec3::new(data[0], data[1], data[2])).collect(),
             normals: normals.iter().map(|data| Vec3::new(data[0], data[1], data[2])).collect(),
-            material: material
+            material: primitive.material().index().map(|id| materials[id].clone()).unwrap_or_default(),
         }
     }
 
