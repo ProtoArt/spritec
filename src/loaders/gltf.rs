@@ -1,7 +1,5 @@
 use std::rc::Rc;
 
-use gltf::mesh;
-
 use crate::geometry::Mesh;
 use crate::material::Material;
 
@@ -10,29 +8,16 @@ pub fn load_file(filepath: &str) -> Vec<Mesh> {
 
     let mut ret: Vec<Mesh> = Vec::new();
 
+    // Load all the materials first, this assumes that the material index
+    // that primitive refers to is loaded in the same order as document.materials()
+    let materials: Vec<_> = document
+        .materials()
+        .map(|material| Rc::new(Material::from_gltf(&material)))
+        .collect();
+
     for mesh in document.meshes() {
         for primitive in mesh.primitives() {
-            // We're only dealing with triangle meshes
-            assert_eq!(mesh::Mode::Triangles, primitive.mode());
-
-            let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
-            let positions = reader.read_positions().unwrap().collect::<Vec<_>>();
-            let normals = reader.read_normals().unwrap().collect::<Vec<_>>();
-            assert_eq!(positions.len(), normals.len()); // not handling optional normals yet
-
-            let indices = reader
-                .read_indices()
-                .map(|read_indices| read_indices.into_u32().collect::<Vec<_>>())
-                .expect("Failed to read indices");
-
-            let material = Material::from_gltf(&primitive.material());
-
-            ret.push(Mesh::from_gltf(
-                indices,
-                positions,
-                normals,
-                Rc::new(material),
-            ));
+            ret.push(Mesh::from_gltf(&buffers, &primitive, &materials));
         }
     }
 
