@@ -2,12 +2,14 @@ language: rust
 rust:
   - stable
   - beta
-  - nightly
-matrix:
-  allow_failures:
-    - rust: nightly
-  fast_finish: true
 addons:
   apt:
     update: true
-    packages: xorg-dev  # needed by minifb
+    packages:
+      - xorg-dev # needed by minifb
+before_script:
+  - rustup component add clippy
+script:
+  - cargo clippy --all-targets --all-features -- -D warnings
+  - cargo build --verbose --all
+  - cargo test --verbose --all
