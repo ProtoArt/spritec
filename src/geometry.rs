@@ -28,21 +28,26 @@ impl Mesh {
     pub fn from_gltf(
         buffers: &Vec<gltf::buffer::Data>,
         primitive: &gltf::Primitive,
-        materials: &[Rc<Material>]) -> Self {
+        materials: &[Rc<Material>],
+    ) -> Self {
 
         // We're only dealing with triangle meshes
         assert_eq!(gltf::mesh::Mode::Triangles, primitive.mode());
 
         let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
-        let positions = reader.read_positions().unwrap().collect::<Vec<_>>();
-        let normals = reader.read_normals().unwrap().collect::<Vec<_>>();
+        let positions = reader.read_positions().expect("Failed to read glTF positions").collect::<Vec<_>>();
+        let normals = reader.read_normals().expect("Failed to read glTF normals").collect::<Vec<_>>();
         let indices = reader
             .read_indices()
             .map(|read_indices| read_indices.into_u32().collect::<Vec<_>>())
-            .expect("Failed to read indices");
+            .expect("Failed to read glTF indices");
 
         // Not handling optional normals yet
-        assert_eq!(positions.len(), normals.len());
+        assert_eq!(
+            positions.len(),
+            normals.len(),
+            "Position vector and normals vector have different lengths"
+        );
 
         Self {
             indices: indices,
