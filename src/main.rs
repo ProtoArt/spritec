@@ -1,3 +1,21 @@
+//! The main spritec executable
+
+// TOOL POLICY:
+// - We add tools in order to help *us* improve our code
+// - If they are not doing that, we can configure them or even elect to remove them
+// - No tool is perfect and we are allowed to disagree with its results
+// - If the tool warns about something that isn't actually an issue worth caring about, add it to
+//   the list below and explain your change in your PR
+// - We don't want to litter our code with #[allow] attributes unnecessarily, so try to either
+//   globally disable that aspect of the tool or live with it and do what the tool says
+// - If we make a mistake and find that one of these lints shouldn't have been added here, we can
+//   always remove it later
+#![allow(
+    clippy::identity_op,
+    clippy::let_and_return,
+    clippy::cast_lossless,
+)]
+
 mod cel;
 mod color;
 mod geometry;
@@ -63,7 +81,7 @@ fn save_poses(
     let mut color = Buffer2d::new([image_width, image_height], 0);
     let mut depth = Buffer2d::new([image_width, image_height], 1.0);
 
-    for (i, frame) in frames.into_iter().enumerate() {
+    for (i, frame) in frames.iter().enumerate() {
         render(&mut color, &mut depth, model, view, projection, frame, 0.15);
 
         let mut img = ImageBuffer::new(image_width as u32, image_height as u32);
@@ -97,7 +115,7 @@ fn save_spritesheet(
     let mut color = Buffer2d::new([image_width, image_height], 0);
     let mut depth = Buffer2d::new([image_width, image_height], 1.0);
 
-    for (i, frame) in frames.into_iter().enumerate() {
+    for (i, frame) in frames.iter().enumerate() {
         render(&mut color, &mut depth, model, view, projection, frame, 0.15);
 
         let column = i % columns;
