@@ -26,9 +26,12 @@ pub struct OutlineShader<'a> {
 }
 
 impl<'a> Pipeline for OutlineShader<'a> {
-    type Vertex = u32; // Vertex index
-    type VsOut = Vec3<f32>; // Normal
-    type Pixel = u32; // BGRA
+    // BGRA
+    type Pixel = u32;
+    // Vertex index
+    type Vertex = u32;
+    // Normal
+    type VsOut = Vec3<f32>;
 
     /// The vertex shader that does the outlines.
     #[inline(always)]
