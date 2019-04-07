@@ -32,15 +32,20 @@ impl Mesh {
     ) -> Self {
 
         // We're only dealing with triangle meshes
-        assert_eq!(gltf::mesh::Mode::Triangles, primitive.mode());
+        assert_eq!(gltf::mesh::Mode::Triangles, primitive.mode(), "Not handling non-triangle glTF primitives");
 
         let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
-        let positions = reader.read_positions().expect("Failed to read glTF positions").collect::<Vec<_>>();
-        let normals = reader.read_normals().expect("Failed to read glTF normals").collect::<Vec<_>>();
         let indices = reader
             .read_indices()
             .map(|read_indices| read_indices.into_u32().collect::<Vec<_>>())
             .expect("Failed to read glTF indices");
+        let positions: Vec<_> = reader.read_positions().expect("Failed to read glTF positions")
+            .map(|data| Vec3::new(data[0], data[1], data[2]))
+            .collect();
+        let normals: Vec<_> = reader.read_normals().expect("Failed to read glTF normals")
+            .map(|data| Vec3::new(data[0], data[1], data[2]))
+            .collect();
+        let material = primitive.material().index().map(|id| materials[id].clone()).unwrap_or_default();
 
         // Not handling optional normals yet
         assert_eq!(
@@ -51,9 +56,9 @@ impl Mesh {
 
         Self {
             indices: indices,
-            positions: positions.iter().map(|data| Vec3::new(data[0], data[1], data[2])).collect(),
-            normals: normals.iter().map(|data| Vec3::new(data[0], data[1], data[2])).collect(),
-            material: primitive.material().index().map(|id| materials[id].clone()).unwrap_or_default(),
+            positions: positions,
+            normals: normals,
+            material: material,
         }
     }
 
