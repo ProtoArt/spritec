@@ -12,7 +12,7 @@ pub fn load_file(filepath: &str) -> Vec<Mesh> {
     // that primitive refers to is loaded in the same order as document.materials()
     let materials: Vec<_> = document
         .materials()
-        .map(|material| Rc::new(Material::from_gltf(&material)))
+        .map(|material| Rc::new(Material::from(material)))
         .collect();
 
     for mesh in document.meshes() {
