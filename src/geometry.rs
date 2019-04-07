@@ -26,7 +26,7 @@ impl Mesh {
     }
 
     pub fn from_gltf(
-        buffers: &Vec<gltf::buffer::Data>,
+        buffers: &[gltf::buffer::Data],
         primitive: &gltf::Primitive,
         materials: &[Rc<Material>],
     ) -> Self {
@@ -54,12 +54,7 @@ impl Mesh {
             "Position vector and normals vector have different lengths"
         );
 
-        Self {
-            indices: indices,
-            positions: positions,
-            normals: normals,
-            material: material,
-        }
+        Self {indices, positions, normals, material}
     }
 
     /// Returns the indices of this mesh
