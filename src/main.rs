@@ -10,6 +10,7 @@
 //   globally disable that aspect of the tool or live with it and do what the tool says
 // - If we make a mistake and find that one of these lints shouldn't have been added here, we can
 //   always remove it later
+#![deny(clippy::all)] // Deny clippy warnings when running clippy (used for CI)
 #![allow(
     clippy::identity_op,
     clippy::let_and_return,
