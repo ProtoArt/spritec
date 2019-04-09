@@ -117,7 +117,7 @@ name = "euc"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "vek 0.9.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "vek 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -595,7 +595,7 @@ dependencies = [
  "image 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "minifb 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "tobj 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "vek 0.9.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "vek 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -678,7 +678,7 @@ dependencies = [
 
 [[package]]
 name = "vek"
-version = "0.9.6"
+version = "0.9.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "approx 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -812,7 +812,7 @@ dependencies = [
 "checksum unicode-xid 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "8c1f860d7d29cf02cb2f3f359fd35991af3d30bac52c57d265a3c461074cb4dc"
 "checksum unicode-xid 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fc72304796d0818e357ead4e000d19c9c174ab23dc11093ac919054d20a6a7fc"
 "checksum user32-sys 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "e6b719983b952c04198829b51653c06af36f0e44c967fcc1a2bb397ceafbf80a"
-"checksum vek 0.9.6 (registry+https://github.com/rust-lang/crates.io-index)" = "1d9c276b25cb5791944a5e39ef739a8f30f1c09ee2623d0365f8c300e4cd931e"
+"checksum vek 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)" = "41a272c9a959b8d3acd4fdbb83bb20d815976e3ab68b3fa9e0c9519b5dd18478"
 "checksum winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)" = "167dc9d6949a9b857f3451275e911c3f44255842c1f7a76f33c55103a909087a"
 "checksum winapi 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "92c1eb33641e276cfa214a0522acad57be5c56b10cb348b3c5117db75f3ac4b0"
 "checksum winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2d315eee3b34aca4797b2da6b13ed88266e6d612562a0c46390af8299fc699bc"
