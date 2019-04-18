@@ -1,32 +1,40 @@
+//! The spritec-preview executable
+
+// See TOOL POLICY in src/lib.rs
+#![deny(clippy::all)] // Deny clippy warnings when running clippy (used for CI)
+#![allow(
+    clippy::identity_op,
+    clippy::let_and_return,
+    clippy::cast_lossless,
+    clippy::redundant_closure,
+    clippy::len_without_is_empty,
+    clippy::large_enum_variant,
+)]
+#![deny(bare_trait_objects)] // Prefer Box<dyn Trait> over Box<Trait>
+
 use std::f32::consts::PI;
 use std::time::Duration;
+use std::error::Error;
 use std::thread;
 
-use vek::{Mat4, Vec2, Rgba};
+use vek::{Mat4, Rgba};
 use euc::{buffer::Buffer2d, Target};
 use minifb::{Window, WindowOptions, Key, KeyRepeat};
 use spritec::{
     render,
-    loaders,
-    geometry::Mesh,
+    loaders::{self, Model},
     color::rgba_to_bgra_u32,
-    scale::scale_buffer_map,
+    scale::{scale_map, copy_map},
 };
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let image_width = 64;
     let image_height = 64;
 
-    let frames: Vec<_> = (1..=8).map(|i| {
+    let frames = (1..=8).map(|i| {
         loaders::obj::load_file(&format!("samples/bigboi/obj/bigboi_rigged_{:06}.obj", i))
-    }).collect();
+    }).collect::<Result<Vec<_>, _>>()?;
 
-    // The transformation that represents the center of the model, all points in the model are
-    // relative to this
-    // Also known as the "world" transformation
-    //
-    // Model coordinates -> World coordinates
-    let model = Mat4::identity();
     // The transformation that represents the position and orientation of the camera
     //
     // World coordinates -> Camera coordinates
@@ -68,13 +76,16 @@ fn main() {
         depth.clear(1.0);
 
         let meshes = &frames[i];
-        render(&mut color, &mut depth, model, view, projection, meshes, 0.15);
+        render(&mut color, &mut depth, view, projection, meshes, 0.15);
 
-        scale_buffer_map(&mut screen, &color, |color| rgba_to_bgra_u32(color));
+        scale_map(&mut screen, &color, |color| rgba_to_bgra_u32(color));
 
         if let Some(axis) = &axis {
             // Unsafe because we are guaranteeing that the provided offset is not out of bounds
-            unsafe { copy(&mut screen, &axis, (0, screen_height - axis_height)); }
+            unsafe {
+                copy_map(&mut screen, &axis, (0, screen_height - axis_height),
+                    |pixel| rgba_to_bgra_u32(pixel));
+            }
         }
 
         win.update_with_buffer(screen.as_ref()).unwrap();
@@ -84,20 +95,8 @@ fn main() {
 
         i = (i + 1) % frames.len();
     }
-}
 
-/// Copy the entire source buffer into the given target buffer starting at the given offset
-///
-/// Unsafe because no bounds checking is performed.
-unsafe fn copy(target: &mut Buffer2d<u32>, source: &Buffer2d<Rgba<f32>>, (x, y): (usize, usize)) {
-    let Vec2 {x: source_width, y: source_height} = Vec2::from(source.size());
-
-    for i in 0..source_width {
-        for j in 0..source_height {
-            let value = rgba_to_bgra_u32(*source.get([i, j]));
-            target.set([x + i, y + j], value);
-        }
-    }
+    Ok(())
 }
 
 /// Renders a set of axis that match the orientation of the given view matrix
@@ -107,7 +106,8 @@ fn render_axis(
 ) {
     // Only want to load this once
     thread_local! {
-        static AXIS_MESHES: Vec<Mesh> = loaders::obj::load_file("samples/axis/axis.obj");
+        static AXIS_MESHES: Model = loaders::obj::load_file("samples/axis/axis.obj")
+            .expect("Unable to load axis model");
     }
 
     let axis_size = axis_color.size();
@@ -116,6 +116,6 @@ fn render_axis(
 
     let mut depth = Buffer2d::new(axis_color.size(), 1.0);
     AXIS_MESHES.with(|meshes| {
-        render(axis_color, &mut depth, Mat4::identity(), view, projection, meshes, 0.0)
+        render(axis_color, &mut depth, view, projection, meshes, 0.0)
     });
 }
