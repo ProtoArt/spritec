@@ -93,7 +93,8 @@ impl Spritesheet {
             let projection = anim.camera.projection();
 
             for (i, frame) in anim.frames.iter().enumerate() {
-                crate::render(&mut color, &mut depth, view, projection, &*frame, anim.outline);
+                crate::render(&mut color, &mut depth, view, projection, &*frame,
+                    anim.outline_thickness, anim.outline_color);
 
                 let x_offset = i * frame_width;
                 // Unsafe because we are guaranteeing that the provided offset is not out of bounds
@@ -130,7 +131,9 @@ pub struct Animation {
     /// The camera perspective from which to render each frame
     camera: Camera,
     /// The outline thickness to use when drawing each frame
-    outline: f32,
+    outline_thickness: f32,
+    /// The outline color to use when drawing each frame
+    outline_color: Rgba<f32>,
 }
 
 impl Animation {
@@ -144,7 +147,8 @@ impl Animation {
             frame_width,
             frame_height,
             camera: camera.into(),
-            outline,
+            outline_thickness: outline.thickness,
+            outline_color: outline.color,
         })
     }
 
@@ -255,7 +259,9 @@ pub struct Pose {
     /// The background color of the generated image
     background: Rgba<f32>,
     /// The outline thickness to use when drawing the generated image
-    outline: f32,
+    outline_thickness: f32,
+    /// The outline color to use when drawing the generated image
+    outline_color: Rgba<f32>,
 }
 
 impl Pose {
@@ -288,7 +294,8 @@ impl Pose {
             camera: camera.into(),
             scale,
             background,
-            outline,
+            outline_thickness: outline.thickness,
+            outline_color: outline.color,
         })
     }
 
@@ -309,7 +316,8 @@ impl Pose {
         let view = self.camera.view();
         let projection = self.camera.projection();
 
-        crate::render(&mut color, &mut depth, view, projection, &self.model, self.outline);
+        crate::render(&mut color, &mut depth, view, projection, &self.model,
+            self.outline_thickness, self.outline_color);
 
         //FIXME: Could optimize the case of scale == 1
         let scale = self.scale.get();

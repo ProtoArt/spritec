@@ -46,6 +46,7 @@ pub fn render(
     projection: Mat4<f32>,
     model: &Model,
     outline_thickness: f32,
+    outline_color: Rgba<f32>,
 ) {
     for mesh in &model.meshes {
         // The model matrix
@@ -58,7 +59,7 @@ pub fn render(
 
             mesh,
 
-            outline_color: Rgba {r: 0.0, g: 0.0, b: 0.0, a: 0.0},
+            outline_color,
             outline_thickness,
         }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), color, depth);
 
