@@ -17,7 +17,7 @@ edition = "2018"
 [dependencies]
 euc = "0.2"
 tobj = "0.1"
-vek = "0.9"
+vek = { version = "0.9", features = ["serde"] }
 image = "0.21"
 gltf = "0.11.3"
 structopt = "0.2"
