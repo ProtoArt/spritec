@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use vek::Vec3;
+use vek::{Vec3, Mat4};
 
 use crate::material::Material;
 
@@ -13,6 +13,14 @@ pub struct Mesh {
     normals: Vec<Vec3<f32>>,
     /// The material associated with this mesh (if any)
     material: Arc<Material>,
+    /// The model transformation represents the center of the mesh, all vertices in the model are
+    /// relative to this. This is also known as the "world" transformation.
+    ///
+    /// Model coordinates -> World coordinates
+    ///
+    /// If this is the identity matrix, then all vertices in the model are already in world
+    /// coordinates.
+    transform: Mat4<f32>,
 }
 
 impl Mesh {
@@ -22,6 +30,7 @@ impl Mesh {
             positions: mesh.positions.chunks(3).map(|sl| Vec3::from_slice(sl)).collect(),
             normals: mesh.normals.chunks(3).map(|sl| Vec3::from_slice(sl)).collect(),
             material: mesh.material_id.map(|id| materials[id].clone()).unwrap_or_default(),
+            transform: Mat4::identity(),
         }
     }
 
@@ -30,7 +39,6 @@ impl Mesh {
         primitive: &gltf::Primitive,
         materials: &[Arc<Material>],
     ) -> Self {
-
         // We're only dealing with triangle meshes
         assert_eq!(gltf::mesh::Mode::Triangles, primitive.mode(), "Not handling non-triangle glTF primitives");
 
@@ -54,7 +62,7 @@ impl Mesh {
             "Position vector and normals vector have different lengths"
         );
 
-        Self {indices, positions, normals, material}
+        Self {indices, positions, normals, material, transform: Mat4::identity()}
     }
 
     /// Returns the indices of this mesh
@@ -75,5 +83,11 @@ impl Mesh {
     /// Returns the material associated with this mesh
     pub fn material(&self) -> &Material {
         &self.material
+    }
+
+    /// Returns the model transformation for this mesh. All vertices of this mesh must have this
+    /// applied to them in order to become world coordinates.
+    pub fn transform(&self) -> Mat4<f32> {
+        self.transform
     }
 }
