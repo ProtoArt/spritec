@@ -18,6 +18,7 @@
 )]
 
 pub mod color;
+pub mod config;
 pub mod geometry;
 pub mod light;
 pub mod loaders;
