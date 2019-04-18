@@ -31,7 +31,7 @@ pub struct AppArgs {
 
 impl AppArgs {
     /// Loads the configuration file provided as an argument
-    pub fn load_config(&self) -> Result<TaskConfig, Box<Error>> {
+    pub fn load_config(&self) -> Result<TaskConfig, Box<dyn Error + Send + Sync>> {
         Ok(toml::from_str(&fs::read_to_string(&self.config_path)?)?)
     }
 
