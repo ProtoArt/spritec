@@ -1,0 +1,187 @@
+# Configuration file for generating images with spritec
+#
+# Paths in this file are relative to the location of this configuration file
+
+[[spritesheets]]
+path = "../../spritesheet0.png"
+scale = 2
+
+[[spritesheets.animations]]
+frames = { gltf = "gltf/bigboi_rigged.gltf", start_frame = 0, end_frame = 3 }
+frame_width = 32
+frame_height = 32
+camera = "PerspectiveFront"
+
+[[spritesheets.animations]]
+frames = { gltf = "gltf/bigboi_rigged.gltf", start_frame = 4, end_frame = 7 }
+frame_width = 32
+frame_height = 32
+camera = "PerspectiveFront"
+
+
+[[spritesheets]]
+path = "../../spritesheet1.png"
+scale = 2
+
+[[spritesheets.animations]]
+frames = [
+  "obj/bigboi_rigged_000001.obj",
+  "obj/bigboi_rigged_000002.obj",
+  "obj/bigboi_rigged_000003.obj",
+  "obj/bigboi_rigged_000004.obj",
+]
+frame_width = 32
+frame_height = 32
+camera = "PerspectiveFront"
+
+[[spritesheets.animations]]
+frames = [
+  "obj/bigboi_rigged_000005.obj",
+  "obj/bigboi_rigged_000006.obj",
+  "obj/bigboi_rigged_000007.obj",
+  "obj/bigboi_rigged_000008.obj",
+]
+frame_width = 32
+frame_height = 32
+camera = "PerspectiveFront"
+
+
+[[spritesheets]]
+path = "../../spritesheet2.png"
+scale = 2
+
+[[spritesheets.animations]]
+frames = [
+  "obj/bigboi_rigged_000001.obj",
+  "obj/bigboi_rigged_000002.obj",
+  "obj/bigboi_rigged_000003.obj",
+  "obj/bigboi_rigged_000004.obj",
+]
+frame_width = 32
+frame_height = 32
+camera = "PerspectiveRight"
+
+[[spritesheets.animations]]
+frames = [
+  "obj/bigboi_rigged_000005.obj",
+  "obj/bigboi_rigged_000006.obj",
+  "obj/bigboi_rigged_000007.obj",
+  "obj/bigboi_rigged_000008.obj",
+]
+frame_width = 32
+frame_height = 32
+camera = "PerspectiveRight"
+
+
+[[spritesheets]]
+path = "../../spritesheet3.png"
+
+[[spritesheets.animations]]
+frames = [
+  "obj/bigboi_rigged_000001.obj",
+  "obj/bigboi_rigged_000002.obj",
+  "obj/bigboi_rigged_000003.obj",
+  "obj/bigboi_rigged_000004.obj",
+]
+frame_width = 32
+frame_height = 32
+camera = "PerspectiveFront"
+
+[[spritesheets.animations]]
+frames = [
+  "obj/bigboi_rigged_000005.obj",
+  "obj/bigboi_rigged_000006.obj",
+  "obj/bigboi_rigged_000007.obj",
+  "obj/bigboi_rigged_000008.obj",
+]
+frame_width = 32
+frame_height = 32
+camera = "PerspectiveFront"
+
+[[spritesheets.animations]]
+frames = [
+  "obj/bigboi_rigged_000001.obj",
+  "obj/bigboi_rigged_000002.obj",
+  "obj/bigboi_rigged_000003.obj",
+  "obj/bigboi_rigged_000004.obj",
+]
+frame_width = 32
+frame_height = 32
+camera = "PerspectiveRight"
+
+[[spritesheets.animations]]
+frames = [
+  "obj/bigboi_rigged_000005.obj",
+  "obj/bigboi_rigged_000006.obj",
+  "obj/bigboi_rigged_000007.obj",
+  "obj/bigboi_rigged_000008.obj",
+]
+frame_width = 32
+frame_height = 32
+camera = "PerspectiveRight"
+
+
+[[poses]]
+# Or { gltf = "gltf/bigboi_rigged.gltf", frame = 0 }
+model = "obj/bigboi_rigged_000001.obj"
+path = "../../pose000001.png"
+width = 32
+height = 32
+scale = 2
+camera = "PerspectiveFront"
+
+[[poses]]
+model = "obj/bigboi_rigged_000002.obj"
+path = "../../pose000002.png"
+width = 32
+height = 32
+scale = 2
+camera = "PerspectiveFront"
+
+[[poses]]
+model = "obj/bigboi_rigged_000003.obj"
+path = "../../pose000003.png"
+width = 32
+height = 32
+scale = 2
+camera = "PerspectiveFront"
+
+[[poses]]
+model = "obj/bigboi_rigged_000004.obj"
+path = "../../pose000004.png"
+width = 32
+height = 32
+scale = 2
+camera = "PerspectiveFront"
+
+[[poses]]
+model = "obj/bigboi_rigged_000005.obj"
+path = "../../pose000005.png"
+width = 32
+height = 32
+scale = 2
+camera = "PerspectiveFront"
+
+[[poses]]
+model = "obj/bigboi_rigged_000006.obj"
+path = "../../pose000006.png"
+width = 32
+height = 32
+scale = 2
+camera = "PerspectiveFront"
+
+[[poses]]
+model = "obj/bigboi_rigged_000007.obj"
+path = "../../pose000007.png"
+width = 32
+height = 32
+scale = 2
+camera = "PerspectiveFront"
+
+[[poses]]
+model = "obj/bigboi_rigged_000008.obj"
+path = "../../pose000008.png"
+width = 32
+height = 32
+scale = 2
+camera = "PerspectiveFront"
