@@ -1,6 +1,6 @@
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::error::Error;
 
 use structopt::{
@@ -37,10 +37,10 @@ impl AppArgs {
 
     /// Determines the base directory of the configuration file, used to resolve all paths within
     /// the configuration file
-    pub fn base_directory(&self) -> Result<&Path, io::Error> {
+    pub fn base_directory(&self) -> Result<PathBuf, io::Error> {
         self.config_path.canonicalize().and_then(|p| p.parent().ok_or_else(|| io::Error::new(
             io::ErrorKind::Other,
             "No parent directory for configuration path",
-        )))
+        )).map(|p| p.to_path_buf()))
     }
 }
