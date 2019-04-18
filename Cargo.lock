@@ -645,11 +645,8 @@ name = "spritec-preview"
 version = "0.1.0"
 dependencies = [
  "euc 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "gltf 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "minifb 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "spritec 0.1.0",
- "structopt 0.2.15 (registry+https://github.com/rust-lang/crates.io-index)",
- "tobj 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "vek 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
