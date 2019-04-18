@@ -67,7 +67,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         image_width * scale,
         image_height * scale,
         WindowOptions::default()
-    ).unwrap();
+    )?;
 
     // Keep the program from ending
     let mut i = 0;
@@ -88,7 +88,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
 
-        win.update_with_buffer(screen.as_ref()).unwrap();
+        win.update_with_buffer(screen.as_ref())?;
 
         // No need to use 100% CPU for no reason
         thread::sleep(Duration::from_millis(1000 / 10));
