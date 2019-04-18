@@ -14,13 +14,6 @@ use crate::color::vek_rgba_to_image_rgba;
 use crate::loaders::{self, Model, LoaderError, gltf::GltfFile};
 use crate::scale::{copy, scale_with};
 
-/// The dimensions of any 2D array/grid
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct GridSize {
-    pub rows: usize,
-    pub cols: usize,
-}
-
 /// The dimensions of an image (in pixels)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ImageSize {
@@ -56,14 +49,6 @@ impl Spritesheet {
         })
     }
 
-    /// Returns the size of the spritesheet grid
-    pub fn grid_size(&self) -> GridSize {
-        GridSize {
-            rows: self.animations.len(),
-            cols: self.animations.iter().map(|a| a.frames.len()).max().unwrap_or_default(),
-        }
-    }
-
     /// Returns the size of image needed to uniformly layout a single animation per row.
     /// Does not take into account the scale factor.
     pub fn image_size(&self) -> ImageSize {
@@ -75,7 +60,6 @@ impl Spritesheet {
 
     /// Draw the spritesheet and write the result to the configured file
     pub fn generate(&self) -> Result<(), io::Error> {
-        let GridSize {rows, cols} = self.grid_size();
         let ImageSize {width, height} = self.image_size();
 
         // An unscaled version of the final image
