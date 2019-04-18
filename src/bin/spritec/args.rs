@@ -91,7 +91,7 @@ impl Error for InvalidRenderSize {}
 
 impl fmt::Display for InvalidRenderSize {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Invalid size: '{}'", self.0)
+        write!(f, "{}", self.0)
     }
 }
 
@@ -134,7 +134,7 @@ impl Error for InvalidScaleFactor {}
 
 impl fmt::Display for InvalidScaleFactor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Invalid scale factor: '{}'", self.0)
+        write!(f, "{}", self.0)
     }
 }
 
