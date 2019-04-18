@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use vek::{Vec3, Mat4};
 
-use crate::material::Material;
+use crate::model::Material;
 
 #[derive(Debug, Clone)]
 pub struct Mesh {

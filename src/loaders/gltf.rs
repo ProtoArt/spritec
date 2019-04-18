@@ -1,10 +1,7 @@
 use std::sync::Arc;
 use std::path::Path;
 
-use crate::geometry::Mesh;
-use crate::material::Material;
-
-use super::Model;
+use crate::model::{Mesh, Material, Model};
 
 /// Loads the given glTF file path, optionally generating a model for the specific animation or
 /// frame within the file.

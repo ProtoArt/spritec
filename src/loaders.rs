@@ -6,7 +6,7 @@ use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt;
 
-use crate::geometry::Mesh;
+use crate::model::Model;
 
 #[derive(Debug)]
 pub enum LoaderError {
@@ -40,11 +40,6 @@ impl fmt::Display for LoaderError {
             },
         }
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct Model {
-    pub meshes: Vec<Mesh>,
 }
 
 /// Load a model based on the file extension of its path. OBJ files will be used as is. For glTF

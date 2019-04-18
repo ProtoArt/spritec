@@ -1,7 +1,7 @@
 use vek::{Mat4, Vec3, Vec4, Rgba};
 use euc::{Pipeline, DepthStrategy};
 
-use crate::geometry::Mesh;
+use crate::model::Mesh;
 
 /// An outline shader
 /// Initial version based on this article: http://rbwhitaker.wikidot.com/toon-shader

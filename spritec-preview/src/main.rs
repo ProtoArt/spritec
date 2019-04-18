@@ -22,7 +22,8 @@ use euc::{buffer::Buffer2d, Target};
 use minifb::{Window, WindowOptions, Key, KeyRepeat};
 use spritec::{
     render,
-    loaders::{self, Model},
+    loaders,
+    model::Model,
     color::rgba_to_bgra_u32,
     scale::{scale_map, copy_map},
 };
