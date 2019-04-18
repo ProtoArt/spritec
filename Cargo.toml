@@ -23,6 +23,7 @@ gltf = "0.11.3"
 structopt = "0.2"
 toml = "0.5"
 serde = { version = "1.0", features = ["derive"] }
+rayon = "1.0"
 
 [profile.dev]
 # Needed to make software rendering fast enough
