@@ -20,7 +20,7 @@ impl UnresolvedPath {
         if path.is_absolute() {
             path.to_path_buf()
         } else {
-            base_dir.join(path).canonicalize().expect("Unable to determine absolute path of file")
+            base_dir.join(path)
         }
     }
 }
@@ -179,9 +179,9 @@ impl From<Perspective> for Camera {
         use Perspective::*;
         let view = match persp {
             PerspectiveFront => Mat4::rotation_x(PI/8.0) * Mat4::rotation_y(0.0*PI/2.0),
-            PerspectiveBack => Mat4::rotation_x(PI/8.0) * Mat4::rotation_y(-1.0*PI/2.0),
+            PerspectiveBack => unimplemented!("TODO"),
             PerspectiveLeft => unimplemented!("TODO"),
-            PerspectiveRight => unimplemented!("TODO"),
+            PerspectiveRight => Mat4::rotation_x(PI/8.0) * Mat4::rotation_y(-1.0*PI/2.0),
             PerspectiveTop => unimplemented!("TODO"),
             PerspectiveBottom => unimplemented!("TODO"),
         };
