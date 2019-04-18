@@ -7,7 +7,9 @@ use tobj;
 use crate::geometry::Mesh;
 use crate::material::Material;
 
-pub fn load_file(path: impl AsRef<Path>) -> Result<Vec<Mesh>, tobj::LoadError> {
+use super::Model;
+
+pub fn load_file(path: impl AsRef<Path>) -> Result<Model, tobj::LoadError> {
     let (meshes, materials) = tobj::load_obj(path.as_ref()).unwrap();
     let materials: Vec<_> = materials
         .into_par_iter()
@@ -17,5 +19,5 @@ pub fn load_file(path: impl AsRef<Path>) -> Result<Vec<Mesh>, tobj::LoadError> {
         .into_par_iter()
         .map(|model| Mesh::from_obj(model.mesh, &materials))
         .collect();
-    Ok(meshes)
+    Ok(Model {meshes})
 }

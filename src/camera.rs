@@ -1,5 +1,6 @@
 use vek::Mat4;
 
+#[derive(Debug, Clone)]
 pub struct Camera {
     //TODO(#4): These fields should be replaced with: position, target, fov, aspect_ratio_x, etc.
     pub(crate) view: Mat4<f32>,
