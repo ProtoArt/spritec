@@ -15,7 +15,7 @@ pub struct GridSize {
     pub cols: usize,
 }
 
-/// The dimensions of an image
+/// The dimensions of an image (in pixels)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ImageSize {
     pub width: u32,
