@@ -2,6 +2,8 @@
 
 mod args;
 
+use std::io;
+use std::error::Error;
 use std::f32::consts::PI;
 
 use structopt::StructOpt;
@@ -11,14 +13,17 @@ use vek::{Mat4, Rgba};
 use spritec::{
     render,
     loaders,
+    config::{TaskConfig, Spritesheet, Animation, AnimationFrames, Pose, PoseModel},
     geometry::Mesh,
     color::vek_rgba_to_image_rgba,
 };
 
 use crate::args::AppArgs;
 
-fn main() {
+fn main() -> Result<(), Box<Error>> {
     let args = AppArgs::from_args();
+    let TaskConfig {spritesheets, poses} = args.load_config()?;
+    let base_dir = args.base_directory()?;
 
     let (image_width, image_height) = args.size.into();
 
