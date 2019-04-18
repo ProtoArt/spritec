@@ -15,6 +15,9 @@
     clippy::identity_op,
     clippy::let_and_return,
     clippy::cast_lossless,
+    clippy::redundant_closure,
+    clippy::len_without_is_empty,
+    clippy::large_enum_variant,
 )]
 
 pub mod color;
@@ -26,6 +29,7 @@ pub mod loaders;
 pub mod material;
 pub mod scale;
 pub mod shaders;
+pub mod spritesheet;
 
 use euc::{Pipeline, rasterizer, buffer::Buffer2d};
 use vek::{Mat4, Vec3, Vec4, Rgba};
