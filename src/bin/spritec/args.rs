@@ -1,4 +1,7 @@
-use std::path::PathBuf;
+use std::fs;
+use std::io;
+use std::path::{Path, PathBuf};
+use std::error::Error;
 
 use structopt::{
     StructOpt,
@@ -10,6 +13,7 @@ use structopt::{
         },
     },
 };
+use spritec::config::TaskConfig;
 
 /// A tool for generating pixel art from 3D models.
 ///
@@ -22,5 +26,21 @@ use structopt::{
 pub struct AppArgs {
     /// Path to the configuration file to execute tasks from
     #[structopt(name = "config-file", default_value = "spritec.toml", parse(from_os_str))]
-    pub config_path: PathBuf,
+    config_path: PathBuf,
+}
+
+impl AppArgs {
+    /// Loads the configuration file provided as an argument
+    pub fn load_config(&self) -> Result<TaskConfig, Box<Error>> {
+        Ok(toml::from_str(&fs::read_to_string(&self.config_path)?)?)
+    }
+
+    /// Determines the base directory of the configuration file, used to resolve all paths within
+    /// the configuration file
+    pub fn base_directory(&self) -> Result<&Path, io::Error> {
+        self.config_path.canonicalize().and_then(|p| p.parent().ok_or_else(|| io::Error::new(
+            io::ErrorKind::Other,
+            "No parent directory for configuration path",
+        )))
+    }
 }
