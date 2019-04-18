@@ -31,13 +31,13 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         let sheet = Spritesheet::from_config(sheet, &base_dir)?;
         sheet.generate()?;
         Ok(())
-    }).collect::<Result<Vec<()>, Box<dyn Error + Send + Sync>>>()?;
+    }).collect::<Result<_, _>>()?;
 
     poses.into_par_iter().map(|pose| -> Result<(), Box<dyn Error + Send + Sync>> {
         let pose = Pose::from_config(pose, &base_dir)?;
         pose.generate()?;
         Ok(())
-    }).collect::<Result<Vec<()>, Box<dyn Error + Send + Sync>>>()?;
+    }).collect::<Result<_, _>>()?;
 
     Ok(())
 }
