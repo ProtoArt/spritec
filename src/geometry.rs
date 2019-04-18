@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use vek::Vec3;
 
@@ -12,11 +12,11 @@ pub struct Mesh {
     /// The normal of each vertex of the model
     normals: Vec<Vec3<f32>>,
     /// The material associated with this mesh (if any)
-    material: Rc<Material>,
+    material: Arc<Material>,
 }
 
 impl Mesh {
-    pub fn from_obj(mesh: tobj::Mesh, materials: &[Rc<Material>]) -> Self {
+    pub fn from_obj(mesh: tobj::Mesh, materials: &[Arc<Material>]) -> Self {
         Self {
             indices: mesh.indices,
             positions: mesh.positions.chunks(3).map(|sl| Vec3::from_slice(sl)).collect(),
@@ -28,7 +28,7 @@ impl Mesh {
     pub fn from_gltf(
         buffers: &[gltf::buffer::Data],
         primitive: &gltf::Primitive,
-        materials: &[Rc<Material>],
+        materials: &[Arc<Material>],
     ) -> Self {
 
         // We're only dealing with triangle meshes
