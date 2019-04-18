@@ -61,10 +61,9 @@ pub struct Animation {
     pub frame_height: NonZeroUsize,
     /// The camera perspective from which to render each frame
     pub camera: PresetCamera,
-    /// The outline thickness to use when drawing each frame. Value must not be negative.
-    /// (default: 0.0)
+    /// The outline to use when drawing each frame. (default: no outline)
     #[serde(default)]
-    pub outline: f32,
+    pub outline: Outline,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -107,10 +106,9 @@ pub struct Pose {
     /// The background color of the generated image (default: transparent black)
     #[serde(default = "default_background")]
     pub background: Rgba<f32>,
-    /// The outline thickness to use when drawing the generated image. Value must not be negative.
-    /// (default: 0.0)
+    /// The outline to use when drawing the generated image. (default: no outline)
     #[serde(default)]
-    pub outline: f32,
+    pub outline: Outline,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -130,6 +128,26 @@ pub enum PoseModel {
     /// A single filename. An OBJ file will be used as is. For a glTF file, the model will be
     /// rendered as loaded regardless of the animations present in the file.
     Model(UnresolvedPath),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[serde(default)]
+pub struct Outline {
+    /// The outline thickness to use when drawing the generated image. Value must not be negative.
+    /// (default: 0.0)
+    pub thickness: f32,
+    /// The color of the outline to draw (default: black)
+    pub color: Rgba<f32>,
+}
+
+impl Default for Outline {
+    fn default() -> Self {
+        Self {
+            thickness: 0.0,
+            color: Rgba::black(),
+        }
+    }
 }
 
 /// A number of present camera angles or a completely custom configuration

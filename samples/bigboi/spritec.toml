@@ -11,6 +11,7 @@ frames = { gltf = "gltf/bigboi_rigged.gltf", start_frame = 0, end_frame = 3 }
 frame_width = 64
 frame_height = 64
 camera = "PerspectiveFront"
+outline = { thickness = 0.15 }
 
 [[spritesheets.animations]]
 frames = { gltf = "gltf/bigboi_rigged.gltf", start_frame = 4, end_frame = 7 }

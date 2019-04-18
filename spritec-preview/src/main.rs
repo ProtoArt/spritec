@@ -76,7 +76,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         depth.clear(1.0);
 
         let meshes = &frames[i];
-        render(&mut color, &mut depth, view, projection, meshes, 0.15);
+        render(&mut color, &mut depth, view, projection, meshes, 0.15, Rgba::black());
 
         scale_map(&mut screen, &color, |color| rgba_to_bgra_u32(color));
 
@@ -116,6 +116,6 @@ fn render_axis(
 
     let mut depth = Buffer2d::new(axis_color.size(), 1.0);
     AXIS_MESHES.with(|meshes| {
-        render(axis_color, &mut depth, view, projection, meshes, 0.0)
+        render(axis_color, &mut depth, view, projection, meshes, 0.0, Rgba::black())
     });
 }
