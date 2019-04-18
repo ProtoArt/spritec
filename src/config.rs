@@ -55,9 +55,9 @@ pub struct Spritesheet {
 #[serde(deny_unknown_fields)]
 pub struct Animation {
     pub frames: AnimationFrames,
-    /// The width at which to render each frame
+    /// The width at which to render each frame (in pixels)
     pub frame_width: NonZeroUsize,
-    /// The height at which to render each frame
+    /// The height at which to render each frame (in pixels)
     pub frame_height: NonZeroUsize,
     /// The camera perspective from which to render each frame
     pub camera: PresetCamera,
@@ -90,9 +90,9 @@ pub struct Pose {
     pub model: PoseModel,
     /// The path to output the generated image, relative to configuration file
     pub path: UnresolvedPath,
-    /// The width at which to render each frame
+    /// The width at which to render each frame (in pixels)
     pub width: NonZeroUsize,
-    /// The height at which to render each frame
+    /// The height at which to render each frame (in pixels)
     pub height: NonZeroUsize,
     /// The camera perspective from which to render each frame
     pub camera: PresetCamera,
