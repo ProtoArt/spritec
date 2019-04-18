@@ -62,7 +62,7 @@ pub fn render(
             mesh,
 
             light: DiffuseLight {
-                direction: Vec3::from(view * Vec4::forward_lh()),
+                direction: Vec3::from(view * Vec4::up()),
                 color: Rgba::white(),
                 intensity: 1.0,
             },
