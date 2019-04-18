@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use std::num::NonZeroUsize;
 use std::f32::consts::PI;
 
@@ -6,6 +5,25 @@ use vek::{Vec3, Mat4};
 use serde::{Serialize, Deserialize};
 
 use crate::camera::Camera;
+
+/// A newtype around PathBuf to force the path to be resolved relative to a base directory before
+/// it can be used. Good to prevent something that is pretty easy to do accidentally.
+// Using an absolute path to PathBuf so we don't even have PathBuf imported
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct UnresolvedPath(std::path::PathBuf);
+
+impl UnresolvedPath {
+    /// Resolves this path relative to the given base directory. Returns an absolute path.
+    pub fn resolve(&self, base_dir: &std::path::Path) -> std::path::PathBuf {
+        let path = &self.0;
+        if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            base_dir.join(path).canonicalize().expect("Unable to determine absolute path of file")
+        }
+    }
+}
 
 /// A configuration that represents the tasks that spritec should complete
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -21,7 +39,7 @@ pub struct TaskConfig {
 #[serde(deny_unknown_fields)]
 pub struct Spritesheet {
     /// The path to output the generated spritesheet, relative to configuration file
-    pub path: PathBuf,
+    pub path: UnresolvedPath,
     /// Animations to include in the spritesheet
     pub animations: Vec<Animation>,
     /// A scale factor to apply to the generated images. Each image is scaled without interpolation.
@@ -48,7 +66,7 @@ pub struct Animation {
 pub enum AnimationFrames {
     GltfFrames {
         /// The path to a glTF file
-        gltf: PathBuf,
+        gltf: UnresolvedPath,
         /// The name of the animation to select. Can be omitted if there is only a single animation
         animation: Option<String>,
         /// The frame to start the animation from (default: 0)
@@ -59,7 +77,7 @@ pub enum AnimationFrames {
     },
     /// An array of filenames. OBJ files will be used as is. For glTF files, the model will be used
     /// as loaded regardless of the animations present in the file.
-    Models(Vec<PathBuf>),
+    Models(Vec<UnresolvedPath>),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -68,7 +86,7 @@ pub struct Pose {
     /// The model to render
     pub model: PoseModel,
     /// The path to output the generated image, relative to configuration file
-    pub path: PathBuf,
+    pub path: UnresolvedPath,
     /// The width at which to render each frame
     pub width: NonZeroUsize,
     /// The height at which to render each frame
@@ -87,7 +105,7 @@ pub struct Pose {
 pub enum PoseModel {
     GltfFrame {
         /// The path to a glTF file
-        gltf: PathBuf,
+        gltf: UnresolvedPath,
         /// The name of the animation to select. Can be omitted if there is only a single animation
         /// or if there is no animation.
         animation: Option<String>,
@@ -97,7 +115,7 @@ pub enum PoseModel {
     },
     /// A single filename. An OBJ file will be used as is. For a glTF file, the model will be
     /// rendered as loaded regardless of the animations present in the file.
-    Model(PathBuf),
+    Model(UnresolvedPath),
 }
 
 /// A number of present camera angles or a completely custom configuration
