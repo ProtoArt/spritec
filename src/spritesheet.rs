@@ -7,14 +7,6 @@ use crate::config;
 use crate::camera::Camera;
 use crate::loaders::{self, Model, LoaderError, gltf::GltfFile};
 
-fn resolve_path(path: &Path, base_dir: &Path) -> PathBuf {
-    if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        base_dir.join(path).canonicalize().expect("Unable to determine absolute path of file")
-    }
-}
-
 /// The dimensions of any 2D array/grid
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GridSize {
@@ -45,7 +37,7 @@ impl Spritesheet {
     /// the given base directory
     pub fn from_config(sheet: config::Spritesheet, base_dir: &Path) -> Result<Self, LoaderError> {
         Ok(Self {
-            path: resolve_path(&sheet.path, base_dir),
+            path: sheet.path.resolve(base_dir),
             animations: sheet.animations.into_par_iter()
                 .map(|a| Animation::from_config(a, base_dir))
                 .collect::<Result<_, _>>()?,
@@ -123,7 +115,7 @@ impl AnimationFrames {
         use config::AnimationFrames::*;
         Ok(match frames {
             GltfFrames {gltf, animation, start_frame, end_frame} => {
-                let model_path = resolve_path(&gltf, base_dir);
+                let model_path = gltf.resolve(base_dir);
                 let model = GltfFile::load_file(model_path)?;
                 //FIXME: Change to `as_deref` instead of `as_ref().map(...)` when this issue is
                 // resolved: https://github.com/rust-lang/rust/issues/50264
@@ -136,7 +128,7 @@ impl AnimationFrames {
             },
             Models(models) => AnimationFrames::Models(
                 models.into_iter()
-                    .map(|path| resolve_path(&path, base_dir))
+                    .map(|path| path.resolve(base_dir))
                     .map(loaders::load_file).collect::<Result<_, _>>()?
             ),
         })
@@ -176,7 +168,7 @@ impl Pose {
         use config::PoseModel::*;
         let model = match pose.model {
             GltfFrame {gltf, animation, frame} => {
-                let model_path = resolve_path(&gltf, base_dir);
+                let model_path = gltf.resolve(base_dir);
                 let model = GltfFile::load_file(model_path)?;
                 //FIXME: Change to `as_deref` instead of `as_ref().map(...)` when this issue is
                 // resolved: https://github.com/rust-lang/rust/issues/50264
@@ -184,14 +176,14 @@ impl Pose {
                 model.frame(animation.as_ref().map(|s| &**s), frame)
             },
             Model(path) => {
-                let model_path = resolve_path(&path, base_dir);
+                let model_path = path.resolve(base_dir);
                 loaders::load_file(model_path)?
             },
         };
 
         Ok(Self {
             model,
-            path: resolve_path(&pose.path, base_dir),
+            path: pose.path.resolve(base_dir),
             width: pose.width,
             height: pose.height,
             camera: pose.camera.into(),
