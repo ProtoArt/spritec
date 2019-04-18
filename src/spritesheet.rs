@@ -154,7 +154,10 @@ impl AnimationFrames {
 
 #[derive(Debug)]
 pub struct Pose {
+    /// The model to render
     model: Model,
+    /// The absolute path to output the generated image
+    path: PathBuf,
     /// The width at which to render each frame
     width: NonZeroUsize,
     /// The height at which to render each frame
@@ -188,6 +191,7 @@ impl Pose {
 
         Ok(Self {
             model,
+            path: resolve_path(&pose.path, base_dir),
             width: pose.width,
             height: pose.height,
             camera: pose.camera.into(),

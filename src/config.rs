@@ -9,6 +9,7 @@ use crate::camera::Camera;
 
 /// A configuration that represents the tasks that spritec should complete
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct TaskConfig {
     /// A list of the spritesheets for spritec to generate
     pub spritesheets: Vec<Spritesheet>,
@@ -17,6 +18,7 @@ pub struct TaskConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Spritesheet {
     /// The path to output the generated spritesheet, relative to configuration file
     pub path: PathBuf,
@@ -29,6 +31,7 @@ pub struct Spritesheet {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Animation {
     pub frames: AnimationFrames,
     /// The width at which to render each frame
@@ -40,6 +43,7 @@ pub struct Animation {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub enum AnimationFrames {
     GltfFrames {
@@ -59,8 +63,12 @@ pub enum AnimationFrames {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Pose {
+    /// The model to render
     pub model: PoseModel,
+    /// The path to output the generated image, relative to configuration file
+    pub path: PathBuf,
     /// The width at which to render each frame
     pub width: NonZeroUsize,
     /// The height at which to render each frame
@@ -74,6 +82,7 @@ pub struct Pose {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub enum PoseModel {
     GltfFrame {
@@ -93,6 +102,7 @@ pub enum PoseModel {
 
 /// A number of present camera angles or a completely custom configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub enum PresetCamera {
     Perspective(Perspective),
@@ -119,6 +129,7 @@ impl From<PresetCamera> for Camera {
 
 /// Preset perspective cameras for common angles
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub enum Perspective {
     PerspectiveFront,
     PerspectiveBack,
