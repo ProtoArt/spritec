@@ -1,10 +1,5 @@
-[workspace]
-members = [
-  "spritec-preview",
-]
-
 [package]
-name = "spritec"
+name = "spritec-preview"
 version = "0.1.0"
 authors = [
   "Sunjay Varma <varma.sunjay@gmail.com>",
@@ -15,13 +10,10 @@ authors = [
 edition = "2018"
 
 [dependencies]
+spritec = { path = ".." }
 euc = "0.2"
+minifb = "0.11"
 tobj = "0.1"
 vek = "0.9"
-image = "0.21"
 gltf = "0.11.3"
 structopt = "0.2"
-
-[profile.dev]
-# Needed to make software rendering fast enough
-opt-level = 3
