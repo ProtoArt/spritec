@@ -14,21 +14,10 @@
 
 mod args;
 
-use std::io;
 use std::error::Error;
 
 use structopt::StructOpt;
-use euc::{buffer::Buffer2d, Target};
-use image::ImageBuffer;
-use vek::{Mat4, Rgba};
-use spritec::{
-    render,
-    loaders,
-    config::TaskConfig,
-    geometry::Mesh,
-    spritesheet::{Spritesheet, Pose},
-    color::vek_rgba_to_image_rgba,
-};
+use spritec::{config::TaskConfig, spritesheet::{Spritesheet, Pose}};
 use rayon::prelude::*;
 
 use crate::args::AppArgs;
@@ -41,6 +30,12 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     spritesheets.into_par_iter().map(|sheet| -> Result<(), Box<dyn Error + Send + Sync>> {
         let sheet = Spritesheet::from_config(sheet, &base_dir)?;
         sheet.generate()?;
+        Ok(())
+    }).collect::<Result<Vec<()>, Box<dyn Error + Send + Sync>>>()?;
+
+    poses.into_par_iter().map(|pose| -> Result<(), Box<dyn Error + Send + Sync>> {
+        let pose = Pose::from_config(pose, &base_dir)?;
+        pose.generate()?;
         Ok(())
     }).collect::<Result<Vec<()>, Box<dyn Error + Send + Sync>>>()?;
 
