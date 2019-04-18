@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::num::NonZeroUsize;
+use std::num::{NonZeroUsize, NonZeroU32};
 
 use rayon::prelude::*;
 use vek::Rgba;
@@ -30,7 +30,7 @@ pub struct Spritesheet {
     animations: Vec<Animation>,
     /// A scale factor to apply to the generated images. Each image is scaled without interpolation.
     /// The value must be greater than zero. (default: 1).
-    scale: NonZeroUsize,
+    scale: NonZeroU32,
     /// The background color of the generated image
     background: Rgba<f32>,
 }
@@ -58,7 +58,8 @@ impl Spritesheet {
         }
     }
 
-    /// Returns the size of image needed to uniformly layout a single animation per row
+    /// Returns the size of image needed to uniformly layout a single animation per row.
+    /// Does not take into account the scale factor.
     pub fn image_size(&self) -> ImageSize {
         ImageSize {
             width: self.animations.iter().map(|a| a.width()).max().unwrap_or_default(),
@@ -165,7 +166,7 @@ pub struct Pose {
     camera: Camera,
     /// A scale factor to apply to the generated image. The image is scaled without interpolation.
     /// The value must be greater than zero. (default: 1).
-    scale: NonZeroUsize,
+    scale: NonZeroU32,
     /// The background color of the generated image
     background: Rgba<f32>,
 }
