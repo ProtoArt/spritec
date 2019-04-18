@@ -1,4 +1,4 @@
-use std::num::NonZeroUsize;
+use std::num::{NonZeroUsize, NonZeroU32};
 use std::f32::consts::PI;
 
 use vek::{Vec3, Mat4, Rgba};
@@ -45,7 +45,7 @@ pub struct Spritesheet {
     /// A scale factor to apply to the generated images. Each image is scaled without interpolation.
     /// The value must be greater than zero. (default: 1).
     #[serde(default = "default_scale_factor")]
-    pub scale: NonZeroUsize,
+    pub scale: NonZeroU32,
     /// The background color of the spritesheet (default: transparent black)
     #[serde(default = "default_background")]
     pub background: Rgba<f32>,
@@ -99,7 +99,7 @@ pub struct Pose {
     /// A scale factor to apply to the generated image. The image is scaled without interpolation.
     /// The value must be greater than zero. (default: 1).
     #[serde(default = "default_scale_factor")]
-    pub scale: NonZeroUsize,
+    pub scale: NonZeroU32,
     /// The background color of the generated image (default: transparent black)
     #[serde(default = "default_background")]
     pub background: Rgba<f32>,
@@ -196,7 +196,7 @@ impl From<Perspective> for Camera {
     }
 }
 
-fn default_scale_factor() -> NonZeroUsize { NonZeroUsize::new(1).unwrap() }
+fn default_scale_factor() -> NonZeroU32 { NonZeroU32::new(1).unwrap() }
 fn default_background() -> Rgba<f32> { Rgba {r: 0.0, g: 0.0, b: 0.0, a: 0.0} }
 
 #[cfg(test)]
