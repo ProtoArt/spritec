@@ -1,12 +1,18 @@
+use std::io;
 use std::path::{Path, PathBuf};
+use std::borrow::Cow;
 use std::num::{NonZeroUsize, NonZeroU32};
 
 use rayon::prelude::*;
+use euc::{buffer::Buffer2d, Target};
+use image::ImageBuffer;
 use vek::Rgba;
 
 use crate::config;
 use crate::camera::Camera;
+use crate::color::vek_rgba_to_image_rgba;
 use crate::loaders::{self, Model, LoaderError, gltf::GltfFile};
+use crate::scale::{copy, scale_with};
 
 /// The dimensions of any 2D array/grid
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -66,6 +72,51 @@ impl Spritesheet {
             height: self.animations.iter().map(|a| a.frame_height.get() as u32).sum(),
         }
     }
+
+    /// Draw the spritesheet and write the result to the configured file
+    pub fn generate(&self) -> Result<(), io::Error> {
+        let GridSize {rows, cols} = self.grid_size();
+        let ImageSize {width, height} = self.image_size();
+
+        // An unscaled version of the final image
+        let mut sheet = Buffer2d::new([width as usize, height as usize], self.background);
+
+        let mut y_offset = 0;
+        for anim in &self.animations {
+            let frame_size = anim.frame_size();
+            let mut color = Buffer2d::new(frame_size, self.background);
+            let mut depth = Buffer2d::new(frame_size, 1.0);
+
+            let [frame_width, frame_height] = frame_size;
+
+            let view = anim.camera.view();
+            let projection = anim.camera.projection();
+
+            for (i, frame) in anim.frames.iter().enumerate() {
+                crate::render(&mut color, &mut depth, view, projection, &*frame, anim.outline);
+
+                let x_offset = i * frame_width;
+                // Unsafe because we are guaranteeing that the provided offset is not out of bounds
+                unsafe { copy(&mut sheet, &color, (x_offset, y_offset)); }
+
+                color.clear(self.background);
+                depth.clear(1.0);
+            }
+
+            y_offset += frame_height;
+        }
+
+        let scale = self.scale.get();
+        let mut img = ImageBuffer::new(width * scale, height * scale);
+        let img_size = [img.width() as usize, img.height() as usize];
+
+        scale_with(img_size, &sheet, |[x, y], rgba| {
+            let pixel = img.get_pixel_mut(x as u32, y as u32);
+            *pixel = vek_rgba_to_image_rgba(rgba);
+        });
+
+        img.save(&self.path)
+    }
 }
 
 #[derive(Debug)]
@@ -99,6 +150,11 @@ impl Animation {
     /// Returns the total width of all the animation frames adjacent to each other
     pub fn width(&self) -> u32 {
         (self.frames.len() * self.frame_width.get()) as u32
+    }
+
+    /// Returns the dimensions of each frame of this animation
+    pub fn frame_size(&self) -> [usize; 2] {
+        [self.frame_width.get(), self.frame_height.get()]
     }
 }
 
@@ -151,6 +207,31 @@ impl AnimationFrames {
         match self {
             GltfFrames {start_frame, end_frame, ..} => end_frame - start_frame + 1,
             Models(frames) => frames.len(),
+        }
+    }
+
+    /// Returns an iterator to the frames in this animation
+    pub fn iter(&self) -> impl Iterator<Item=Cow<Model>> {
+        // Having this method avoids the awkward syntax: (&self.frames).into_iter()
+        self.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a AnimationFrames {
+    type Item = Cow<'a, Model>;
+    type IntoIter = Box<dyn Iterator<Item=Self::Item> + 'a>;
+
+    /// Returns an iterator over each model (frame) of this animation
+    fn into_iter(self) -> Self::IntoIter {
+        use AnimationFrames::*;
+        match self {
+            GltfFrames {model, animation, start_frame, end_frame} => Box::new((*start_frame..=*end_frame).map(move |frame| {
+                //FIXME: Change to `as_deref` instead of `as_ref().map(...)` when this issue is
+                // resolved: https://github.com/rust-lang/rust/issues/50264
+                // To understand this code: https://stackoverflow.com/a/31234028/551904
+                Cow::Owned(model.frame(animation.as_ref().map(|s| &**s), Some(frame)))
+            })),
+            Models(models) => Box::new(models.iter().map(Cow::Borrowed)),
         }
     }
 }

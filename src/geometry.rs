@@ -4,7 +4,7 @@ use vek::{Vec3, Mat4};
 
 use crate::material::Material;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Mesh {
     indices: Vec<u32>,
     /// The position of each vertex of the model

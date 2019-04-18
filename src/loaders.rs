@@ -42,7 +42,7 @@ impl fmt::Display for LoaderError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Model {
     pub meshes: Vec<Mesh>,
 }
