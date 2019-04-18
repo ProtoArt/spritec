@@ -1,7 +1,6 @@
 use vek::{Mat4, Vec3, Vec4, Rgba, Clamp};
 use euc::Pipeline;
 
-use crate::color::rgba_to_bgra_u32;
 use crate::light::DiffuseLight;
 use crate::geometry::Mesh;
 
@@ -30,8 +29,8 @@ pub struct CelShader<'a> {
 }
 
 impl<'a> Pipeline for CelShader<'a> {
-    // BGRA
-    type Pixel = u32;
+    // Fragment shader output
+    type Pixel = Rgba<f32>;
     // Vertex index
     type Vertex = u32;
     // Normal
@@ -83,6 +82,6 @@ impl<'a> Pipeline for CelShader<'a> {
         // Clamp the color values between 0.0 and 1.0
         let final_color = final_color.clamped(Rgba::zero(), Rgba::one());
 
-        rgba_to_bgra_u32(final_color)
+        final_color
     }
 }

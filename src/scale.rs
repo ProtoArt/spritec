@@ -4,6 +4,15 @@ use euc::{Target, buffer::Buffer2d};
 ///
 /// The dimensions of the target buffer must be an even multiple of the dimensions of the source.
 pub fn scale_buffer<T: Clone + Copy>(target: &mut Buffer2d<T>, source: &Buffer2d<T>) {
+    scale_buffer_map(target, source, |x| x)
+}
+
+/// Same as scale_buffer but also runs the given function for each color
+pub fn scale_buffer_map<T, U, F>(target: &mut Buffer2d<U>, source: &Buffer2d<T>, f: F)
+    where T: Clone + Copy,
+          U: Clone + Copy,
+          F: Fn(T) -> U,
+{
     let target_size = target.size();
     let source_size = source.size();
     let scale_x = target_size[0] / source_size[0];
@@ -18,7 +27,7 @@ pub fn scale_buffer<T: Clone + Copy>(target: &mut Buffer2d<T>, source: &Buffer2d
     for i in 0..source_size[0] {
         for j in 0..source_size[1] {
             // Unsafe because we are guaranteeing that these indexes are not out of bounds
-            let color = unsafe { *source.get([i, j]) };
+            let color = f(unsafe { *source.get([i, j]) });
 
             // Copy the color to every pixel in the scaled box
             for sx in 0..scale_x {

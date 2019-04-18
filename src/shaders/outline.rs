@@ -1,7 +1,6 @@
 use vek::{Mat4, Vec3, Vec4, Rgba};
 use euc::{Pipeline, DepthStrategy};
 
-use crate::color::rgba_to_bgra_u32;
 use crate::geometry::Mesh;
 
 /// An outline shader
@@ -26,8 +25,8 @@ pub struct OutlineShader<'a> {
 }
 
 impl<'a> Pipeline for OutlineShader<'a> {
-    // BGRA
-    type Pixel = u32;
+    // Fragment shader output
+    type Pixel = Rgba<f32>;
     // Vertex index
     type Vertex = u32;
     // Normal
@@ -61,7 +60,7 @@ impl<'a> Pipeline for OutlineShader<'a> {
         // Draw everything with the correct line color
         let color = self.outline_color;
 
-        rgba_to_bgra_u32(color)
+        color
     }
 
     fn get_depth_strategy(&self) -> DepthStrategy {
