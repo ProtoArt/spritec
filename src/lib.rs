@@ -19,6 +19,7 @@
     clippy::len_without_is_empty,
     clippy::large_enum_variant,
 )]
+#![deny(bare_trait_objects)] // Prefer Box<dyn Trait> over Box<Trait>
 
 pub mod color;
 pub mod config;
@@ -34,23 +35,24 @@ pub mod spritesheet;
 use euc::{Pipeline, rasterizer, buffer::Buffer2d};
 use vek::{Mat4, Vec3, Vec4, Rgba};
 
-use crate::geometry::Mesh;
 use crate::light::DiffuseLight;
+use crate::loaders::Model;
 use crate::shaders::{CelShader, OutlineShader};
 
 pub fn render(
     color: &mut Buffer2d<Rgba<f32>>,
     depth: &mut Buffer2d<f32>,
-    model: Mat4<f32>,
     view: Mat4<f32>,
     projection: Mat4<f32>,
-    meshes: &[Mesh],
+    model: &Model,
     outline_thickness: f32,
 ) {
-    // Must be multiplied backwards since each point to be multiplied will be on the right
-    let mvp = projection * view * model;
+    for mesh in &model.meshes {
+        // The model matrix
+        let model = mesh.transform();
+        // Must be multiplied backwards since each point to be multiplied will be on the right
+        let mvp = projection * view * model;
 
-    for mesh in meshes {
         OutlineShader {
             mvp,
 

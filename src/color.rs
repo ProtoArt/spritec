@@ -28,6 +28,7 @@ pub fn bgra_u32_to_rgba(value: u32) -> Rgba<f32> {
     }
 }
 
+/// Converts an Rgba color to one suitable for writing to an image
 #[inline(always)]
 pub fn vek_rgba_to_image_rgba(Rgba {r, g, b, a}: Rgba<f32>) -> image::Rgba<u8> {
     image::Rgba::from_channels(
