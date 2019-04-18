@@ -1,7 +1,7 @@
 use std::num::NonZeroUsize;
 use std::f32::consts::PI;
 
-use vek::{Vec3, Mat4};
+use vek::{Vec3, Mat4, Rgba};
 use serde::{Serialize, Deserialize};
 
 use crate::camera::Camera;
@@ -46,6 +46,9 @@ pub struct Spritesheet {
     /// The value must be greater than zero. (default: 1).
     #[serde(default = "default_scale_factor")]
     pub scale: NonZeroUsize,
+    /// The background color of the spritesheet (default: transparent black)
+    #[serde(default = "default_background")]
+    pub background: Rgba<f32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -97,6 +100,9 @@ pub struct Pose {
     /// The value must be greater than zero. (default: 1).
     #[serde(default = "default_scale_factor")]
     pub scale: NonZeroUsize,
+    /// The background color of the generated image (default: transparent black)
+    #[serde(default = "default_background")]
+    pub background: Rgba<f32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -191,6 +197,7 @@ impl From<Perspective> for Camera {
 }
 
 fn default_scale_factor() -> NonZeroUsize { NonZeroUsize::new(1).unwrap() }
+fn default_background() -> Rgba<f32> { Rgba {r: 0.0, g: 0.0, b: 0.0, a: 0.0} }
 
 #[cfg(test)]
 mod tests {

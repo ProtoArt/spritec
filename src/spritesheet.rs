@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use std::num::NonZeroUsize;
 
 use rayon::prelude::*;
+use vek::Rgba;
 
 use crate::config;
 use crate::camera::Camera;
@@ -30,18 +31,22 @@ pub struct Spritesheet {
     /// A scale factor to apply to the generated images. Each image is scaled without interpolation.
     /// The value must be greater than zero. (default: 1).
     scale: NonZeroUsize,
+    /// The background color of the generated image
+    background: Rgba<f32>,
 }
 
 impl Spritesheet {
     /// Generates a spritesheet from the given configuration, resolving all paths relative to
     /// the given base directory
     pub fn from_config(sheet: config::Spritesheet, base_dir: &Path) -> Result<Self, LoaderError> {
+        let config::Spritesheet {path, animations, scale, background} = sheet;
         Ok(Self {
-            path: sheet.path.resolve(base_dir),
-            animations: sheet.animations.into_par_iter()
+            path: path.resolve(base_dir),
+            animations: animations.into_par_iter()
                 .map(|a| Animation::from_config(a, base_dir))
                 .collect::<Result<_, _>>()?,
-            scale: sheet.scale,
+            scale,
+            background,
         })
     }
 
@@ -77,11 +82,13 @@ impl Animation {
     /// Generates an Animation from the given configuration, resolving all paths relative to
     /// the given base directory
     pub fn from_config(anim: config::Animation, base_dir: &Path) -> Result<Self, LoaderError> {
+        let config::Animation {frames, frame_width, frame_height, camera} = anim;
+
         Ok(Self {
-            frames: AnimationFrames::from_config(anim.frames, base_dir)?,
-            frame_width: anim.frame_width,
-            frame_height: anim.frame_height,
-            camera: anim.camera.into(),
+            frames: AnimationFrames::from_config(frames, base_dir)?,
+            frame_width,
+            frame_height,
+            camera: camera.into(),
         })
     }
 
@@ -159,14 +166,18 @@ pub struct Pose {
     /// A scale factor to apply to the generated image. The image is scaled without interpolation.
     /// The value must be greater than zero. (default: 1).
     scale: NonZeroUsize,
+    /// The background color of the generated image
+    background: Rgba<f32>,
 }
 
 impl Pose {
     /// Generates a pose from the given configuration, resolving all paths relative to
     /// the given base directory
     pub fn from_config(pose: config::Pose, base_dir: &Path) -> Result<Self, LoaderError> {
+        let config::Pose {model, path, width, height, camera, scale, background} = pose;
+
         use config::PoseModel::*;
-        let model = match pose.model {
+        let model = match model {
             GltfFrame {gltf, animation, frame} => {
                 let model_path = gltf.resolve(base_dir);
                 let model = GltfFile::load_file(model_path)?;
@@ -183,11 +194,12 @@ impl Pose {
 
         Ok(Self {
             model,
-            path: pose.path.resolve(base_dir),
-            width: pose.width,
-            height: pose.height,
-            camera: pose.camera.into(),
-            scale: pose.scale,
+            path: path.resolve(base_dir),
+            width,
+            height,
+            camera: camera.into(),
+            scale,
+            background,
         })
     }
 }
