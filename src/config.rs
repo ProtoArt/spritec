@@ -4,7 +4,7 @@ use std::f32::consts::PI;
 use vek::{Vec3, Mat4, Rgba};
 use serde::{Serialize, Deserialize};
 
-use crate::camera::Camera;
+use crate::shader::Camera;
 
 /// A newtype around PathBuf to force the path to be resolved relative to a base directory before
 /// it can be used. Good to prevent something that is pretty easy to do accidentally.

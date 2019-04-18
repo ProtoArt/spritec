@@ -1,8 +1,8 @@
 use vek::{Mat4, Vec3, Vec4, Rgba, Clamp};
 use euc::Pipeline;
 
-use crate::light::DiffuseLight;
-use crate::geometry::Mesh;
+use crate::shader::DiffuseLight;
+use crate::model::Mesh;
 
 /// A Cel/Toon shader implementation
 /// Initial version based on this article: http://rbwhitaker.wikidot.com/toon-shader

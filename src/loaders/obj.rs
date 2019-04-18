@@ -4,10 +4,7 @@ use std::sync::Arc;
 use rayon::iter::{ParallelIterator, IntoParallelIterator};
 use tobj;
 
-use crate::geometry::Mesh;
-use crate::material::Material;
-
-use super::Model;
+use crate::model::{Mesh, Material, Model};
 
 pub fn load_file(path: impl AsRef<Path>) -> Result<Model, tobj::LoadError> {
     let (meshes, materials) = tobj::load_obj(path.as_ref())?;

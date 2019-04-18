@@ -23,21 +23,18 @@
 
 pub mod color;
 pub mod config;
-pub mod geometry;
-pub mod light;
-pub mod camera;
 pub mod loaders;
-pub mod material;
 pub mod scale;
-pub mod shaders;
-pub mod spritesheet;
+pub mod shader;
+pub mod tasks;
+pub mod model;
 
 use euc::{Pipeline, rasterizer, buffer::Buffer2d};
 use vek::{Mat4, Vec3, Vec4, Rgba};
 
-use crate::light::DiffuseLight;
-use crate::loaders::Model;
-use crate::shaders::{CelShader, OutlineShader};
+use crate::shader::DiffuseLight;
+use crate::model::Model;
+use crate::shader::{CelShader, OutlineShader};
 
 pub fn render(
     color: &mut Buffer2d<Rgba<f32>>,

@@ -17,7 +17,7 @@ mod args;
 use std::error::Error;
 
 use structopt::StructOpt;
-use spritec::{config::TaskConfig, spritesheet::{Spritesheet, Pose}};
+use spritec::{config::TaskConfig, tasks::{Spritesheet, Pose}};
 use rayon::prelude::*;
 
 use crate::args::AppArgs;
