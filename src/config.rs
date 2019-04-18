@@ -5,6 +5,8 @@ use std::f32::consts::PI;
 use vek::{Vec3, Mat4};
 use serde::{Serialize, Deserialize};
 
+use crate::camera::Camera;
+
 /// A configuration that represents the tasks that spritec should complete
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaskConfig {
@@ -66,7 +68,7 @@ pub struct Animation {
     /// The height at which to render each frame
     pub frame_height: NonZeroUsize,
     /// The camera perspective from which to render each frame
-    pub camera: Camera,
+    pub camera: PresetCamera,
 }
 
 impl Animation {
@@ -114,7 +116,7 @@ pub struct Pose {
     /// The height at which to render each frame
     pub height: NonZeroUsize,
     /// The camera perspective from which to render each frame
-    pub camera: Camera,
+    pub camera: PresetCamera,
     /// A scale factor to apply to the generated image. The image is scaled without interpolation.
     /// The value must be greater than zero. (default: 1).
     #[serde(default = "default_scale_factor")]
@@ -139,9 +141,10 @@ pub enum PoseModel {
     Model(PathBuf),
 }
 
+/// A number of present camera angles or a completely custom configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum Camera {
+pub enum PresetCamera {
     Perspective(Perspective),
     Custom {
         /// The position of the camera (world coordinates)
@@ -153,36 +156,14 @@ pub enum Camera {
     },
 }
 
-impl Camera {
-    /// The view transformation represents the position and orientation of the camera.
-    ///
-    /// World coordinates -> Camera coordinates
-    pub fn to_view_matrix(&self) -> Mat4<f32> {
-        use Camera::*;
-        match self {
-            &Perspective(persp) => persp.into(),
+impl From<PresetCamera> for Camera {
+    fn from(cam: PresetCamera) -> Self {
+        use PresetCamera::*;
+        match cam {
+            Perspective(persp) => persp.into(),
             //TODO(#4): This should be implemented as part of #4.
             Custom {position, target} => unimplemented!(),
         }
-    }
-
-    /// The perspective/orthographic projection of the camera.
-    ///
-    /// Camera coordinates -> Homogenous coordinates
-    pub fn to_projection_matrix(&self) -> Mat4<f32> {
-        //TODO(#4): This should be implemented as part of #4. We may want to add some additional
-        // settings to the Custom variant of Camera. The variables below are good examples of what
-        // these additional fields could be called.
-        let fov = 0.8*PI; // radians
-        let aspect_ratio_x = 1.0;
-        let aspect_ratio_y = 1.0;
-        let near = 0.01;
-        let far = 100.0;
-        //TODO(#4): There are several methods with "perspective" in the name for Mat4. Don't know
-        // which one we want to use.
-        Mat4::perspective_rh_no(fov, aspect_ratio_x/aspect_ratio_y, near, far)
-            //TODO(#4): Part of #4 is that we want to get rid of the scaling here
-            * Mat4::<f32>::scaling_3d(0.6)
     }
 }
 
@@ -197,20 +178,36 @@ pub enum Perspective {
     PerspectiveBottom,
 }
 
-impl From<Perspective> for Mat4<f32> {
+impl From<Perspective> for Camera {
     fn from(persp: Perspective) -> Self {
         //TODO(#4): This should be reimplemented properly as part of #4. These placeholder values
         // are only meant to work for the desired angles of bigboi. The angles are slightly tilted.
         // In the actual implementation they should be straight on.
         use Perspective::*;
-        match persp {
+        let view = match persp {
             PerspectiveFront => Mat4::rotation_x(PI/8.0) * Mat4::rotation_y(0.0*PI/2.0),
             PerspectiveBack => Mat4::rotation_x(PI/8.0) * Mat4::rotation_y(-1.0*PI/2.0),
             PerspectiveLeft => unimplemented!("TODO"),
             PerspectiveRight => unimplemented!("TODO"),
             PerspectiveTop => unimplemented!("TODO"),
             PerspectiveBottom => unimplemented!("TODO"),
-        }
+        };
+
+        //TODO(#4): This should be implemented as part of #4. We may want to add some additional
+        // settings to the Custom variant of PresetCamera. The variables below are good examples of
+        // what these additional fields could be called.
+        let fov = 0.8*PI; // radians
+        let aspect_ratio_x = 1.0;
+        let aspect_ratio_y = 1.0;
+        let near = 0.01;
+        let far = 100.0;
+        //TODO(#4): There are several methods with "perspective" in the name for Mat4. Don't know
+        // which one we want to use.
+        let projection = Mat4::perspective_rh_no(fov, aspect_ratio_x/aspect_ratio_y, near, far)
+            //TODO(#4): Part of #4 is that we want to get rid of the scaling here
+            * Mat4::<f32>::scaling_3d(0.6);
+
+        Camera {view, projection}
     }
 }
 
