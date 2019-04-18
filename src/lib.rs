@@ -21,6 +21,7 @@ pub mod color;
 pub mod config;
 pub mod geometry;
 pub mod light;
+pub mod camera;
 pub mod loaders;
 pub mod material;
 pub mod scale;
