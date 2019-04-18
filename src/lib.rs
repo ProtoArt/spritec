@@ -26,16 +26,12 @@ pub mod material;
 pub mod scale;
 pub mod shaders;
 
-use std::f32::consts::PI;
+use euc::{Pipeline, rasterizer, buffer::Buffer2d};
+use vek::{Mat4, Vec3, Vec4, Rgba};
 
-use euc::{Pipeline, rasterizer, buffer::Buffer2d, Target};
-use vek::{Mat4, Vec2, Vec3, Vec4, Rgba};
-
-use crate::color::{rgba_to_bgra_u32, bgra_u32_to_rgba, vek_rgba_to_image_rgba};
 use crate::geometry::Mesh;
 use crate::light::DiffuseLight;
 use crate::shaders::{CelShader, OutlineShader};
-use crate::scale::scale_buffer;
 
 pub fn render(
     color: &mut Buffer2d<Rgba<f32>>,
