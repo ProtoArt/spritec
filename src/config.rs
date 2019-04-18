@@ -14,7 +14,19 @@ pub struct TaskConfig {
     pub poses: Vec<Pose>,
 }
 
-fn default_scale_factor() -> NonZeroUsize { NonZeroUsize::new(1).unwrap() }
+/// The dimensions of any 2D array/grid
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GridSize {
+    pub rows: usize,
+    pub cols: usize,
+}
+
+/// The dimensions of an image
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ImageSize {
+    pub width: u32,
+    pub height: u32,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Spritesheet {
@@ -28,6 +40,24 @@ pub struct Spritesheet {
     pub scale: NonZeroUsize,
 }
 
+impl Spritesheet {
+    /// Returns the size of the spritesheet grid
+    pub fn grid_size(&self) -> GridSize {
+        GridSize {
+            rows: self.animations.len(),
+            cols: self.animations.iter().map(|a| a.frames.len()).max().unwrap_or_default(),
+        }
+    }
+
+    /// Returns the size of image needed to uniformly layout a single animation per row
+    pub fn image_size(&self) -> ImageSize {
+        ImageSize {
+            width: self.animations.iter().map(|a| a.width()).max().unwrap_or_default(),
+            height: self.animations.iter().map(|a| a.frame_height.get() as u32).sum(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Animation {
     pub frames: AnimationFrames,
@@ -37,6 +67,13 @@ pub struct Animation {
     pub frame_height: NonZeroUsize,
     /// The camera perspective from which to render each frame
     pub camera: Camera,
+}
+
+impl Animation {
+    /// Returns the total width of all the animation frames adjacent to each other
+    pub fn width(&self) -> u32 {
+        (self.frames.len() * self.frame_width.get()) as u32
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,6 +93,17 @@ pub enum AnimationFrames {
     /// An array of filenames. OBJ files will be used as is. For glTF files, the model will be used
     /// as loaded regardless of the animations present in the file.
     Models(Vec<PathBuf>),
+}
+
+impl AnimationFrames {
+    /// Returns the number of animation frames
+    pub fn len(&self) -> usize {
+        use AnimationFrames::*;
+        match self {
+            GltfFrames {start_frame, end_frame, ..} => end_frame.unwrap(/*TODO*/) - start_frame + 1,
+            Models(frames) => frames.len(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -165,6 +213,8 @@ impl From<Perspective> for Mat4<f32> {
         }
     }
 }
+
+fn default_scale_factor() -> NonZeroUsize { NonZeroUsize::new(1).unwrap() }
 
 #[cfg(test)]
 mod tests {
