@@ -61,6 +61,10 @@ pub struct Animation {
     pub frame_height: NonZeroUsize,
     /// The camera perspective from which to render each frame
     pub camera: PresetCamera,
+    /// The outline thickness to use when drawing each frame. Value must not be negative.
+    /// (default: 0.0)
+    #[serde(default)]
+    pub outline: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -103,6 +107,10 @@ pub struct Pose {
     /// The background color of the generated image (default: transparent black)
     #[serde(default = "default_background")]
     pub background: Rgba<f32>,
+    /// The outline thickness to use when drawing the generated image. Value must not be negative.
+    /// (default: 0.0)
+    #[serde(default)]
+    pub outline: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -77,19 +77,22 @@ pub struct Animation {
     frame_height: NonZeroUsize,
     /// The camera perspective from which to render each frame
     camera: Camera,
+    /// The outline thickness to use when drawing each frame
+    outline: f32,
 }
 
 impl Animation {
     /// Generates an Animation from the given configuration, resolving all paths relative to
     /// the given base directory
     pub fn from_config(anim: config::Animation, base_dir: &Path) -> Result<Self, LoaderError> {
-        let config::Animation {frames, frame_width, frame_height, camera} = anim;
+        let config::Animation {frames, frame_width, frame_height, camera, outline} = anim;
 
         Ok(Self {
             frames: AnimationFrames::from_config(frames, base_dir)?,
             frame_width,
             frame_height,
             camera: camera.into(),
+            outline,
         })
     }
 
@@ -169,13 +172,15 @@ pub struct Pose {
     scale: NonZeroU32,
     /// The background color of the generated image
     background: Rgba<f32>,
+    /// The outline thickness to use when drawing the generated image
+    outline: f32,
 }
 
 impl Pose {
     /// Generates a pose from the given configuration, resolving all paths relative to
     /// the given base directory
     pub fn from_config(pose: config::Pose, base_dir: &Path) -> Result<Self, LoaderError> {
-        let config::Pose {model, path, width, height, camera, scale, background} = pose;
+        let config::Pose {model, path, width, height, camera, scale, background, outline} = pose;
 
         use config::PoseModel::*;
         let model = match model {
@@ -201,6 +206,7 @@ impl Pose {
             camera: camera.into(),
             scale,
             background,
+            outline,
         })
     }
 }
