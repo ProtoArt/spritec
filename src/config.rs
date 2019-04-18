@@ -8,9 +8,9 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaskConfig {
     /// A list of the spritesheets for spritec to generate
-    spritesheets: Vec<Spritesheet>,
+    pub spritesheets: Vec<Spritesheet>,
     /// A list of individual poses for spritec to generate images for
-    poses: Vec<Pose>,
+    pub poses: Vec<Pose>,
 }
 
 fn default_scale_factor() -> NonZeroUsize { NonZeroUsize::new(1).unwrap() }
@@ -18,24 +18,24 @@ fn default_scale_factor() -> NonZeroUsize { NonZeroUsize::new(1).unwrap() }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Spritesheet {
     /// The path to output the generated spritesheet, relative to configuration file
-    path: PathBuf,
+    pub path: PathBuf,
     /// Animations to include in the spritesheet
-    animations: Vec<Animation>,
+    pub animations: Vec<Animation>,
     /// A scale factor to apply to the generated images. Each image is scaled without interpolation.
     /// The value must be greater than zero. (default: 1).
     #[serde(default = "default_scale_factor")]
-    scale: NonZeroUsize,
+    pub scale: NonZeroUsize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Animation {
-    frames: AnimationFrames,
+    pub frames: AnimationFrames,
     /// The width at which to render each frame
-    frame_width: NonZeroUsize,
+    pub frame_width: NonZeroUsize,
     /// The height at which to render each frame
-    frame_height: NonZeroUsize,
+    pub frame_height: NonZeroUsize,
     /// The camera perspective from which to render each frame
-    camera: Camera,
+    pub camera: Camera,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,17 +59,17 @@ pub enum AnimationFrames {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pose {
-    model: PoseModel,
+    pub model: PoseModel,
     /// The width at which to render each frame
-    width: NonZeroUsize,
+    pub width: NonZeroUsize,
     /// The height at which to render each frame
-    height: NonZeroUsize,
+    pub height: NonZeroUsize,
     /// The camera perspective from which to render each frame
-    camera: Camera,
+    pub camera: Camera,
     /// A scale factor to apply to the generated image. The image is scaled without interpolation.
     /// The value must be greater than zero. (default: 1).
     #[serde(default = "default_scale_factor")]
-    scale: NonZeroUsize,
+    pub scale: NonZeroUsize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
