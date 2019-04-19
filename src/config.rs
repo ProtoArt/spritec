@@ -1,10 +1,7 @@
 use std::num::{NonZeroUsize, NonZeroU32};
-use std::f32::consts::PI;
 
-use vek::{Vec3, Mat4, Rgba};
+use vek::{Vec3, Rgba};
 use serde::{Serialize, Deserialize};
-
-use crate::shader::Camera;
 
 /// A newtype around PathBuf to force the path to be resolved relative to a base directory before
 /// it can be used. Good to prevent something that is pretty easy to do accidentally.
@@ -166,17 +163,6 @@ pub enum PresetCamera {
     },
 }
 
-impl From<PresetCamera> for Camera {
-    fn from(cam: PresetCamera) -> Self {
-        use PresetCamera::*;
-        match cam {
-            Perspective(persp) => persp.into(),
-            //TODO(#4): This should be implemented as part of #4.
-            Custom {position, target} => unimplemented!(),
-        }
-    }
-}
-
 /// Preset perspective cameras for common angles
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -187,39 +173,6 @@ pub enum Perspective {
     PerspectiveRight,
     PerspectiveTop,
     PerspectiveBottom,
-}
-
-impl From<Perspective> for Camera {
-    fn from(persp: Perspective) -> Self {
-        //TODO(#4): This should be reimplemented properly as part of #4. These placeholder values
-        // are only meant to work for the desired angles of bigboi. The angles are slightly tilted.
-        // In the actual implementation they should be straight on.
-        use Perspective::*;
-        let view = match persp {
-            PerspectiveFront => Mat4::rotation_x(PI/8.0) * Mat4::rotation_y(0.0*PI/2.0),
-            PerspectiveBack => unimplemented!("TODO"),
-            PerspectiveLeft => unimplemented!("TODO"),
-            PerspectiveRight => Mat4::rotation_x(PI/8.0) * Mat4::rotation_y(-1.0*PI/2.0),
-            PerspectiveTop => unimplemented!("TODO"),
-            PerspectiveBottom => unimplemented!("TODO"),
-        };
-
-        //TODO(#4): This should be implemented as part of #4. We may want to add some additional
-        // settings to the Custom variant of PresetCamera. The variables below are good examples of
-        // what these additional fields could be called.
-        let fov = 0.8*PI; // radians
-        let aspect_ratio_x = 1.0;
-        let aspect_ratio_y = 1.0;
-        let near = 0.01;
-        let far = 100.0;
-        //TODO(#4): There are several methods with "perspective" in the name for Mat4. Don't know
-        // which one we want to use.
-        let projection = Mat4::perspective_rh_no(fov, aspect_ratio_x/aspect_ratio_y, near, far)
-            //TODO(#4): Part of #4 is that we want to get rid of the scaling here
-            * Mat4::<f32>::scaling_3d(0.6);
-
-        Camera {view, projection}
-    }
 }
 
 fn default_scale_factor() -> NonZeroU32 { NonZeroU32::new(1).unwrap() }
