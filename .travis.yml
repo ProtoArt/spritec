@@ -8,8 +8,11 @@ addons:
     packages:
       - xorg-dev # needed by minifb
 before_script:
+  - rustup target add wasm32-unknown-unknown
   - rustup component add clippy
 script:
-  - cargo clippy --all-targets --all-features --all
   - cargo build --verbose --all
   - cargo test --verbose --all
+  # Only build --lib because --bin is not WASM-compatible
+  - cargo build --verbose --all --lib --target wasm32-unknown-unknown
+  - cargo clippy --all-targets --all-features --all
