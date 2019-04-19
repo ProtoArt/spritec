@@ -1,0 +1,16 @@
+{
+  "name": "spritec-preview",
+  "version": "0.1.0",
+  "description": "The GUI frontend for configuring and previewing sprites generated with spritec",
+  "repository": "https://github.com/ProtoArt/spritec",
+  "author": "The ProtoArt Team <https://protoart.me>",
+  "license": "MPL-2.0",
+  "private": true,
+  "main": "app/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^5.0.0-beta.8"
+  }
+}

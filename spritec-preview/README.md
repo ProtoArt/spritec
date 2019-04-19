@@ -6,11 +6,25 @@ quickly iterating as you update your character's design.
 
 # Building & Running
 
-To build and run this from the root directory of this project:
+Make sure you have the following installed:
+
+* [Rust & Cargo](https://rustup.rs/)
+* [Node.js](https://nodejs.org)
+* [npm](https://www.npmjs.com/)
+* [Yarn Package Manager](https://yarnpkg.com)
+
+Start in the `spritec-preview` directory if you aren't there already.
+
+Do the following installation steps once:
 
 ```bash
-$ cargo run --package spritec-preview
+$ cargo build --target wasm32-unknown-unknown
+$ yarn
 ```
 
-You can leave off the `--package` flag if you are already in the directory of
-this crate.
+Then, to build and run the UI, use the following commands:
+
+```bash
+$ cargo build --target wasm32-unknown-unknown
+$ yarn start
+```
