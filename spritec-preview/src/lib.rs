@@ -1,4 +1,4 @@
-//! The spritec-preview executable
+//! The spritec-preview WASM library
 
 // See TOOL POLICY in src/lib.rs
 #![deny(clippy::all)] // Deny clippy warnings when running clippy (used for CI)
@@ -14,8 +14,15 @@
 
 use wasm_bindgen::prelude::*;
 
+/// Any initialization code that needs to happen exactly once
 #[wasm_bindgen]
-extern "C" {
+pub fn initialize() {
+    #[cfg(feature = "console_error_panic_hook")]
+    console_error_panic_hook::set_once();
+}
+
+#[wasm_bindgen]
+extern {
     fn alert(s: &str);
 }
 

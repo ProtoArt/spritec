@@ -9,6 +9,7 @@ quickly iterating as you update your character's design.
 Make sure you have the following installed:
 
 * [Rust & Cargo](https://rustup.rs/)
+* [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 * [Node.js](https://nodejs.org)
 * [npm](https://www.npmjs.com/)
 * [Yarn Package Manager](https://yarnpkg.com)
@@ -19,13 +20,13 @@ Do the following installation steps once:
 
 ```bash
 $ rustup target add wasm32-unknown-unknown
-$ cargo build --target wasm32-unknown-unknown
 $ yarn
+$ yarn run build-wasm
 ```
 
 Then, to build and run the UI, use the following commands:
 
 ```bash
-$ cargo build --target wasm32-unknown-unknown
+$ yarn run build-wasm
 $ yarn start
 ```
