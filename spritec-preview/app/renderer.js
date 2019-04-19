@@ -1,6 +1,9 @@
-const spritec = require("spritec-preview");
+const spritec = require('./spritec_preview.js');
 
-spritec.initialize();
+spritec.ready(({module, instance}) => {
+  console.log(module);
+  console.log(instance);
+});
 
 const canvasEl = document.getElementById('canvas');
 const ctx = canvasEl.getContext('2d');

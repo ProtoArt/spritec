@@ -9,7 +9,7 @@ quickly iterating as you update your character's design.
 Make sure you have the following installed:
 
 * [Rust & Cargo](https://rustup.rs/)
-* [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
+* `wasm-gc` via `cargo install wasm-gc`
 * [Node.js](https://nodejs.org)
 * [npm](https://www.npmjs.com/)
 * [Yarn Package Manager](https://yarnpkg.com)
