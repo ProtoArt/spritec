@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use std::borrow::Cow;
 use std::num::{NonZeroUsize, NonZeroU32};
 
-use rayon::prelude::*;
 use euc::{buffer::Buffer2d, Target};
 use image::ImageBuffer;
 use vek::Rgba;
@@ -14,6 +13,7 @@ use crate::shader::Camera;
 use crate::color::vek_rgba_to_image_rgba;
 use crate::loaders::{self, LoaderError, gltf::GltfFile};
 use crate::scale::{copy, scale_with};
+use crate::rayon_polyfill::*;
 
 /// The dimensions of an image (in pixels)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

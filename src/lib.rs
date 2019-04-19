@@ -29,6 +29,8 @@ pub mod shader;
 pub mod tasks;
 pub mod model;
 
+mod rayon_polyfill;
+
 use euc::{Pipeline, rasterizer, buffer::Buffer2d};
 use vek::{Mat4, Vec3, Vec4, Rgba};
 

@@ -28,6 +28,16 @@ structopt = "0.2"
 image = "0.22"
 rayon = "1.2"
 
+# Dependencies specifically for WASM
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+
+[target.'cfg(target_arch = "wasm32")'.dependencies.image]
+version = "0.21.0"
+default-features = false
+# All the default features except for jpeg_rayon
+# https://github.com/image-rs/image/issues/879#issuecomment-472009104
+features = ["gif_codec", "jpeg", "ico", "png_codec", "pnm", "tga", "tiff", "webp", "bmp", "hdr", "dxt"]
+
 [profile.dev]
 # Needed to make software rendering fast enough
 opt-level = 3

@@ -1,9 +1,9 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use rayon::iter::{ParallelIterator, IntoParallelIterator};
 use tobj;
 
+use crate::rayon_polyfill::*;
 use crate::model::{Mesh, Material, Model};
 
 pub fn load_file(path: impl AsRef<Path>) -> Result<Model, tobj::LoadError> {

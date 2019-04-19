@@ -11,6 +11,6 @@ edition = "2018"
 
 [dependencies]
 spritec = { path = ".." }
+wasm-bindgen = "0.2.42"
 euc = "0.2"
-minifb = "0.12"
 vek = "0.9"
