@@ -36,7 +36,7 @@ version = "0.21.0"
 default-features = false
 # All the default features except for jpeg_rayon
 # https://github.com/image-rs/image/issues/879#issuecomment-472009104
-features = ["gif_codec", "jpeg", "ico", "png_codec", "pnm", "tga", "tiff", "webp", "bmp", "hdr", "dxt"]
+features = ["gif_codec", "jpeg", "ico", "png_codec", "pnm", "tga", "tiff", "webp", "bmp", "dxt"]
 
 [profile.dev]
 # Needed to make software rendering fast enough
