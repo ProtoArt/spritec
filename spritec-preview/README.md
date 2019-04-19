@@ -18,6 +18,7 @@ Start in the `spritec-preview` directory if you aren't there already.
 Do the following installation steps once:
 
 ```bash
+$ rustup target add wasm32-unknown-unknown
 $ cargo build --target wasm32-unknown-unknown
 $ yarn
 ```
