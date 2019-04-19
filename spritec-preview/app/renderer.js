@@ -1,6 +1,6 @@
 const spritec = require('./spritec_preview.js');
 
-spritec.ready(({module, instance}) => {
+spritec.then(({module, instance}) => {
   console.log(module);
   console.log(instance);
 });
