@@ -1,5 +1,8 @@
 [package]
 name = "spritec-preview"
+description = "The GUI frontend for configuring and previewing sprites generated with spritec"
+repository = "https://github.com/ProtoArt/spritec"
+license = "MPL-2.0"
 version = "0.1.0"
 authors = [
   "Sunjay Varma <varma.sunjay@gmail.com>",
