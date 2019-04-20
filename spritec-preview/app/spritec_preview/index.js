@@ -1,7 +1,8 @@
 // All the code for interacting with the spritec_preview WASM module.
 
 const Spritec = require('./spritec.js')
-const wasm_io = require('./io.js');
+const wasm_console = require('./console.js');
+const { readFile } = require('./io.js');
 
 let wasm = {exports: {}};
 
@@ -11,11 +12,13 @@ const applyWasm = (func) => {
 
 const imports = {
   env: {
-    console_error: applyWasm(wasm_io.console_error),
-    console_warn: applyWasm(wasm_io.console_warn),
-    console_info: applyWasm(wasm_io.console_info),
-    console_log: applyWasm(wasm_io.console_log),
-    console_debug: applyWasm(wasm_io.console_debug),
+    console_error: applyWasm(wasm_console.console_error),
+    console_warn: applyWasm(wasm_console.console_warn),
+    console_info: applyWasm(wasm_console.console_info),
+    console_log: applyWasm(wasm_console.console_log),
+    console_debug: applyWasm(wasm_console.console_debug),
+
+    read_file: applyWasm(readFile),
   },
 };
 

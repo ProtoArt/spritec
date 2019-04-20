@@ -3,6 +3,8 @@ mod renderer;
 mod console_log;
 mod panic_hook;
 
+pub mod io;
+
 /// Must be called exactly once when the WASM module is loaded
 #[no_mangle]
 extern fn initialize(debug: bool) {

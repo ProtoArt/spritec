@@ -6,11 +6,17 @@ spritec_preview.then((spritec) => {
   const renderer = spritec.renderer();
   console.log(renderer);
 
+  const modelPath = '../samples/bigboi/obj/bigboi_rigged_000001.obj';
+  const mtlPath = '../samples/bigboi/obj/bigboi_rigged_000001.mtl';
+
+  setupCanvas(renderer);
+});
+
+function setupCanvas(renderer) {
   const canvasEl = document.getElementById('app-canvas');
   const modelCanvas = new ModelCanvas({
     renderer,
     element: canvasEl,
-    modelPath: '../samples/bigboi/obj/bigboi_rigged_000001.obj',
     imageWidth: 64,
     imageHeight: 64,
   });
@@ -34,4 +40,4 @@ spritec_preview.then((spritec) => {
       render();
     }
   })
-});
+}

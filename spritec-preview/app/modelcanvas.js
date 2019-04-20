@@ -3,11 +3,10 @@
 // Automatically resizes to fit its container while also maintaining the aspect
 // ratio of the rendered image.
 class ModelCanvas {
-  constructor({renderer, element, modelPath, imageWidth, imageHeight}) {
+  constructor({renderer, element, imageWidth, imageHeight}) {
     this.renderer = renderer;
     this.el = element;
     this.ctx = this.el.getContext('2d');
-    this.modelPath = modelPath;
     // The dimensions to render at, not necessarily the dimensions of the canvas
     this.imageWidth = imageWidth;
     this.imageHeight = imageHeight;
