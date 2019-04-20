@@ -77,7 +77,7 @@ function watchBuild(release) {
 
   // https://thisdavej.com/how-to-watch-for-files-changes-in-node-js/
   let fsWait = false;
-  fs.watch('src', (event, filename) => {
+  const watcher = (event, filename) => {
     if (!filename || fsWait) {
       return;
     }
@@ -89,5 +89,8 @@ function watchBuild(release) {
 
     console.log('==========================');
     build();
-  });
+  };
+
+  fs.watch('src', watcher);
+  fs.watch('../src', watcher);
 }
