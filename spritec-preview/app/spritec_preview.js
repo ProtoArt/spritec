@@ -31,15 +31,9 @@ class Context {
     const width = 64;
     const height = 64;
     const scale = 1;
-    const imagePtr = this.spritec.exports().context_image_data(this.ptr);
-    console.log(imagePtr);
-    const buffer = new Uint8ClampedArray(
-      this.spritec.memoryBuffer(),
-      imagePtr,
-      4 * width * scale * height * scale,
-    );
-    const data = new ImageData(buffer, width, height);
-    this.image = {width, height, scale, buffer, data};
+    this.image = {width, height, scale};
+
+    this._fetchImage();
   }
 
   // Must call destroy before this goes out of scope or else we will leak memory
@@ -57,18 +51,30 @@ class Context {
   // Perform a render and update the image data with the resulting image
   render() {
     const ptr = this.spritec.exports().context_render(this.ptr);
-    const imagePtr = this.spritec.exports().context_image_data(ptr);
-    const width = 64;
-    const height = 64;
-    const scale = 1;
-    const buffer = new Uint8ClampedArray(
-      this.spritec.memoryBuffer(),
-      imagePtr,
-      4 * width * scale * height * scale,
-    );
-    const data = new ImageData(buffer, width, height);
-    this.image.buffer = buffer;
-    this.image.data = data;
+
+    if (ptr != this.ptr) {
+      this.ptr = ptr;
+
+      this._fetchImage();
+    }
+  }
+
+  _fetchImage() {
+    const imagePtr = this.spritec.exports().context_image_data(this.ptr);
+
+    if (imagePtr != this.image.ptr) {
+      const {width, height, scale} = this.image;
+      const buffer = new Uint8ClampedArray(
+        this.spritec.memoryBuffer(),
+        imagePtr,
+        4 * width * scale * height * scale,
+      );
+      const data = new ImageData(buffer, width, height);
+
+      this.image.ptr = imagePtr;
+      this.image.buffer = buffer;
+      this.image.data = data;
+    }
   }
 }
 
