@@ -51,30 +51,24 @@ class Context {
   // Perform a render and update the image data with the resulting image
   render() {
     const ptr = this.spritec.exports().context_render(this.ptr);
-
-    if (ptr != this.ptr) {
-      this.ptr = ptr;
-
-      this._fetchImage();
-    }
+    this.ptr = ptr;
+    this._fetchImage();
   }
 
   _fetchImage() {
     const imagePtr = this.spritec.exports().context_image_data(this.ptr);
 
-    if (imagePtr != this.image.ptr) {
-      const {width, height, scale} = this.image;
-      const buffer = new Uint8ClampedArray(
-        this.spritec.memoryBuffer(),
-        imagePtr,
-        4 * width * scale * height * scale,
-      );
-      const data = new ImageData(buffer, width, height);
+    const {width, height, scale} = this.image;
+    const buffer = new Uint8ClampedArray(
+      this.spritec.memoryBuffer(),
+      imagePtr,
+      4 * width * scale * height * scale,
+    );
+    const data = new ImageData(buffer, width, height);
 
-      this.image.ptr = imagePtr;
-      this.image.buffer = buffer;
-      this.image.data = data;
-    }
+    this.image.ptr = imagePtr;
+    this.image.buffer = buffer;
+    this.image.data = data;
   }
 }
 
