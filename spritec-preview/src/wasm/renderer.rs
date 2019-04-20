@@ -54,7 +54,7 @@ unsafe extern fn renderer_render(ctx_ptr: *mut Renderer) -> *const Renderer {
     // Camera coordinates -> Homogenous coordinates
     let projection = Mat4::perspective_rh_no(0.8*PI, 1.0, 0.01, 100.0)
         * Mat4::<f32>::scaling_3d(0.6);
-    let background = Rgba {r: 0.62, g: 0.62, b: 0.62, a: 1.0};
+    let background = Rgba {r: 0.0, g: 0.0, b: 0.0, a: 0.0};
 
     let image_data = ctx.image_data_mut();
     image_data.clear(background);

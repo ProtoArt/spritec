@@ -46,10 +46,12 @@ class ModelCanvas {
     this.el.height = this.height;
 
     // Re-render
-    console.log(this.width, this.height, this.scale);
+    this.render();
   }
 
   render() {
+    this.renderer.render();
+
     this.ctx.clearRect(0, 0, this.width, this.height);
     this.ctx.putImageData(this.renderer.imageData(), 0, 0);
   }
