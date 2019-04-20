@@ -31,15 +31,15 @@ pub mod model;
 
 mod rayon_polyfill;
 
-use euc::{Pipeline, rasterizer, buffer::Buffer2d};
+use euc::{Pipeline, Target, rasterizer, buffer::Buffer2d};
 use vek::{Mat4, Vec3, Vec4, Rgba};
 
 use crate::shader::DiffuseLight;
 use crate::model::Model;
 use crate::shader::{CelShader, OutlineShader};
 
-pub fn render(
-    color: &mut Buffer2d<Rgba<f32>>,
+pub fn render<T: Target<Item=Rgba<f32>>>(
+    color: &mut T,
     depth: &mut Buffer2d<f32>,
     view: Mat4<f32>,
     projection: Mat4<f32>,

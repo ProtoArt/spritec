@@ -5,6 +5,8 @@ spritec_preview.then((spritec) => {
   const context = spritec.context();
   console.log(context);
 
+  context.render();
+
   const canvasEl = document.getElementById('canvas');
   const ctx = canvasEl.getContext('2d');
   ctx.fillStyle = 'red';

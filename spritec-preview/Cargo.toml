@@ -17,5 +17,6 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 spritec = { path = ".." }
-euc = "0.2"
+euc = { path = "../../euc" }
 vek = "0.9"
+tobj = "0.1"

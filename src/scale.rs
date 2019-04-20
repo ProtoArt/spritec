@@ -36,7 +36,7 @@ pub fn scale_with<T: Clone + Copy, F: FnMut([usize; 2], T)>(
     for i in 0..source_width {
         for j in 0..source_height {
             // Unsafe because we are guaranteeing that these indexes are not out of bounds
-            let color = unsafe { *source.get([i, j]) };
+            let color = unsafe { source.get([i, j]) };
 
             // Copy the color to every pixel in the scaled box
             for sx in 0..scale_x {
@@ -68,7 +68,7 @@ pub unsafe fn copy_map<T, U, F>(target: &mut Buffer2d<U>, source: &Buffer2d<T>, 
 
     for i in 0..source_width {
         for j in 0..source_height {
-            let value = f(*source.get([i, j]));
+            let value = f(source.get([i, j]));
             target.set([x + i, y + j], value);
         }
     }
