@@ -1,4 +1,4 @@
-const spritec_preview = require('./spritec_preview.js');
+const spritec_preview = require('./spritec_preview');
 
 spritec_preview.then((spritec) => {
   console.log(spritec);

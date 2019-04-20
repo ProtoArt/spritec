@@ -121,9 +121,27 @@ extern "C" {
 }
 
 /// Prints a value out to the JavaScript console (for debugging purposes)
+#[cfg(debug_assertions)] // Keep this to debug builds
 pub fn debug<T: Debug>(value: T) {
     let raw_str = CString::new(format!("{:?}", value)).unwrap().into_raw();
     unsafe { console_log(raw_str) };
+}
+
+// In order to work with the memory in WASM, we expose allocation and deallocation methods
+#[no_mangle]
+extern "C" fn alloc(size: usize) -> *const c_void {
+    let buf = Vec::with_capacity(size);
+    let ptr = buf.as_ptr();
+    // Forget the pointer so that Rust doesn't free the memory we want to give JavaScript
+    // access to. (Leaking memory is **safe**, so unsafe { ... } is not necessary.)
+    mem::forget(buf);
+    ptr as *const c_void
+}
+
+#[no_mangle]
+unsafe extern "C" fn dealloc(ptr: *mut c_void, cap: usize) {
+    // Rust will drop this vector and free the memory
+    let _buf = Vec::from_raw_parts(ptr, 0, cap);
 }
 
 /// Specifically for deallocating NULL-terminated strings without knowing their length in advance
