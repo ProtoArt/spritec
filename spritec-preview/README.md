@@ -21,12 +21,18 @@ Do the following installation steps once:
 ```bash
 $ rustup target add wasm32-unknown-unknown
 $ yarn
-$ yarn run build-wasm
+$ yarn build-wasm
 ```
 
 Then, to build and run the UI, use the following commands:
 
 ```bash
-$ yarn run build-wasm
+$ yarn build-wasm
 $ yarn start
+```
+
+To continuously watch for changes, run:
+
+```bash
+$ yarn build-wasm --watch
 ```
