@@ -31,7 +31,7 @@ struct Context {
 impl Context {
     pub fn new() -> Self {
         Self {
-            image_data: ImageBuffer::new(64, 64, 1),
+            image_data: ImageBuffer::new(64, 64, 12),
         }
     }
 
@@ -79,16 +79,24 @@ impl Target for ImageBuffer {
 
     #[inline(always)]
     unsafe fn set(&mut self, [x, y]: [usize; 2], item: Self::Item) {
-        let index = y * RGBA_COMPONENTS * self.width + x * RGBA_COMPONENTS;
-        *self.data.get_unchecked_mut(index + 0) = (255.0 * item.r) as u8;
-        *self.data.get_unchecked_mut(index + 1) = (255.0 * item.g) as u8;
-        *self.data.get_unchecked_mut(index + 2) = (255.0 * item.b) as u8;
-        *self.data.get_unchecked_mut(index + 3) = (255.0 * item.a) as u8;
+        let scale = self.scale;
+        for i in 0..scale {
+            let col = x * scale + i;
+            for j in 0..scale {
+                let row = y * scale + j;
+                let index = row * RGBA_COMPONENTS * self.width * scale + col * RGBA_COMPONENTS;
+                *self.data.get_unchecked_mut(index + 0) = (255.0 * item.r) as u8;
+                *self.data.get_unchecked_mut(index + 1) = (255.0 * item.g) as u8;
+                *self.data.get_unchecked_mut(index + 2) = (255.0 * item.b) as u8;
+                *self.data.get_unchecked_mut(index + 3) = (255.0 * item.a) as u8;
+            }
+        }
     }
 
     #[inline(always)]
     unsafe fn get(&self, [x, y]: [usize; 2]) -> Self::Item {
-        let index = y * RGBA_COMPONENTS * self.width + x * RGBA_COMPONENTS;
+        let scale = self.scale;
+        let index = y * scale * RGBA_COMPONENTS * self.width + x * scale * RGBA_COMPONENTS;
         Rgba {
             r: *self.data.get_unchecked(index + 0) as f32 / 255.0,
             g: *self.data.get_unchecked(index + 1) as f32 / 255.0,
@@ -166,7 +174,7 @@ unsafe extern fn context_render(ctx_ptr: *mut Context, rotation: f32) -> *const 
     })
         .expect("could not read model");
 
-    let mut depth = Buffer2d::new([64, 64], 1.0);
+    let mut depth = Buffer2d::new(ctx.image_data.size(), 1.0);
     // The transformation that represents the position and orientation of the camera
     //
     // World coordinates -> Camera coordinates

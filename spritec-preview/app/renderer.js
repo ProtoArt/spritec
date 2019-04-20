@@ -6,6 +6,8 @@ spritec_preview.then((spritec) => {
   console.log(context);
 
   const canvasEl = document.getElementById('canvas');
+  canvasEl.width = 1000;
+  canvasEl.height = 820;
   const ctx = canvasEl.getContext('2d');
 
   let rotation = 0.0;

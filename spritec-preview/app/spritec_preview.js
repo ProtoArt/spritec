@@ -30,7 +30,7 @@ class Context {
 
     const width = 64;
     const height = 64;
-    const scale = 1;
+    const scale = 12;
     this.image = {width, height, scale};
 
     this._fetchImage();
@@ -64,7 +64,7 @@ class Context {
       imagePtr,
       4 * width * scale * height * scale,
     );
-    const data = new ImageData(buffer, width, height);
+    const data = new ImageData(buffer, width * scale, height * scale);
 
     this.image.ptr = imagePtr;
     this.image.buffer = buffer;
