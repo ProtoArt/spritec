@@ -15,7 +15,7 @@ authors = [
 edition = "2018"
 
 [dependencies]
-euc = { path = "../euc" }
+euc = "0.3"
 tobj = "0.1"
 vek = { version = "0.9", features = ["serde"] }
 gltf = "0.14"
