@@ -20,3 +20,4 @@ spritec = { path = ".." }
 euc = "0.3"
 vek = "0.9"
 tobj = "0.1"
+log = "0.4"

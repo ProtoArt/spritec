@@ -31,7 +31,7 @@ class Context {
   }
 
   _fetchImage() {
-    const imagePtr = this.spritec.exports().context_image_data(this.ptr);
+    const imagePtr = this.spritec.exports().image_data(this.ptr);
 
     const {width, height, scale} = this.image;
     const buffer = new Uint8ClampedArray(

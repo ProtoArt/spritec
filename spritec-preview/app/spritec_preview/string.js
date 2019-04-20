@@ -34,7 +34,7 @@ function createWasmString(wasmExports, str) {
 function copyStringFromWasm(wasmExports, ptr) {
   // Code adapted from: https://github.com/WasmBlock/WasmBlock/blob/bc5959dd7b0d0d5f5ed4033b149591574bad68b6/wasmblock.js#L31
 
-  const str_ptr = ptr;
+  let str_ptr = ptr;
   const collectCString = function* () {
     const memory = new Uint8Array(wasmExports.memory.buffer);
     while (memory[str_ptr] !== 0) {
