@@ -16,6 +16,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const program = require('commander');
+const chokidar = require('chokidar');
 
 program
   .version('0.1.0', '-v, --version')
@@ -73,7 +74,6 @@ function watchBuild(release) {
     }
     console.log(`[${new Date(Date.now()).toLocaleString()}] Watching for changes...`);
   };
-  build();
 
   // https://thisdavej.com/how-to-watch-for-files-changes-in-node-js/
   let fsWait = false;
@@ -85,12 +85,16 @@ function watchBuild(release) {
     // debounce to make sure we don't re-build too many times too quickly
     fsWait = setTimeout(() => {
       fsWait = false;
-    }, 100);
+    }, 400);
 
     console.log('==========================');
     build();
   };
 
-  fs.watch('src', watcher);
-  fs.watch('../src', watcher);
+  const watchedDirs = [
+    'src',
+    '../src',
+  ];
+
+  chokidar.watch(watchedDirs, {ignored: /(^|[\/\\])\../}).on('all', watcher);
 }
