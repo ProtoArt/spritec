@@ -12,7 +12,7 @@ html {
 
 .canvas-container {
   align-items: center;
-  background: #212121;
+  background: #b0bec5;
   display: flex;
   flex-grow: 1;
   flex-shrink: 1;
@@ -22,11 +22,11 @@ html {
 }
 
 .canvas-container canvas {
-  background: white;
+  background-image: url('../assets/images/transparent-bg.svg');
 }
 
 .controls {
-  background: #cfd8dc;
+  background: #64b5f6;
   flex-shrink: 0;
   padding: 15px;
   min-width: 300px;
