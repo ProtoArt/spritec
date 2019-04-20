@@ -156,7 +156,7 @@ unsafe extern fn context_image_data(ctx_ptr: *mut Context) -> *const u8 {
 /// invalidated by any allocations. If the pointer has been changed, all pointers to data within
 /// the context are also invalidated.
 #[no_mangle]
-unsafe extern fn context_render(ctx_ptr: *mut Context) -> *const Context {
+unsafe extern fn context_render(ctx_ptr: *mut Context, rotation: f32) -> *const Context {
     let mut ctx = Box::from_raw(ctx_ptr);
 
     let mut obj_data: &[u8] = include_bytes!("../../samples/bigboi/obj/bigboi_rigged_000001.obj");
@@ -170,14 +170,15 @@ unsafe extern fn context_render(ctx_ptr: *mut Context) -> *const Context {
     // The transformation that represents the position and orientation of the camera
     //
     // World coordinates -> Camera coordinates
-    let view = Mat4::rotation_x(PI/8.0) * Mat4::rotation_y(0.0*PI/2.0);
+    let view = Mat4::rotation_x(PI/8.0) * Mat4::rotation_y(rotation*PI/2.0);
     // The perspective/orthographic/etc. projection of the camera
     //
     // Camera coordinates -> Homogenous coordinates
     let projection = Mat4::perspective_rh_no(0.8*PI, 1.0, 0.01, 100.0)
         * Mat4::<f32>::scaling_3d(0.6);
+    let background = Rgba {r: 0.62, g: 0.62, b: 0.62, a: 1.0};
+    ctx.image_data.clear(background);
     spritec::render(&mut ctx.image_data, &mut depth, view, projection, &model, 0.15, Rgba::black());
-    debug(ctx.image_data.data.iter().filter(|&&x| x == 0).count());
 
     Box::into_raw(ctx)
 }

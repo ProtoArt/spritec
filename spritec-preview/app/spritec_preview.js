@@ -49,8 +49,8 @@ class Context {
   }
 
   // Perform a render and update the image data with the resulting image
-  render() {
-    const ptr = this.spritec.exports().context_render(this.ptr);
+  render(rotation) {
+    const ptr = this.spritec.exports().context_render(this.ptr, rotation);
     this.ptr = ptr;
     this._fetchImage();
   }
