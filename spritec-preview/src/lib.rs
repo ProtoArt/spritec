@@ -12,20 +12,75 @@
 )]
 #![deny(bare_trait_objects)] // Prefer Box<dyn Trait> over Box<Trait>
 
-/// Any initialization code that needs to happen exactly once
-pub fn initialize() {
+/// A shared context to store in the web assembly memory that outlives the function it is
+/// created in.
+#[derive(Debug, Clone)]
+struct Context {
+    image_data: ImageBuffer,
 }
 
-extern {
-    fn alert(s: &str);
+impl Context {
+    pub fn new() -> Self {
+        Self {
+            image_data: ImageBuffer::new(64, 64, 1),
+        }
+    }
+
+    /// Loads the Context from the given pointer. Leaks the value so it is not dropped.
+    pub unsafe fn from_raw_leak(ctx_ptr: *mut Context) -> &'static Self {
+        Box::leak(Box::from_raw(ctx_ptr))
+    }
 }
 
+/// The number of components in an RGBA value (always 4)
+const RGBA_COMPONENTS: usize = 4;
+
+/// An image data buffer (compatible with JavaScript's ImageData)
+#[derive(Debug, Clone)]
+struct ImageBuffer {
+    data: Vec<u8>,
+    width: usize,
+    height: usize,
+    scale: usize,
+}
+
+impl ImageBuffer {
+    pub fn new(width: usize, height: usize, scale: usize) -> Self {
+        Self {
+            data: vec![0; RGBA_COMPONENTS * width * scale * height * scale],
+            width,
+            height,
+            scale,
+        }
+    }
+
+    /// Returns a pointer to the data buffer compatible with JavaScript's Uint8ClampedArray
+    pub fn as_ptr(&self) -> *const u8 {
+        self.data.as_ptr()
+    }
+}
+
+/// Create a new context.
+///
+/// IMPORTANT NOTE: If the allocator re-allocates the web assembly memory, this pointer will
+/// become *INVALIDATED*.
 #[no_mangle]
-pub unsafe extern fn add(x: i32, y: i32) -> i32 {
-    x + y
+extern fn context_new() -> *mut Context {
+    let ctx = Box::new(Context::new());
+    // Ownership of this value is given to the caller. It is *not* freed at the end of this function.
+    Box::into_raw(ctx)
 }
 
+/// Delete a previously created context
 #[no_mangle]
-pub unsafe extern fn greet(name: &str) {
-    alert(&format!("Hello, {}!", name));
+unsafe extern fn context_delete(ctx_ptr: *mut Context) {
+    // Loads the value and then immediately drops it
+    Box::from_raw(ctx_ptr);
+}
+
+/// Returns a pointer to the image data stored in the context (compatible with Uint8ClampedArray)
+#[no_mangle]
+unsafe extern fn context_image_data(ctx_ptr: *mut Context) -> *const u8 {
+    let ctx = Context::from_raw_leak(ctx_ptr);
+    ctx.image_data.as_ptr()
 }
