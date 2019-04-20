@@ -1,20 +1,40 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title>The Sprite Compiler</title>
+<head>
+  <meta charset="utf-8">
+  <title>The Sprite Compiler</title>
 
-    <style type="text/css">
-      canvas {
-        border: 1px solid black;
-      }
-    </style>
-  </head>
-  <body>
-    <canvas id="canvas"></canvas>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+  <link rel="stylesheet" href="https://cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+  <link rel="stylesheet" href="css/main.css">
 
-    <script>
-    require('./app/renderer.js')
-    </script>
-  </body>
+</head>
+<body>
+  <main class="app-container">
+    <div class="canvas-container">
+      <canvas id="app-canvas"></canvas>
+    </div>
+    <aside class="controls">
+      <fieldset>
+        <legend>Image Properties:</legend>
+
+        <div class="control-grid">
+          <label class="label">Model:</label>
+          <input class="input" type="text" id="image-width" placeholder="path/to/model.gltf">
+
+          <label class="label">Width (px):</label>
+          <input class="input" type="number" step="1" id="image-width" value="64">
+
+          <label class="label">Height (px):</label>
+          <input class="input" type="number" step="1" id="image-height" value="64">
+        </div>
+      </fieldset>
+    </aside>
+  </main>
+
+  <script>
+  require('./app/renderer.js')
+  </script>
+</body>
 </html>

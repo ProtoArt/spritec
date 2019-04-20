@@ -1,5 +1,5 @@
 mod alloc;
-mod context;
+mod renderer;
 mod console_log;
 mod panic_hook;
 

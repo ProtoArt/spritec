@@ -1,7 +1,7 @@
-class Context {
+class Renderer {
   constructor(spritec) {
     this.spritec = spritec;
-    this.ptr = this.spritec.exports().context_new();
+    this.ptr = this.spritec.exports().renderer_new();
 
     const width = 64;
     const height = 64;
@@ -12,10 +12,10 @@ class Context {
   }
 
   // Must call destroy before this goes out of scope or else we will leak memory
-  // in the web assembly module. The Context object *cannot* be used after this
+  // in the web assembly module. The Renderer object *cannot* be used after this
   // method is called.
   destroy() {
-    this.spritec.exports().context_delete(this.ptr)
+    this.spritec.exports().renderer_delete(this.ptr)
   }
 
   // Returns an ImageData instance suitable for rendering to a canvas
@@ -24,8 +24,8 @@ class Context {
   }
 
   // Perform a render and update the image data with the resulting image
-  render(rotation) {
-    const ptr = this.spritec.exports().context_render(this.ptr, rotation);
+  render() {
+    const ptr = this.spritec.exports().renderer_render(this.ptr);
     this.ptr = ptr;
     this._fetchImage();
   }
@@ -47,4 +47,4 @@ class Context {
   }
 }
 
-module.exports = Context;
+module.exports = Renderer;

@@ -1,4 +1,4 @@
-const Context = require('./context.js');
+const Renderer = require('./renderer.js');
 
 // Class to encapsulte all interaction with the spritec_preview wasm module
 class Spritec {
@@ -17,9 +17,9 @@ class Spritec {
     return this.exports().memory.buffer;
   }
 
-  // Create a new context for interacting with the web assembly module
-  context() {
-    return new Context(this);
+  // Create a new renderer for interacting with the web assembly module
+  renderer() {
+    return new Renderer(this);
   }
 }
 

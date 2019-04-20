@@ -1,26 +1,25 @@
 const spritec_preview = require('./spritec_preview');
+const ModelCanvas = require('./modelcanvas.js');
 
 spritec_preview.then((spritec) => {
   console.log(spritec);
-  const context = spritec.context();
-  console.log(context);
+  const renderer = spritec.renderer();
+  console.log(renderer);
 
-  const canvasEl = document.getElementById('canvas');
-  canvasEl.width = 1000;
-  canvasEl.height = 820;
-  const ctx = canvasEl.getContext('2d');
+  const canvasEl = document.getElementById('app-canvas');
+  const modelCanvas = new ModelCanvas({
+    renderer,
+    element: canvasEl,
+    modelPath: '../samples/bigboi/obj/bigboi_rigged_000001.obj',
+    imageWidth: 64,
+    imageHeight: 64,
+  });
+
+  window.addEventListener('resize', () => {
+    modelCanvas.resize();
+  });
 
   let rotation = 0.0;
-  const render = () => {
-    context.render(rotation);
-
-    ctx.fillStyle = 'red';
-    ctx.fillRect(0, 0, 1000, 1000);
-    ctx.putImageData(context.imageData(), 20, 20);
-  };
-
-  render();
-
   let dragging = false;
   document.addEventListener('mousedown', (e) => {
     dragging = true;

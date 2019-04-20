@@ -14,5 +14,5 @@
 #![deny(unused_must_use)] // Ignoring Result is the source of many common bugs
 
 pub mod image_buffer;
-pub mod context;
+pub mod renderer;
 pub mod wasm;
