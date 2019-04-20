@@ -65,7 +65,12 @@ function buildWasm(release = false) {
 
 function watchBuild(release) {
   let build = () => {
-    buildWasm(release);
+    try {
+      buildWasm(release);
+    } catch (e) {
+      console.error(e);
+      console.log('Build failed!');
+    }
     console.log(`[${new Date(Date.now()).toLocaleString()}] Watching for changes...`);
   };
   build();
