@@ -20,6 +20,7 @@
     clippy::large_enum_variant,
 )]
 #![deny(bare_trait_objects)] // Prefer Box<dyn Trait> over Box<Trait>
+#![deny(unused_must_use)] // Ignoring Result is the source of many common bugs
 
 pub mod color;
 pub mod config;
