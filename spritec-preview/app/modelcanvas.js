@@ -29,7 +29,9 @@ class ModelCanvas {
     const heightScale = parentHeight / this.renderer.imageHeight();
 
     // The scale factor must be an integer because pixels are indivisible
-    const scale = Math.floor(Math.min(widthScale, heightScale));
+    let scale = Math.floor(Math.min(widthScale, heightScale));
+    // Scale must not be <= 0
+    scale = scale > 0 ? scale : 1;
 
     this.width = this.renderer.imageWidth() * scale;
     this.height = this.renderer.imageHeight() * scale;
