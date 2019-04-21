@@ -3,6 +3,7 @@ mod renderer;
 mod console_log;
 mod panic_hook;
 
+pub mod str;
 pub mod io;
 
 /// Must be called exactly once when the WASM module is loaded

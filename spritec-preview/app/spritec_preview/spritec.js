@@ -1,3 +1,4 @@
+const { createWasmString } = require('./string.js');
 const Renderer = require('./renderer.js');
 
 // Class to encapsulte all interaction with the spritec_preview wasm module
@@ -18,8 +19,13 @@ class Spritec {
   }
 
   // Create a new renderer for interacting with the web assembly module
-  renderer() {
-    return new Renderer(this);
+  renderer({path, width, height, scale}) {
+    return new Renderer(this, {path, width, height, scale});
+  }
+
+  // Create a new string in the web assembly memory and return the pointer to it
+  string(str) {
+    return createWasmString(this.exports(), str);
   }
 }
 

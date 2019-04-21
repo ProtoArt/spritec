@@ -12,7 +12,7 @@ module.exports = {
 
     const ptr = wasmExports.alloc(data.length);
     // Create a view into the WASM memory compatible with the Buffer API
-    const memoryBuffer = Buffer.from(wasmExports.memory.buffer)
+    const memoryBuffer = Buffer.from(wasmExports.memory.buffer);
     const copied = data.copy(memoryBuffer, ptr, 0, data.length);
     if (copied !== data.length) {
       throw new Error('Unable to copy entire buffer');

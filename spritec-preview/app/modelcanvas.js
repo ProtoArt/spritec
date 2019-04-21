@@ -3,18 +3,13 @@
 // Automatically resizes to fit its container while also maintaining the aspect
 // ratio of the rendered image.
 class ModelCanvas {
-  constructor({renderer, element, imageWidth, imageHeight}) {
+  constructor(renderer, element) {
     this.renderer = renderer;
     this.el = element;
     this.ctx = this.el.getContext('2d');
-    // The dimensions to render at, not necessarily the dimensions of the canvas
-    this.imageWidth = imageWidth;
-    this.imageHeight = imageHeight;
     // The actual dimensions of the canvas (set during resize)
     this.width = null;
     this.height = null;
-    // The scale factor to render at (integer)
-    this.scale = null;
 
     this.resize();
   }
@@ -30,21 +25,21 @@ class ModelCanvas {
     // Going to find the scale factor we would have to use to get up to the max
     // width and max height and then scale by the lower of those factors to get
     // within the box.
-    const widthScale = parentWidth / this.imageWidth;
-    const heightScale = parentHeight / this.imageHeight;
+    const widthScale = parentWidth / this.renderer.imageWidth();
+    const heightScale = parentHeight / this.renderer.imageHeight();
 
     // The scale factor must be an integer because pixels are indivisible
     const scale = Math.floor(Math.min(widthScale, heightScale));
 
-    this.width = this.imageWidth * scale;
-    this.height = this.imageHeight * scale;
-    this.scale = scale;
+    this.width = this.renderer.imageWidth() * scale;
+    this.height = this.renderer.imageHeight() * scale;
 
     // Update the canvas size
     this.el.width = this.width;
     this.el.height = this.height;
 
     // Re-render
+    this.renderer.setScale(scale);
     this.render();
   }
 

@@ -2,24 +2,20 @@ const spritec_preview = require('./spritec_preview');
 const ModelCanvas = require('./modelcanvas.js');
 
 spritec_preview.then((spritec) => {
-  console.log(spritec);
-  const renderer = spritec.renderer();
-  console.log(renderer);
-
   const modelPath = '../samples/bigboi/obj/bigboi_rigged_000001.obj';
-  const mtlPath = '../samples/bigboi/obj/bigboi_rigged_000001.mtl';
+  const renderer = spritec.renderer({
+    path: modelPath,
+    width: 64,
+    height: 64,
+    scale: 3,
+  });
 
   setupCanvas(renderer);
 });
 
 function setupCanvas(renderer) {
   const canvasEl = document.getElementById('app-canvas');
-  const modelCanvas = new ModelCanvas({
-    renderer,
-    element: canvasEl,
-    imageWidth: 64,
-    imageHeight: 64,
-  });
+  const modelCanvas = new ModelCanvas(renderer, canvasEl);
 
   window.addEventListener('resize', () => {
     modelCanvas.resize();

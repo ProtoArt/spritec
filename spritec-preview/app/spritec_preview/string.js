@@ -13,12 +13,11 @@ function createWasmString(wasmExports, str) {
   const utf8Encoder = new TextEncoder("UTF-8");
   const string_buffer = utf8Encoder.encode(str);
   const len = string_buffer.length;
-  // +1 because of NULL-terminator
-  const ptr = wasmExports.alloc(len+1);
+  // Allocated pointer is already NULL-terminated
+  const ptr = wasmExports.alloc_str(len);
 
   const memory = new Uint8Array(wasmExports.memory.buffer, ptr, len+1);
   memory.set(string_buffer);
-  memory[ptr+len] = 0;
 
   return ptr;
 }
