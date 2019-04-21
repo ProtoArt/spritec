@@ -16,11 +16,8 @@ function createWasmString(wasmExports, str) {
   // +1 because of NULL-terminator
   const ptr = wasmExports.alloc(len+1);
 
-  const memory = new Uint8Array(wasmExports.memory.buffer);
-  for (let i = 0; i < len; i++) {
-    memory[ptr+i] = string_buffer[i];
-  }
-
+  const memory = new Uint8Array(wasmExports.memory.buffer, ptr, len+1);
+  memory.set(string_buffer);
   memory[ptr+len] = 0;
 
   return ptr;
