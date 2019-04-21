@@ -19,6 +19,7 @@ html {
   justify-content: center;
   /* Needed or else canvas container will never get smaller than canvas */
   overflow: hidden;
+  user-select: none;
 }
 
 .canvas-container canvas {

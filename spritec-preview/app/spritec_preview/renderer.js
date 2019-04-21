@@ -47,6 +47,13 @@ class Renderer {
     this.image.scale = scale;
   }
 
+  // Sets the Y rotation of the renderer
+  // Does *not* trigger a re-render
+  setViewYRotation(rotation) {
+    const opt = this.configOpts.ViewYRotation;
+    this.spritec.exports().renderer_config_f32(this.ptr, opt, rotation);
+  }
+
   // Perform a render and update the image data with the resulting image
   render() {
     const ptr = this.spritec.exports().renderer_render(this.ptr);

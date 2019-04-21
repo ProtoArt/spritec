@@ -33,7 +33,8 @@ function setupCanvas(renderer) {
     if (dragging) {
       const dx = e.movementX / 1000.0;
       rotation += dx * Math.PI;
-      render();
+      renderer.setViewYRotation(rotation);
+      modelCanvas.render();
     }
   })
 }
