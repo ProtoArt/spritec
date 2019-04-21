@@ -1,11 +1,13 @@
 use std::path::Path;
+use std::ffi::CString;
 use std::os::raw::c_char;
 
 use spritec::loaders;
+use vek::Rgba;
 
 use crate::wasm::io::read_file_buf;
 use crate::wasm::str::ptr_to_str;
-use crate::renderer::Renderer;
+use crate::renderer::{Renderer, ConfigureRenderer};
 
 /// Create a new renderer to draw the given file with the given size.
 ///
@@ -41,6 +43,34 @@ unsafe extern fn renderer_delete(r_ptr: *mut Renderer) {
 unsafe extern fn image_data(r_ptr: *mut Renderer) -> *const u8 {
     let renderer = Renderer::from_raw_leak(r_ptr);
     renderer.image_data().as_ptr()
+}
+
+/// Returns a JSON string of the valid configuration constants and their u8 values
+#[no_mangle]
+unsafe extern fn renderer_config_options() -> *const c_char {
+    // Since we're building the string statically ourselves, it should never be invalid
+    CString::new(ConfigureRenderer::options()).unwrap().into_raw()
+}
+
+/// Set a configuration option on the renderer that takes a usize
+#[no_mangle]
+unsafe extern fn renderer_config_usize(r_ptr: *mut Renderer, opt: u8, arg: usize) {
+    let renderer = Renderer::from_raw_leak(r_ptr);
+    renderer.config(ConfigureRenderer::from_usize(opt.into(), arg));
+}
+
+/// Set a configuration option on the renderer that takes a f32
+#[no_mangle]
+unsafe extern fn renderer_config_f32(r_ptr: *mut Renderer, opt: u8, arg: f32) {
+    let renderer = Renderer::from_raw_leak(r_ptr);
+    renderer.config(ConfigureRenderer::from_f32(opt.into(), arg));
+}
+
+/// Set a configuration option on the renderer that takes a Rgba<f32>
+#[no_mangle]
+unsafe extern fn renderer_config_rgba(r_ptr: *mut Renderer, opt: u8, r: f32, g: f32, b: f32, a: f32) {
+    let renderer = Renderer::from_raw_leak(r_ptr);
+    renderer.config(ConfigureRenderer::from_rgba(opt.into(), Rgba {r, g, b, a}));
 }
 
 /// Performs a render and returns a new pointer to the renderer in case the previous one has been

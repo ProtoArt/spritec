@@ -14,6 +14,7 @@ use crate::image_buffer::ImageBuffer;
 #[strum_discriminants(name(ConfigOpts))]
 #[strum_discriminants(derive(EnumIter, AsRefStr, IntoStaticStr, EnumCount))]
 pub enum ConfigureRenderer {
+    Scale(usize),
     ViewXRotation(f32),
     ViewYRotation(f32),
     Background(Rgba<f32>),
@@ -40,15 +41,49 @@ impl ConfigureRenderer {
         json
     }
 
-    /// Return the configuration option
+    /// Return the configuration corresponding to the given option
+    pub fn from_usize(opt: ConfigOpts, arg: usize) -> Self {
+        use ConfigureRenderer::*;
+        match opt {
+            ConfigOpts::Scale => Scale(arg),
+            ConfigOpts::ViewXRotation |
+            ConfigOpts::ViewYRotation |
+            ConfigOpts::BorderThickness |
+            ConfigOpts::Background |
+            ConfigOpts::BorderColor => unreachable!(),
+        }
+    }
+
+    /// Return the configuration corresponding to the given option
     pub fn from_f32(opt: ConfigOpts, arg: f32) -> Self {
         use ConfigureRenderer::*;
         match opt {
             ConfigOpts::ViewXRotation => ViewXRotation(arg),
             ConfigOpts::ViewYRotation => ViewYRotation(arg),
             ConfigOpts::BorderThickness => BorderThickness(arg),
-            ConfigOpts::Background | ConfigOpts::BorderColor => unreachable!(),
+            ConfigOpts::Scale |
+            ConfigOpts::Background |
+            ConfigOpts::BorderColor => unreachable!(),
         }
+    }
+
+    /// Return the configuration corresponding to the given option
+    pub fn from_rgba(opt: ConfigOpts, arg: Rgba<f32>) -> Self {
+        use ConfigureRenderer::*;
+        match opt {
+            ConfigOpts::Background => Background(arg),
+            ConfigOpts::BorderColor => BorderColor(arg),
+            ConfigOpts::Scale |
+            ConfigOpts::ViewXRotation |
+            ConfigOpts::ViewYRotation |
+            ConfigOpts::BorderThickness => unreachable!(),
+        }
+    }
+}
+
+impl From<u8> for ConfigOpts {
+    fn from(value: u8) -> Self {
+        ConfigOpts::iter().nth(value as usize).expect("Value for ConfigOpts out of range")
     }
 }
 
@@ -91,9 +126,17 @@ impl Renderer {
         &self.image_data
     }
 
-    /// Set one of the given options for this renderer
-    pub fn set_option(&mut self, opt: ConfigureRenderer) {
-
+    /// Set one of the configurable options for this renderer
+    pub fn config(&mut self, opt: ConfigureRenderer) {
+        use ConfigureRenderer::*;
+        match opt {
+            Scale(arg) => self.image_data.set_scale(arg),
+            ViewXRotation(arg) => self.view_x_rotation = arg,
+            ViewYRotation(arg) => self.view_y_rotation = arg,
+            Background(arg) => self.background = arg,
+            BorderThickness(arg) => self.border_thickness = arg,
+            BorderColor(arg) => self.border_color = arg,
+        }
     }
 
     /// Render the image, modifying the image buffer in-place

@@ -2,8 +2,13 @@ class Renderer {
   constructor(spritec, {path, width, height, scale}) {
     this.spritec = spritec;
 
-    const pathPtr = this.spritec.string(path);
+    const pathPtr = this.spritec.fromString(path);
     this.ptr = this.spritec.exports().renderer_new(pathPtr, width, height, scale);
+
+    // A mapping from each variant of ConfigureRenderer to a number that can be
+    // passed to the WASM to set the configuration option
+    const configOptsPtr = this.spritec.exports().renderer_config_options();
+    this.configOpts = JSON.parse(this.spritec.intoString(configOptsPtr));
 
     this.image = {width, height, scale};
 
@@ -37,8 +42,9 @@ class Renderer {
   // Sets the scale property of the renderer
   // Does *not* trigger a re-render
   setScale(scale) {
-    // this.image.scale = scale;
-    //TODO: Send scale to renderer
+    const opt = this.configOpts.Scale;
+    this.spritec.exports().renderer_config_usize(this.ptr, opt, scale);
+    this.image.scale = scale;
   }
 
   // Perform a render and update the image data with the resulting image

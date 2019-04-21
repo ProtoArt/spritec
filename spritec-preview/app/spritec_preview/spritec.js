@@ -1,4 +1,4 @@
-const { createWasmString } = require('./string.js');
+const { createWasmString, copyStringFromWasm } = require('./string.js');
 const Renderer = require('./renderer.js');
 
 // Class to encapsulte all interaction with the spritec_preview wasm module
@@ -24,8 +24,13 @@ class Spritec {
   }
 
   // Create a new string in the web assembly memory and return the pointer to it
-  string(str) {
+  fromString(str) {
     return createWasmString(this.exports(), str);
+  }
+
+  // Copies a string from WASM and returns a regular JS string
+  intoString(str_ptr) {
+    return copyStringFromWasm(this.exports(), str_ptr);
   }
 }
 

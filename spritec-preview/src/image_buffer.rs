@@ -27,6 +27,14 @@ impl ImageBuffer {
     pub fn as_ptr(&self) -> *const u8 {
         self.data.as_ptr()
     }
+
+    /// Changes the scale of the image buffer. The buffer's contents should not be relied on until
+    /// it has been redrawn with this new scale.
+    pub fn set_scale(&mut self, scale: usize) {
+        let size = RGBA_COMPONENTS * self.width * scale * self.height * scale;
+        self.data.resize_with(size, Default::default);
+        self.scale = scale;
+    }
 }
 
 impl Target for ImageBuffer {
