@@ -1,10 +1,56 @@
+use std::fmt::Write;
 use std::f32::consts::PI;
 
 use spritec::model::Model;
 use euc::{Target, buffer::Buffer2d};
 use vek::{Rgba, Mat4};
+use strum::{IntoEnumIterator, EnumCount};
+use strum_macros::{EnumIter, EnumDiscriminants, AsRefStr, IntoStaticStr, EnumCount};
 
 use crate::image_buffer::ImageBuffer;
+
+/// Represents all valid configuration options for the renderer.
+#[derive(Debug, Clone, EnumDiscriminants)]
+#[strum_discriminants(name(ConfigOpts))]
+#[strum_discriminants(derive(EnumIter, AsRefStr, IntoStaticStr, EnumCount))]
+pub enum ConfigureRenderer {
+    ViewXRotation(f32),
+    ViewYRotation(f32),
+    Background(Rgba<f32>),
+    BorderThickness(f32),
+    BorderColor(Rgba<f32>),
+}
+
+impl ConfigureRenderer {
+    /// Returns a JSON string that maps the option name to its serialized form as a number
+    pub fn options() -> String {
+        // Note that write!() can never panic for strings unless we get OOM
+        let mut json = String::from("{");
+
+        let count = ConfigOpts::count();
+        for (i, opt) in ConfigOpts::iter().enumerate() {
+            if i < count-1 {
+                write!(json, r#""{}": {},"#, opt.as_ref(), opt as u8).unwrap();
+            } else {
+                write!(json, r#""{}": {}"#, opt.as_ref(), opt as u8).unwrap();
+            }
+        }
+
+        json += "}";
+        json
+    }
+
+    /// Return the configuration option
+    pub fn from_f32(opt: ConfigOpts, arg: f32) -> Self {
+        use ConfigureRenderer::*;
+        match opt {
+            ConfigOpts::ViewXRotation => ViewXRotation(arg),
+            ConfigOpts::ViewYRotation => ViewYRotation(arg),
+            ConfigOpts::BorderThickness => BorderThickness(arg),
+            ConfigOpts::Background | ConfigOpts::BorderColor => unreachable!(),
+        }
+    }
+}
 
 /// The full state of the renderer. Stored in web assembly memory and outlives the function it is
 /// created in.
@@ -43,6 +89,11 @@ impl Renderer {
     /// Return a read-only reference to the inner image buffer
     pub fn image_data(&self) -> &ImageBuffer {
         &self.image_data
+    }
+
+    /// Set one of the given options for this renderer
+    pub fn set_option(&mut self, opt: ConfigureRenderer) {
+
     }
 
     /// Render the image, modifying the image buffer in-place
