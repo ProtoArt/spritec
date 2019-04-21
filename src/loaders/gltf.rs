@@ -3,7 +3,6 @@ use std::sync::Arc;
 
 use vek::{Vec3, Mat4, Quaternion};
 
-use crate::rayon_polyfill::*;
 use crate::model::{Mesh, Material, Model};
 
 /// Loads the given glTF file path, optionally generating a model for the specific animation or
@@ -85,7 +84,6 @@ impl GltfFile {
         // Load all the materials first, this assumes that the material index
         // that primitive refers to is loaded in the same order as document.materials()
         let materials: Vec<_> = self.document.materials()
-            .par_bridge()
             .map(|material| Arc::new(Material::from(material)))
             .collect();
 
@@ -96,10 +94,9 @@ impl GltfFile {
     pub fn model(&self) -> Model {
         let mut meshes = Vec::new();
         for mesh in self.document.meshes() {
-            let prims = mesh.primitives()
-                .par_bridge()
-                .map(|prim| Mesh::from_gltf(&self.buffers, &prim, &materials));
-            meshes.par_extend(prims);
+            for primitive in mesh.primitives() {
+                meshes.push(Mesh::from_gltf(&self.buffers, &primitive, &materials));
+            }
         }
 
         Model { meshes }
