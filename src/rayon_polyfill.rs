@@ -27,4 +27,35 @@ mod wasm {
             self.into_iter()
         }
     }
+
+    pub struct IterBridge<T>(T);
+
+    impl<T: Iterator> Iterator for IterBridge<T> {
+        type Item = <T as Iterator>::Item;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            self.0.next()
+        }
+    }
+
+    pub trait ParallelBridge: Sized {
+        fn par_bridge(self) -> IterBridge<Self>;
+    }
+
+    impl<T: Iterator + Send> ParallelBridge for T {
+        fn par_bridge(self) -> IterBridge<Self> {
+            IterBridge(self)
+        }
+    }
+
+    pub trait ParallelExtend<T> {
+        fn par_extend<I: IntoParallelIterator<Item = T>>(&mut self, par_iter: I);
+    }
+
+    impl<T> ParallelExtend<T> for Vec<T> {
+        fn par_extend<I: IntoParallelIterator<Item = T>>(&mut self, par_iter: I) {
+            let par_iter = par_iter.into_par_iter();
+            self.extend(par_iter);
+        }
+    }
 }
