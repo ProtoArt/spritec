@@ -146,7 +146,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "euc"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "vek 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -635,7 +635,7 @@ dependencies = [
 name = "spritec"
 version = "0.1.0"
 dependencies = [
- "euc 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euc 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gltf 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.21.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -650,7 +650,7 @@ dependencies = [
 name = "spritec-preview"
 version = "0.1.0"
 dependencies = [
- "euc 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euc 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "minifb 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "spritec 0.1.0",
  "vek 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -872,7 +872,7 @@ dependencies = [
 "checksum crossbeam-utils 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "2760899e32a1d58d5abb31129f8fae5de75220bc2176e77ff7c627ae45c918d9"
 "checksum deflate 0.7.19 (registry+https://github.com/rust-lang/crates.io-index)" = "8a6abb26e16e8d419b5c78662aa9f82857c2386a073da266840e474d5055ec86"
 "checksum either 1.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "5527cfe0d098f36e3f8839852688e63c8fff1c90b2b405aef730615f9a7bcf7b"
-"checksum euc 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0151594c4feeeb99ff35ac1b467383a46fcb2705275615bed0a47f25ffe2ccf8"
+"checksum euc 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c20f6684a8420df7c300a36bed7cb0b2387b2bc385d4940282399b5df0c08ebd"
 "checksum fuchsia-cprng 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a06f77d526c1a601b7c4cdd98f54b5eaabffc14d5f2f0296febdc7f357c6d3ba"
 "checksum gdi32-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "8e3eb92c1107527888f86b6ebb0b7f82794777dbf172a932998660a0a2e26c11"
 "checksum gif 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "dd4bca55ac1f213920ce3527ccd62386f1f15fa3f1714aeee1cf93f2c416903f"
