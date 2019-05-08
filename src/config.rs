@@ -27,8 +27,10 @@ impl UnresolvedPath {
 #[serde(deny_unknown_fields)]
 pub struct TaskConfig {
     /// A list of the spritesheets for spritec to generate
+    #[serde(default)]
     pub spritesheets: Vec<Spritesheet>,
     /// A list of individual poses for spritec to generate images for
+    #[serde(default)]
     pub poses: Vec<Pose>,
 }
 
