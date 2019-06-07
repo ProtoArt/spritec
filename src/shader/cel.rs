@@ -78,7 +78,15 @@ impl<'a> Pipeline for CelShader<'a> {
             intensity if intensity > 0.05 => color * 0.35,
             _ => color * 0.1,
         };
+
+        // Gamma correction
+        let gamma = 2.2;
+        final_color = final_color.map(|c| c.powf(1.0/gamma));
+
+        // Reassign the final alpha because we don't actually want to calculations above to
+        // influence this value
         final_color.a = alpha;
+
         // Clamp the color values between 0.0 and 1.0
         let final_color = final_color.clamped(Rgba::zero(), Rgba::one());
 
