@@ -1,0 +1,19 @@
+# Configuration file for generating images with spritec
+#
+# Paths in this file are relative to the location of this configuration file
+
+[[poses]]
+model = "priest_000001.obj"
+path = "../../priest000001.png"
+width = 64
+height = 64
+scale = 2
+camera = "PerspectiveFront"
+
+[[poses]]
+model = "priest_000001.obj"
+path = "../../priest000002.png"
+width = 64
+height = 64
+scale = 2
+camera = "PerspectiveRight"
