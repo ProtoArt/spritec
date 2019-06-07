@@ -1,7 +1,7 @@
 # Blender MTL File: 'priest.blend'
 # Material Count: 3
 
-newmtl gold_armor
+newmtl gold
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 1.000000 0.698342 0.096358
