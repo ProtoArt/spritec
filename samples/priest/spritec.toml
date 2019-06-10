@@ -4,7 +4,24 @@
 
 [[poses]]
 model = "priest_000001.obj"
-path = "../../priest000001.png"
+path = "../../priest_front_64.png"
+width = 64
+height = 64
+scale = 12
+camera = "PerspectiveFront"
+
+[[poses]]
+model = "priest_000001.obj"
+path = "../../priest_right_64.png"
+width = 64
+height = 64
+scale = 12
+camera = "PerspectiveRight"
+
+
+[[poses]]
+model = "priest_000001.obj"
+path = "../../priest_front_128.png"
 width = 128
 height = 128
 scale = 6
@@ -12,7 +29,7 @@ camera = "PerspectiveFront"
 
 [[poses]]
 model = "priest_000001.obj"
-path = "../../priest000002.png"
+path = "../../priest_right_128.png"
 width = 128
 height = 128
 scale = 6
