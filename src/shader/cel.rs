@@ -84,7 +84,7 @@ impl<'a> Pipeline for CelShader<'a> {
         let gamma = 2.2;
         final_color = final_color.map(|c| c.powf(1.0/gamma));
 
-        // Reassign the final alpha because we don't actually want to calculations above to
+        // Reassign the final alpha because we don't actually want the calculations above to
         // influence this value
         final_color.a = alpha;
 
