@@ -80,6 +80,7 @@ impl<'a> Pipeline for CelShader<'a> {
         };
 
         // Gamma correction
+        // Technique from: https://learnopengl.com/Advanced-Lighting/Gamma-Correction
         let gamma = 2.2;
         final_color = final_color.map(|c| c.powf(1.0/gamma));
 
