@@ -3,6 +3,8 @@ use std::num::NonZeroU32;
 use crate::math::{Vec3, Rgba, Degrees};
 use serde::{Serialize, Deserialize};
 
+use std::path::{Path, Component};
+
 /// A newtype around PathBuf to force the path to be resolved relative to a base directory before
 /// it can be used. Good to prevent something that is pretty easy to do accidentally.
 // Using an absolute path to PathBuf so we don't even have PathBuf imported
@@ -12,13 +14,63 @@ pub struct UnresolvedPath(std::path::PathBuf);
 
 impl UnresolvedPath {
     /// Resolves this path relative to the given base directory. Returns an absolute path.
-    pub fn resolve(&self, base_dir: &std::path::Path) -> std::path::PathBuf {
+    pub fn resolve(&self, base_dir: &Path) -> std::path::PathBuf {
         let path = &self.0;
-        if path.is_absolute() {
+        let path = if path.is_absolute() {
             path.to_path_buf()
         } else {
             base_dir.join(path)
+        };
+
+        let mut components = path.components().peekable();
+        let mut ret = std::path::PathBuf::new();
+
+        for component in components {
+            match component {
+                Component::Prefix(..) => unreachable!(),
+                Component::RootDir => {
+                    ret.push(component.as_os_str());
+                },
+                Component::CurDir => {},
+                Component::ParentDir => {
+                    ret.pop();
+                },
+                Component::Normal(c) => {
+                    ret.push(c);
+                },
+            }
         }
+
+        println!("path: {:?}", path);
+        println!("ret: {:?}", ret);
+
+        ret
+
+        // Hi mom
+        // let mut components = path.components().peekable();
+        // let mut ret = if let Some(c @ Component::Prefix(..)) = components.peek().cloned() {
+        //     components.next();
+        //     std::path::PathBuf::from(c.as_os_str())
+        // } else {
+        //     std::path::PathBuf::new()
+        // };
+        //
+        // for component in components {
+        //     match component {
+        //         Component::Prefix(..) => unreachable!(),
+        //         Component::RootDir => {
+        //             ret.push(component.as_os_str());
+        //         }
+        //         Component::CurDir => {}
+        //         Component::ParentDir => {
+        //             ret.pop();
+        //         }
+        //         Component::Normal(c) => {
+        //             ret.push(c);
+        //         }
+        //     }
+        // }
+        // ret
     }
 }
 
