@@ -40,37 +40,7 @@ impl UnresolvedPath {
                 },
             }
         }
-
-        println!("path: {:?}", path);
-        println!("ret: {:?}", ret);
-
         ret
-
-        // Hi mom
-        // let mut components = path.components().peekable();
-        // let mut ret = if let Some(c @ Component::Prefix(..)) = components.peek().cloned() {
-        //     components.next();
-        //     std::path::PathBuf::from(c.as_os_str())
-        // } else {
-        //     std::path::PathBuf::new()
-        // };
-        //
-        // for component in components {
-        //     match component {
-        //         Component::Prefix(..) => unreachable!(),
-        //         Component::RootDir => {
-        //             ret.push(component.as_os_str());
-        //         }
-        //         Component::CurDir => {}
-        //         Component::ParentDir => {
-        //             ret.pop();
-        //         }
-        //         Component::Normal(c) => {
-        //             ret.push(c);
-        //         }
-        //     }
-        // }
-        // ret
     }
 }
 
@@ -295,6 +265,28 @@ fn default_background() -> Rgba { Rgba {r: 0.0, g: 0.0, b: 0.0, a: 0.0} }
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn resolve_absolute_path() {
+        let base_path = "/spritec/sample/bigboi";
+        let input_path = "/spritec/sample/bigboi/test";
+        let output_path = "/spritec/sample/bigboi/test";
+        resolve_check(base_path, input_path, output_path);
+    }
+
+    #[test]
+    fn resolve_relative_path() {
+        let base_path = "/spritec/sample/bigboi";
+        let input_path = "../../src/bin";
+        let output_path = "/spritec/src/bin";
+        resolve_check(base_path, input_path, output_path);
+    }
+
+    fn resolve_check(base: &str, input: &str, output: &str) {
+        let input_path = UnresolvedPath(std::path::PathBuf::from(input));
+        let base_path = Path::new(base);
+        assert_eq!(input_path.resolve(base_path), std::path::PathBuf::from(output));
+    }
 
     #[test]
     fn parse_bigboi_config() {
