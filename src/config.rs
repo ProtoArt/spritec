@@ -3,7 +3,8 @@ use std::num::NonZeroU32;
 use crate::math::{Vec3, Rgba, Degrees};
 use serde::{Serialize, Deserialize};
 
-// PathBuf is not imported to avoid its use in this module
+// PathBuf is not imported to avoid its use in this module. Everything path in this module should
+// be an UnresolvedPath.
 use std::path::{Path, Component};
 
 /// A newtype around PathBuf to force the path to be resolved relative to a base directory before
@@ -19,7 +20,12 @@ impl UnresolvedPath {
         // Path resolution based on code found at
         // https://github.com/rust-lang/cargo/blob/9ef364a5507ef87843c5f37b11d3ccfbd8cbe478/src/cargo/util/paths.rs#L65-L90
         // Resolution removes . and .. from the path, where . is removed without affecting the rest
-        // of the path and .. will remove its parent from the path
+        // of the path and .. will remove its parent from the path.
+        // This is needed because Windows does not support . and .. in its paths
+
+        // Constraint: The base directory path (base_dir) should be an absolute path.
+        assert!(base_dir.is_absolute(), "Base directory path was not absolute.");
+
         let path = &self.0;
         let path = if path.is_absolute() {
             path.to_path_buf()
@@ -38,13 +44,8 @@ impl UnresolvedPath {
 
         let path = std::path::PathBuf::from(path_str);
 
-        let mut components = path.components().peekable();
-        let mut normalized_path = if let Some(c @ Component::Prefix(..)) = components.peek().cloned() {
-            components.next();
-            std::path::PathBuf::from(c.as_os_str())
-        } else {
-            std::path::PathBuf::new()
-        };
+        let components = path.components();
+        let mut normalized_path = std::path::PathBuf::new();
 
         for component in components {
             match component {
@@ -293,7 +294,7 @@ mod tests {
 
     #[test]
     fn resolve_absolute_path() {
-        let base_path = "/home/yourname/spritec/sample/bigboi";
+        let base_path = "/home/yourname/spritec/sample";
         let input_path = "/home/yourname/spritec/sample/bigboi/test";
         let output_path = "/home/yourname/spritec/sample/bigboi/test";
         resolve_check!(base_path, input_path, output_path);
@@ -310,16 +311,33 @@ mod tests {
     #[test]
     fn resolve_complex_relative_path() {
         let base_path = "/home/yourname/./spritec";
-        let input_path = "../../../../src/./bin/../file";
+        let input_path = "../../../../src\\.\\bin\\..\\file";
         let output_path = "/src/file";
         resolve_check!(base_path, input_path, output_path);
     }
 
     #[test]
-    fn resolve_windows_path() {
-        let base_path = "C:\\yourname\\spritec\\sample\\bigboi";
+    fn resolve_relative_windows_path() {
+        let base_path = "/C:\\yourname\\spritec\\sample\\bigboi";
         let input_path = "..\\..\\src\\bin";
         let output_path = "C:/yourname/spritec/src/bin";
+        resolve_check!(base_path, input_path, output_path);
+    }
+
+    #[test]
+    fn resolve_absolute_windows_path() {
+        let base_path = "C:\\yourname\\spritec\\sample\\bigboi";
+        let input_path = "C:\\yourname\\spritec\\src\\bin";
+        let output_path = "C:/yourname/spritec/src/bin";
+        resolve_check!(base_path, input_path, output_path);
+    }
+
+    #[test]
+    #[should_panic(expected = "Base directory path")]
+    fn resolve_relative_base_path() {
+        let base_path = "yourname/spritec/";
+        let input_path = "/home/yourname/spritec/";
+        let output_path = "/home/yourname/spritec/";
         resolve_check!(base_path, input_path, output_path);
     }
 
