@@ -38,6 +38,7 @@ impl Mesh {
         buffers: &[gltf::buffer::Data],
         primitive: &gltf::Primitive,
         materials: &[Arc<Material>],
+        transform: Mat4<f32>,
     ) -> Self {
         // We're only dealing with triangle meshes
         assert_eq!(gltf::mesh::Mode::Triangles, primitive.mode(), "Not handling non-triangle glTF primitives");
@@ -62,7 +63,7 @@ impl Mesh {
             "Position vector and normals vector have different lengths"
         );
 
-        Self {indices, positions, normals, material, transform: Mat4::identity()}
+        Self {indices, positions, normals, material, transform}
     }
 
     /// Returns the indices of this mesh
