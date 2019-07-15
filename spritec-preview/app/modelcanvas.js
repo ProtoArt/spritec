@@ -7,15 +7,15 @@ class ModelCanvas {
     this.renderer = renderer;
     this.el = element;
     this.ctx = this.el.getContext('2d');
-    // The actual dimensions of the canvas (set during resize)
+    // The actual dimensions of the canvas (set during rescale)
     this.width = null;
     this.height = null;
 
-    this.resize();
+    this.rescale();
   }
 
   // Determine the size of the canvas and redraw as necessary
-  resize() {
+  rescale() {
     // Want to preserve the aspect ratio of the image while keeping it in bounds
     // https://stackoverflow.com/a/1106367/551904
     const parent = this.el.parentElement;

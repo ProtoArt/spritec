@@ -31,9 +31,29 @@ impl ImageBuffer {
     /// Changes the scale of the image buffer. The buffer's contents should not be relied on until
     /// it has been redrawn with this new scale.
     pub fn set_scale(&mut self, scale: usize) {
-        let size = RGBA_COMPONENTS * self.width * scale * self.height * scale;
-        self.data.resize_with(size, Default::default);
         self.scale = scale;
+        self.resize_buffer();
+    }
+
+    /// Changes the width of the image buffer. The buffer's contents should not be relied on until
+    /// it has been redrawn with this new width.
+    pub fn set_width(&mut self, width: usize) {
+        self.width = width;
+        self.resize_buffer();
+    }
+
+    /// Changes the height of the image buffer. The buffer's contents should not be relied on until
+    /// it has been redrawn with this new height.
+    pub fn set_height(&mut self, height: usize) {
+        self.height = height;
+        self.resize_buffer();
+    }
+
+    /// Sets the raw number of elements in the buffer. After calling this method, the buffer's
+    /// contents should not be relied on until it has been redrawn.
+    fn resize_buffer(&mut self) {
+        let size = RGBA_COMPONENTS * self.width * self.scale * self.height * self.scale;
+        self.data.resize_with(size, Default::default);
     }
 }
 

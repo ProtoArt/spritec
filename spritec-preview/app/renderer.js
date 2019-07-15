@@ -10,7 +10,8 @@ spritec_preview.then((spritec) => {
     scale: 3,
   });
 
-  setupCanvas(renderer);
+  const modelCanvas = setupCanvas(renderer);
+  setupForm(renderer, modelCanvas);
 });
 
 function setupCanvas(renderer) {
@@ -18,7 +19,7 @@ function setupCanvas(renderer) {
   const modelCanvas = new ModelCanvas(renderer, canvasEl);
 
   window.addEventListener('resize', () => {
-    modelCanvas.resize();
+    modelCanvas.rescale();
   });
 
   let rotation = 0.0;
@@ -36,5 +37,30 @@ function setupCanvas(renderer) {
       renderer.setViewYRotation(rotation);
       modelCanvas.render();
     }
-  })
+  });
+
+  return modelCanvas;
+}
+
+function setupForm(renderer, modelCanvas) {
+  const widthEl = document.getElementById('image-width');
+  const heightEl = document.getElementById('image-height');
+
+  widthEl.addEventListener('input', (e) => {
+    const width = Number(e.target.value);
+    // Ignore updates that aren't valid
+    if (width > 0) {
+      renderer.setWidth(width);
+      modelCanvas.rescale();
+    }
+  });
+
+  heightEl.addEventListener('input', (e) => {
+    const height = Number(e.target.value);
+    // Ignore updates that aren't valid
+    if (height > 0) {
+      renderer.setHeight(height);
+      modelCanvas.rescale();
+    }
+  });
 }

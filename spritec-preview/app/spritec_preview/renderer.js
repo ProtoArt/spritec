@@ -39,6 +39,22 @@ class Renderer {
     return this.image.data;
   }
 
+  // Sets the width property of the renderer
+  // Does *not* trigger a re-render
+  setWidth(width) {
+    const opt = this.configOpts.Width;
+    this.spritec.exports().renderer_config_usize(this.ptr, opt, width);
+    this.image.width = width;
+  }
+
+  // Sets the height property of the renderer
+  // Does *not* trigger a re-render
+  setHeight(height) {
+    const opt = this.configOpts.Height;
+    this.spritec.exports().renderer_config_usize(this.ptr, opt, height);
+    this.image.height = height;
+  }
+
   // Sets the scale property of the renderer
   // Does *not* trigger a re-render
   setScale(scale) {

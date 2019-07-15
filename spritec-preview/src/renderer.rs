@@ -14,6 +14,8 @@ use crate::image_buffer::ImageBuffer;
 #[strum_discriminants(name(ConfigOpts))]
 #[strum_discriminants(derive(EnumIter, AsRefStr, IntoStaticStr, EnumCount))]
 pub enum ConfigureRenderer {
+    Width(usize),
+    Height(usize),
     Scale(usize),
     ViewXRotation(f32),
     ViewYRotation(f32),
@@ -45,7 +47,10 @@ impl ConfigureRenderer {
     pub fn from_usize(opt: ConfigOpts, arg: usize) -> Self {
         use ConfigureRenderer::*;
         match opt {
+            ConfigOpts::Width => Width(arg),
+            ConfigOpts::Height => Height(arg),
             ConfigOpts::Scale => Scale(arg),
+
             ConfigOpts::ViewXRotation |
             ConfigOpts::ViewYRotation |
             ConfigOpts::BorderThickness |
@@ -61,6 +66,9 @@ impl ConfigureRenderer {
             ConfigOpts::ViewXRotation => ViewXRotation(arg),
             ConfigOpts::ViewYRotation => ViewYRotation(arg),
             ConfigOpts::BorderThickness => BorderThickness(arg),
+
+            ConfigOpts::Width |
+            ConfigOpts::Height |
             ConfigOpts::Scale |
             ConfigOpts::Background |
             ConfigOpts::BorderColor => unreachable!(),
@@ -73,6 +81,9 @@ impl ConfigureRenderer {
         match opt {
             ConfigOpts::Background => Background(arg),
             ConfigOpts::BorderColor => BorderColor(arg),
+
+            ConfigOpts::Width |
+            ConfigOpts::Height |
             ConfigOpts::Scale |
             ConfigOpts::ViewXRotation |
             ConfigOpts::ViewYRotation |
@@ -130,6 +141,8 @@ impl Renderer {
     pub fn config(&mut self, opt: ConfigureRenderer) {
         use ConfigureRenderer::*;
         match opt {
+            Width(arg) => self.image_data.set_width(arg),
+            Height(arg) => self.image_data.set_height(arg),
             Scale(arg) => self.image_data.set_scale(arg),
             ViewXRotation(arg) => self.view_x_rotation = arg,
             ViewYRotation(arg) => self.view_y_rotation = arg,
