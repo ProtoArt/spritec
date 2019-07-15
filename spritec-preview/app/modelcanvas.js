@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 // A canvas element that represents a rendered 3D model
 //
 // Automatically resizes to fit its container while also maintaining the aspect
@@ -50,6 +52,22 @@ class ModelCanvas {
 
     this.ctx.clearRect(0, 0, this.width, this.height);
     this.ctx.putImageData(this.renderer.imageData(), 0, 0);
+  }
+
+  save(path) {
+    //TODO: This code is from: https://stackoverflow.com/a/52701672/551904
+    // We should probably replace this with a proper image library. We should
+    // also make sure that we're saving the best resolution possible. I'm not
+    // convinced that just saving the canvas will do that.
+
+    // Get the DataUrl from the Canvas
+    const url = this.el.toDataURL('image/png', 0.8);
+
+    // remove Base64 stuff from the Image
+    const base64Data = url.replace(/^data:image\/png;base64,/, "");
+    fs.writeFile(path, base64Data, 'base64', function (err) {
+      console.error(err);
+    });
   }
 }
 

@@ -15,6 +15,25 @@ class Renderer {
     this._fetchImage();
   }
 
+  // Load a new file into this renderer instance. Internally destroys the old
+  // instance and creates a new one.
+  load(path) {
+    this.destroy();
+
+    console.log('loading', path);
+
+    const renderer = new Renderer(this.spritec, {
+      path,
+      width: this.image.width,
+      height: this.image.height,
+      scale: this.image.scale,
+    });
+
+    //TODO: lol this seems like such a bad thing to do. We should probably
+    // design this code better so it isn't so smelly.
+    Object.assign(this, renderer);
+  }
+
   // Must call destroy before this goes out of scope or else we will leak memory
   // in the web assembly module. The Renderer object *cannot* be used after this
   // method is called.

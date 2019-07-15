@@ -1,3 +1,5 @@
+const { dialog } = require('electron').remote;
+
 const spritec_preview = require('./spritec_preview');
 const ModelCanvas = require('./modelcanvas.js');
 
@@ -43,8 +45,24 @@ function setupCanvas(renderer) {
 }
 
 function setupForm(renderer, modelCanvas) {
+  const modelFileEl = document.getElementById('model-file');
   const widthEl = document.getElementById('image-width');
   const heightEl = document.getElementById('image-height');
+  const saveEl = document.getElementById('save-image');
+
+  modelFileEl.addEventListener('change', (e) => {
+    if (!e.target.files.length) {
+      // No files selected
+      return;
+    }
+
+    const path = e.target.files[0].path;
+    // Reset the input so the path doesn't remain visible for no reason
+    e.target.value = '';
+
+    renderer.load(path);
+    modelCanvas.render();
+  });
 
   widthEl.addEventListener('input', (e) => {
     const width = Number(e.target.value);
@@ -62,5 +80,17 @@ function setupForm(renderer, modelCanvas) {
       renderer.setHeight(height);
       modelCanvas.rescale();
     }
+  });
+
+  saveEl.addEventListener('click', (e) => {
+    const path = dialog.showSaveDialog({
+      title: "Save pose as PNG",
+    });
+
+    if (!path) {
+      return;
+    }
+
+    modelCanvas.save(path);
   });
 }
