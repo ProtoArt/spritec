@@ -39,7 +39,7 @@ impl<'a> Pipeline for OutlineShader<'a> {
         // Find vertex position
         let v_pos = Vec4::from_point(self.mesh.position(v_index));
         // Calculate vertex position in camera space
-        let v_pos_cam = Vec3::from(self.mvp * v_pos);
+        let v_pos_cam = Vec3::from((self.mvp * v_pos).homogenized());
         // Find vertex normal
         let v_norm = Vec4::from_point(self.mesh.normal(v_index));
         // Transform normals to preserve orthogonality after non-uniform transformation
