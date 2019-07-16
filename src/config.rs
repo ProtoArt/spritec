@@ -2,6 +2,7 @@ use std::num::{NonZeroUsize, NonZeroU32};
 
 use vek::{Vec3, Rgba};
 use serde::{Serialize, Deserialize};
+use crate::shader::Camera;
 
 /// A newtype around PathBuf to force the path to be resolved relative to a base directory before
 /// it can be used. Good to prevent something that is pretty easy to do accidentally.
@@ -155,14 +156,7 @@ impl Default for Outline {
 #[serde(untagged)]
 pub enum PresetCamera {
     Perspective(Perspective),
-    Custom {
-        /// The position of the camera (world coordinates)
-        /// Specify as an object: {x = 1.23, y = 4.56, z = 7.89}
-        position: Vec3<f32>,
-        /// The target position to look at (world coordinates)
-        /// Specify as an object: {x = 1.23, y = 4.56, z = 7.89}
-        target: Vec3<f32>,
-    },
+    Custom(Camera),
 }
 
 /// Preset perspective cameras for common angles

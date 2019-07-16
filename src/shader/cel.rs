@@ -45,13 +45,13 @@ impl<'a> Pipeline for CelShader<'a> {
         let v_index = *v_index as usize;
         // Find vertex position
         let v_pos = Vec4::from_point(self.mesh.position(v_index));
+        let v_pos_cam_4 = (self.mvp * v_pos).homogenized();
         // Calculate vertex position in camera space
-        let v_pos_cam = Vec3::from(self.mvp * v_pos).into_array();
+        let mut v_pos_cam = Vec3::from(v_pos_cam_4).into_array();
         // Find vertex normal
         let v_norm = Vec4::from_point(self.mesh.normal(v_index));
         // Transform normals to preserve orthogonality after non-uniform transformations.
-        let v_norm = Vec3::from((self.model_inverse_transpose * v_norm).normalized());
-
+        let v_norm = Vec3::from((self.model_inverse_transpose * v_norm).normalized());    
         (v_pos_cam, v_norm)
     }
 
