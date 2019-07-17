@@ -21,56 +21,51 @@ pub struct GltfFile {
 /// glTF node that can be transformed
 struct Node<'a> {
     gltf_node: gltf::Node<'a>,
-    translation: [f32; 3],
-    rotation: [f32; 4],
-    scale: [f32; 3],
+    translation: Vec3<f32>,
+    rotation: Quaternion<f32>,
+    scale: Vec3<f32>,
+}
+
+impl<'a> From<gltf::Node<'a>> for Node<'a> {
+    fn from(gltf_node: gltf::Node<'a>) -> Self {
+        Node {
+            gltf_node,
+            translation: Vec3::zero(),
+            rotation: Quaternion::identity(),
+            scale: Vec3::one(),
+        }
+    }
 }
 
 impl<'a> Node<'a> {
-    fn new(gltf_node: gltf::Node<'a>) -> Self {
-        Node {
-            gltf_node,
-            translation: [0.0, 0.0, 0.0],
-            rotation: [0.0, 0.0, 0.0, 1.0],
-            scale: [1.0, 1.0, 1.0],
-        }
-    }
-
-    fn apply_rotation(&mut self, rotation: [f32; 4]) {
+    fn apply_rotation(&mut self, rotation: Quaternion<f32>) {
         self.rotation = rotation;
     }
 
-    fn apply_translation(&mut self, translation: [f32; 3]) {
+    fn apply_translation(&mut self, translation: Vec3<f32>) {
         self.translation = translation;
     }
 
-    fn apply_scale(&mut self, scale: [f32; 3]) {
+    fn apply_scale(&mut self, scale: Vec3<f32>) {
         self.scale = scale;
     }
 
     fn local_transform(&self) -> Mat4<f32> {
         Node::apply_transform(
-            self.gltf_node.transform().matrix(),
-            Vec3::<f32>::from(self.translation),
-            Quaternion::<f32>::from_xyzw(
-                self.rotation[0], self.rotation[1], self.rotation[2], self.rotation[3]
-            ),
-            Vec3::<f32>::from(self.scale),
+            Mat4::<f32>::from_row_arrays(self.gltf_node.transform().matrix()),
+            self.translation,
+            self.rotation,
+            self.scale,
         )
     }
 
     fn apply_transform(
-        m: [[f32; 4]; 4],
+        m: Mat4<f32>,
         translation: Vec3<f32>,
         rotation: Quaternion<f32>,
         scale: Vec3<f32>
     ) -> Mat4<f32> {
-        let mut transform = Mat4::<f32>::new(
-            m[0][0], m[0][1], m[0][2], m[0][3],
-            m[1][0], m[1][1], m[1][2], m[1][3],
-            m[2][0], m[2][1], m[2][2], m[2][3],
-            m[3][0], m[3][1], m[3][2], m[3][3],
-        );
+        let mut transform = m;
 
         // Order of operation: t * r * s, so apply s->r->t
         transform.scale_3d(scale);
@@ -125,7 +120,7 @@ impl GltfFile {
     pub fn frame(&self, animation: Option<&str>, frame: Option<usize>) -> Model {
         // Create nodes that we can apply transformations to
         let mut nodes = self.document.nodes()
-            .map(|gltf_node| Node::new(gltf_node))
+            .map(|gltf_node| Node::from(gltf_node))
             .collect::<Vec<Node>>();
 
         // TODO: currently only handling the first animation, need to read animation
@@ -143,13 +138,18 @@ impl GltfFile {
                 match outputs {
                     ReadOutputs::Rotations(rotations) => {
                         let mut iter = rotations.into_f32();
-                        nodes[node_index].apply_rotation(iter.next().unwrap());
+                        let [x, y, z, w] = iter.next().unwrap();
+                        nodes[node_index].apply_rotation(Quaternion::from_xyzw(x, y, z, w));
                     }
                     ReadOutputs::Translations(mut translations) => {
-                        nodes[node_index].apply_translation(translations.next().unwrap())
+                        nodes[node_index].apply_translation(
+                            Vec3::from(translations.next().unwrap())
+                        )
                     }
                     ReadOutputs::Scales(mut scales) => {
-                        nodes[node_index].apply_scale(scales.next().unwrap())
+                        nodes[node_index].apply_scale(
+                            Vec3::from(scales.next().unwrap())
+                        )
                     }
                     ReadOutputs::MorphTargetWeights(_) => {
                         // TODO: gltf morph targets not supported
@@ -204,12 +204,12 @@ mod tests {
         );
 
         let actual = Node::apply_transform(
-            [
+            Mat4::from_row_arrays([
                 [2.0, 0.0, 0.0, 0.0],
                 [0.0, 2.0, 0.0, 0.0],
                 [0.0, 0.0, 2.0, 0.0],
                 [0.0, 0.0, 0.0, 2.0]
-            ],
+            ]),
             Vec3::new(1.0, 2.0, 3.0),
             // rotate 180 degrees around z-axis
             Quaternion::from_xyzw(0.0, 0.0, 1.0, 0.0),
