@@ -3,7 +3,7 @@ use std::num::NonZeroU32;
 use crate::math::{Vec3, Rgba, Degrees};
 use serde::{Serialize, Deserialize};
 
-// PathBuf is not imported to avoid its use in this module. Everything path in this module should
+// PathBuf is not imported to avoid its use in this module. Every path in this module should
 // be an UnresolvedPath.
 use std::path::{Path, Component};
 
@@ -23,7 +23,7 @@ impl UnresolvedPath {
         // of the path and .. will remove its parent from the path.
         // This is needed because Windows does not support . and .. in its paths
 
-        // Constraint: The base directory path (base_dir) should be an absolute path.
+        // Constraint: The base directory path (base_dir) should always be an absolute path.
         assert!(base_dir.is_absolute(), "Base directory path was not absolute.");
 
         let path = &self.0;
@@ -34,9 +34,9 @@ impl UnresolvedPath {
         };
 
         // Windows paths are separated by backslashes, which are not separated into components with
-        // the path's component function. For proper separation with the components function, we
-        // replace all backslashes in the path with forward slahes.
-        // eg. Without replacement, component of C:\User\yourname\file is "C:\User\yourname\file"
+        // the path's component function. Replace backslashes with forward slashes to ensure proper
+        // componentization.
+        // eg. Without replacement, C:\User\yourname\file is "C:\User\yourname\file"
         // instead of "C:", "User", "yourname", "file"
         let path_str = path.to_str()
             .expect("Path was not valid Unicode")
@@ -44,8 +44,13 @@ impl UnresolvedPath {
 
         let path = std::path::PathBuf::from(path_str);
 
-        let components = path.components();
-        let mut normalized_path = std::path::PathBuf::new();
+        let mut components = path.components().peekable();
+        let mut normalized_path = if let Some(c @ Component::Prefix(..)) = components.peek().cloned() {
+            components.next();
+            std::path::PathBuf::from(c.as_os_str())
+        } else {
+            std::path::PathBuf::new()
+        };
 
         for component in components {
             match component {
@@ -292,6 +297,7 @@ mod tests {
         }
     }
 
+    #[cfg(not(target_os = "windows"))]
     #[test]
     fn resolve_absolute_path() {
         let base_path = "/home/yourname/spritec/sample";
@@ -300,44 +306,48 @@ mod tests {
         resolve_check!(base_path, input_path, output_path);
     }
 
+    #[cfg(not(target_os = "windows"))]
     #[test]
-    fn resolve_simple_relative_path() {
+    fn resolve_relative_path() {
+        let base_path = "/home/yourname/spritec";
+        let input_path = "../../../spritec/../src/./bin";
+        let output_path = "/src/bin";
+        resolve_check!(base_path, input_path, output_path);
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    #[test]
+    fn resolve_mixed_path() {
         let base_path = "/home/yourname/spritec/sample/bigboi";
-        let input_path = "../../src/bin";
+        let input_path = "..\\..\\src\\bin";
         let output_path = "/home/yourname/spritec/src/bin";
         resolve_check!(base_path, input_path, output_path);
     }
 
+    #[cfg(target_os = "windows")]
     #[test]
-    fn resolve_complex_relative_path() {
-        let base_path = "/home/yourname/./spritec";
-        let input_path = "../../../../src\\.\\bin\\..\\file";
-        let output_path = "/src/file";
+    fn resolve_absolute_path() {
+        let base_path = "C:\\user\\yourname\\spritec\\sample";
+        let input_path = "C:\\user\\yourname\\spritec\\sample\\bigboi\\test";
+        let output_path = "C:\\user\\yourname\\spritec\\sample\\bigboi\\test";
         resolve_check!(base_path, input_path, output_path);
     }
 
+    #[cfg(target_os = "windows")]
     #[test]
-    fn resolve_relative_windows_path() {
-        let base_path = "/C:\\yourname\\spritec\\sample\\bigboi";
-        let input_path = "..\\..\\src\\bin";
-        let output_path = "C:/yourname/spritec/src/bin";
+    fn resolve_relative_path() {
+        let base_path = "C:\\user\\yourname\\spritec";
+        let input_path = "..\\..\\..\\spritec\\..\\src\\.\\bin";
+        let output_path = "C:\\src\\bin";
         resolve_check!(base_path, input_path, output_path);
     }
 
+    #[cfg(target_os = "windows")]
     #[test]
-    fn resolve_absolute_windows_path() {
-        let base_path = "C:\\yourname\\spritec\\sample\\bigboi";
-        let input_path = "C:\\yourname\\spritec\\src\\bin";
-        let output_path = "C:/yourname/spritec/src/bin";
-        resolve_check!(base_path, input_path, output_path);
-    }
-
-    #[test]
-    #[should_panic(expected = "Base directory path")]
-    fn resolve_relative_base_path() {
-        let base_path = "yourname/spritec/";
-        let input_path = "/home/yourname/spritec/";
-        let output_path = "/home/yourname/spritec/";
+    fn resolve_mixed_path() {
+        let base_path = "C:\\user\\yourname\\spritec\\sample\\bigboi";
+        let input_path = "../../src/bin";
+        let output_path = "C:\\user\\yourname\\spritec\\src\\bin";
         resolve_check!(base_path, input_path, output_path);
     }
 
