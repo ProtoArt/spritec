@@ -8,20 +8,20 @@ use crate::config;
 #[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct Camera {
-    pub(crate) eye: Vec4<f32>,
-    pub(crate) target: Vec4<f32>,
-    pub(crate) fovy: f32,
-    pub(crate) aspect_ratio_x: f32,
-    pub(crate) aspect_ratio_y: f32,
-    pub(crate) near: f32,
-    pub(crate) far: f32,
+     eye: Vec4<f32>,
+     target: Vec4<f32>,
+     fovy: f32,
+     aspect_ratio_x: f32,
+     aspect_ratio_y: f32,
+     near: f32,
+     far: f32,
 }
 
 impl Default for Camera {
     fn default() -> Camera {
         Camera {
-            eye: Vec4::new(0.0,1.0,8.5,1.0),
-            target: Vec4::new(0.0,0.0,0.0,1.0),
+            eye: Vec4{x:0.0, y:1.0, z:8.5, w:1.0},
+            target: Vec4{x:0.0, y:0.0, z:0.0, w:1.0},
             fovy: 0.35*PI,
             aspect_ratio_x: 1.0,
             aspect_ratio_y: 1.0,
@@ -36,8 +36,7 @@ impl From<config::PresetCamera> for Camera {
         use config::PresetCamera::*;
         match cam {
             Perspective(persp) => persp.into(),
-            //TODO(#4): This should be implemented as part of #4.
-            Custom(camera) => camera.into(),
+            Custom(camera) => camera,
         }
     }
 }
@@ -45,16 +44,15 @@ impl From<config::PresetCamera> for Camera {
 impl From<config::Perspective> for Camera {
     fn from(persp: config::Perspective) -> Self {
 
-        // NOTE: PerspectiveLeft means point the camera to the left side of the x axis( negative x values ).
-        // I.e: the camera is actually looking at the right side of the model
+        // NOTE: PerspectiveLeft means point the camera to the left side of the model
         use config::Perspective::*;
-        let mut eye = match persp {
-            PerspectiveFront => Vec4::new(0.0,1.0,8.5,1.0),
-            PerspectiveBack => Vec4::new(0.0,1.0,-8.5,1.0),
-            PerspectiveLeft => Vec4::new(-8.5,1.0,0.0,1.0),
-            PerspectiveRight => Vec4::new(8.5,1.0,0.0,1.0),
-            PerspectiveTop => Vec4::new(0.0,8.5,-1.0,1.0),
-            PerspectiveBottom => Vec4::new(0.0,-8.5,-1.0,1.0),
+        let eye = match persp {
+            PerspectiveFront => Vec4{x:0.0, y:0.0, z:8.5, w:1.0},
+            PerspectiveBack => Vec4{x:0.0, y:0.0, z:-8.5, w:1.0},
+            PerspectiveLeft => Vec4{x:-8.5, y:0.0, z:0.0, w:1.0},
+            PerspectiveRight => Vec4{x:8.5, y:0.0, z:0.0, w:1.0},
+            PerspectiveTop => Vec4{x:0.0, y:8.5, z:-1.0, w:1.0},
+            PerspectiveBottom => Vec4{x:0.0, y:-8.5, z:-1.0, w:1.0},
         };
         Camera {eye, ..Default::default()}
     }

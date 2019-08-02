@@ -1,6 +1,6 @@
 use std::num::{NonZeroUsize, NonZeroU32};
 
-use vek::{Vec3, Rgba};
+use vek::{Rgba};
 use serde::{Serialize, Deserialize};
 use crate::shader::Camera;
 
