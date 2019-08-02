@@ -17,7 +17,7 @@ use std::time::Duration;
 use std::error::Error;
 use std::thread;
 
-use vek::{Mat4, Vec3,Vec4, Rgba};
+use vek::{Mat4, Rgba};
 use euc::{buffer::Buffer2d, Target};
 use minifb::{Window, WindowOptions, Key, KeyRepeat};
 use spritec::{
@@ -38,17 +38,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // The transformation that represents the position and orientation of the camera
     //
-
-    // WE GOTTA ESTABLISH A STANDARD HANDEDNESS FOR MODELS
-    // Assume a right-handed system for world
-    let eye = Vec4::new(0.0,-8.5,-1.0,1.0);
-    let target = Vec4::new(0.0,0.0,0.0,1.0);
-
     // World coordinates -> Camera coordinates
-    let view = Mat4::<f32>::look_at_rh(eye, target, Vec4::up());
-    let projection = Mat4::perspective_rh_no(0.35*PI, (image_width as f32)/(image_height as f32), 0.01, 100.0);
+    let view = Mat4::rotation_x(PI/8.0) * Mat4::rotation_y(0.0*PI/2.0);
+    // The perspective/orthographic/etc. projection of the camera
+    //
+    // Camera coordinates -> Homogenous coordinates
+    let projection = Mat4::perspective_rh_no(0.8*PI, (image_width as f32)/(image_height as f32), 0.01, 100.0)
+        * Mat4::<f32>::scaling_3d(0.6);
 
-    let scale = 10;
+    let scale = 16;
     let background = Rgba {r: 0.62, g: 0.62, b: 0.62, a: 1.0};
 
     let mut color = Buffer2d::new([image_width, image_height], background);
