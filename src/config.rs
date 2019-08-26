@@ -81,9 +81,9 @@ pub enum AnimationFrames {
         /// The frame to end the animation at (default: last frame of the animation)
         end_frame: Option<usize>,
     },
-    /// An array of filenames. OBJ files will be used as is. For glTF files, the model will be used
+    /// An array of filenames. OBJ files will be used as is. For glTF files, the scene will be used
     /// as loaded regardless of the animations present in the file.
-    Models(Vec<UnresolvedPath>),
+    Scenes(Vec<UnresolvedPath>),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

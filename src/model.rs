@@ -1,10 +1,9 @@
 mod geometry;
 mod material;
+mod node;
+mod scene;
 
 pub use geometry::*;
 pub use material::*;
-
-#[derive(Debug, Clone)]
-pub struct Model {
-    pub meshes: Vec<Mesh>,
-}
+pub use node::*;
+pub use scene::*;

@@ -6,7 +6,7 @@ use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt;
 
-use crate::model::Model;
+use crate::model::Scene;
 
 #[derive(Debug)]
 pub enum LoaderError {
@@ -42,9 +42,9 @@ impl fmt::Display for LoaderError {
     }
 }
 
-/// Load a model based on the file extension of its path. OBJ files will be used as is. For glTF
-/// files, the model will be used as loaded, regardless of the animations present in the file.
-pub fn load_file(path: impl AsRef<Path>) -> Result<Model, LoaderError> {
+/// Load a scene based on the file extension of its path. OBJ files will be used as is. For glTF
+/// files, the scene will be used as loaded, regardless of the animations present in the file.
+pub fn load_file(path: impl AsRef<Path>) -> Result<Scene, LoaderError> {
     let path = path.as_ref();
     match path.extension().and_then(OsStr::to_str) {
         Some("obj") => obj::load_file(path).map_err(Into::into),

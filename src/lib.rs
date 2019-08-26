@@ -33,7 +33,7 @@ use euc::{Pipeline, rasterizer, buffer::Buffer2d};
 use vek::{Mat4, Vec3, Vec4, Rgba};
 
 use crate::shader::DiffuseLight;
-use crate::model::Model;
+use crate::model::Scene;
 use crate::shader::{CelShader, OutlineShader};
 
 pub fn render(
@@ -41,38 +41,45 @@ pub fn render(
     depth: &mut Buffer2d<f32>,
     view: Mat4<f32>,
     projection: Mat4<f32>,
-    model: &Model,
+    scene: &Scene,
     outline_thickness: f32,
     outline_color: Rgba<f32>,
 ) {
-    for mesh in &model.meshes {
-        // The model matrix
-        let model = mesh.transform();
-        // Must be multiplied backwards since each point to be multiplied will be on the right
-        let mvp = projection * view * model;
+    let view_projection_matrix = projection * view;
 
-        OutlineShader {
-            mvp,
+    for node in scene.gather_nodes() {
+        // Only render nodes with geometry data
+        if let Some(meshes) = node.meshes() {
+            for mesh in meshes {
+                let model_transform = mesh.transform();
+                let mvp = view_projection_matrix * model_transform;
+                OutlineShader {
+                    mvp,
+                    mesh,
+                    outline_color,
+                    outline_thickness
+                }.draw::<rasterizer::Triangles<_>, _>(
+                    mesh.indices(),
+                    color,
+                    depth
+                );
 
-            mesh,
-
-            outline_color,
-            outline_thickness,
-        }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), color, depth);
-
-        CelShader {
-            mvp,
-            model_inverse_transpose: model.inverted().transposed(),
-
-            mesh,
-
-            light: DiffuseLight {
-                direction: Vec3::from(view * Vec4::up()),
-                color: Rgba::white(),
-                intensity: 1.0,
-            },
-
-            ambient_intensity: 0.5,
-        }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), color, depth);
+                CelShader {
+                    mvp,
+                    model_inverse_transpose: model_transform.inverted().transposed(),
+                    mesh,
+                    light: DiffuseLight {
+                        direction: Vec3::from(view * Vec4::up()),
+                        color: Rgba::white(),
+                        intensity: 1.0,
+                    },
+                    ambient_intensity: 0.5,
+                }.draw::<rasterizer::Triangles<_>, _>(
+                    mesh.indices(),
+                    color,
+                    depth
+                );
+            }
+        }
     }
 }

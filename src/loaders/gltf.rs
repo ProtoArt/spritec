@@ -1,111 +1,35 @@
+use crate::model::{Material, Scene};
 use std::path::Path;
 use std::sync::Arc;
 
-use vek::{Vec3, Mat4, Quaternion};
-
-use crate::model::{Material, Mesh, Model};
-
-/// Loads the given glTF file path, optionally generating a model for the specific animation or
-/// frame within the file.
-pub fn load_file(path: impl AsRef<Path>) -> Result<Model, gltf::Error> {
+/// Loads the given glTF file path, optionally generating a scene for the
+/// specific animation or frame within the file.
+pub fn load_file(path: impl AsRef<Path>) -> Result<Scene, gltf::Error> {
     GltfFile::load_file(path).map(|file| file.model())
 }
 
 #[derive(Debug, Clone)]
 pub struct GltfFile {
-    document: gltf::Document,
-    buffers: Vec<gltf::buffer::Data>,
-    materials: Vec<Arc<Material>>,
-}
-
-/// glTF node that can be transformed
-struct Node<'a> {
-    gltf_node: gltf::Node<'a>,
-    translation: Vec3<f32>,
-    rotation: Quaternion<f32>,
-    scale: Vec3<f32>,
-}
-
-impl<'a> From<gltf::Node<'a>> for Node<'a> {
-    fn from(gltf_node: gltf::Node<'a>) -> Self {
-        Node {
-            gltf_node,
-            translation: Vec3::zero(),
-            rotation: Quaternion::identity(),
-            scale: Vec3::one(),
-        }
-    }
-}
-
-impl<'a> Node<'a> {
-    fn apply_rotation(&mut self, rotation: Quaternion<f32>) {
-        self.rotation = rotation;
-    }
-
-    fn apply_translation(&mut self, translation: Vec3<f32>) {
-        self.translation = translation;
-    }
-
-    fn apply_scale(&mut self, scale: Vec3<f32>) {
-        self.scale = scale;
-    }
-
-    fn local_transform(&self) -> Mat4<f32> {
-        Node::apply_transform(
-            Mat4::<f32>::from_row_arrays(self.gltf_node.transform().matrix()),
-            self.translation,
-            self.rotation,
-            self.scale,
-        )
-    }
-
-    fn apply_transform(
-        m: Mat4<f32>,
-        translation: Vec3<f32>,
-        rotation: Quaternion<f32>,
-        scale: Vec3<f32>
-    ) -> Mat4<f32> {
-        let mut transform = m;
-
-        // Order of operation: t * r * s, so apply s->r->t
-        transform.scale_3d(scale);
-        let r_matrix = Mat4::<f32>::from(rotation);
-        transform = r_matrix * transform;
-        transform.translate_3d(translation);
-
-        transform
-    }
+    scene: Scene,
 }
 
 impl GltfFile {
+    /// Reads partial glTF data from disk and parses it.
     pub fn load_file(path: impl AsRef<Path>) -> Result<Self, gltf::Error> {
         let (document, buffers, _) = gltf::import(path)?;
-
-        // Load all the materials first, this assumes that the material index
-        // that primitive refers to is loaded in the same order as document.materials()
         let materials: Vec<_> = document
             .materials()
             .map(|material| Arc::new(Material::from(material)))
             .collect();
 
-        Ok(Self {document, buffers, materials})
+        Ok(Self {
+            scene: Scene::from_gltf(&document, &buffers, &materials),
+        })
     }
 
     /// Returns the default model (all the meshes) for this glTF file
-    pub fn model(&self) -> Model {
-        let mut meshes = Vec::new();
-        for mesh in self.document.meshes() {
-            for primitive in mesh.primitives() {
-                meshes.push(Mesh::from_gltf(
-                    &self.buffers,
-                    &primitive,
-                    &self.materials,
-                    Mat4::<f32>::identity(),
-                ));
-            }
-        }
-
-        Model { meshes }
+    pub fn model(&self) -> Scene {
+        self.scene.clone()
     }
 
     /// Return the particular frame of the given animation
@@ -117,7 +41,11 @@ impl GltfFile {
     /// the first frame (or the loaded pose of the model if there is no animation)
     ///
     /// TODO: need to be given frame_rate in order to know which frame to render
-    pub fn frame(&self, animation: Option<&str>, frame: Option<usize>) -> Model {
+    pub fn frame(&self, animation: Option<&str>, frame: Option<usize>) -> Scene {
+        self.scene.clone()
+        // TODO: write an "animation data" that can be applied to the scene by
+        // the renderer to render the correct frame
+        /*
         // Create nodes that we can apply transformations to
         let mut nodes = self.document.nodes()
             .map(|gltf_node| Node::from(gltf_node))
@@ -179,6 +107,7 @@ impl GltfFile {
         } else {
             self.model()
         }
+        */
     }
 
     /// Returns the frame index of the last frame in the given animation. If animation is None,
@@ -187,34 +116,5 @@ impl GltfFile {
         //TODO: Use the `animation` parameter when we support glTF animations.
 
         0
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn apply_transform() {
-        let expected = Mat4::<f32>::new(
-            -8.0,   0.0,  0.0, 2.0,
-             0.0, -10.0,  0.0, 4.0,
-             0.0,   0.0, 12.0, 6.0,
-             0.0,   0.0,  0.0, 2.0,
-        );
-
-        let actual = Node::apply_transform(
-            Mat4::from_row_arrays([
-                [2.0, 0.0, 0.0, 0.0],
-                [0.0, 2.0, 0.0, 0.0],
-                [0.0, 0.0, 2.0, 0.0],
-                [0.0, 0.0, 0.0, 2.0]
-            ]),
-            Vec3::new(1.0, 2.0, 3.0),
-            // rotate 180 degrees around z-axis
-            Quaternion::from_xyzw(0.0, 0.0, 1.0, 0.0),
-            Vec3::new(4.0, 5.0, 6.0)
-        );
-        assert_eq!(expected, actual);
     }
 }

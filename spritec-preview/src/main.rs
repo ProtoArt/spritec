@@ -23,7 +23,7 @@ use minifb::{Window, WindowOptions, Key, KeyRepeat};
 use spritec::{
     render,
     loaders,
-    model::Model,
+    model::Scene,
     color::rgba_to_bgra_u32,
     scale::{scale_map, copy_map},
 };
@@ -107,7 +107,7 @@ fn render_axis(
 ) {
     // Only want to load this once
     thread_local! {
-        static AXIS_MESHES: Model = loaders::obj::load_file("samples/axis/axis.obj")
+        static AXIS_MESHES: Scene = loaders::obj::load_file("samples/axis/axis.obj")
             .expect("Unable to load axis model");
     }
 

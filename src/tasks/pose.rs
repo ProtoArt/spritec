@@ -7,7 +7,7 @@ use image::ImageBuffer;
 use vek::Rgba;
 
 use crate::config;
-use crate::model::Model;
+use crate::model::Scene;
 use crate::shader::Camera;
 use crate::color::vek_rgba_to_image_rgba;
 use crate::loaders::{self, LoaderError, gltf::GltfFile};
@@ -15,8 +15,8 @@ use crate::scale::scale_with;
 
 #[derive(Debug)]
 pub struct Pose {
-    /// The model to render
-    model: Model,
+    /// The scene to render
+    scene: Scene,
     /// The absolute path to output the generated image
     path: PathBuf,
     /// The width at which to render each frame
@@ -43,14 +43,14 @@ impl Pose {
         let config::Pose {model, path, width, height, camera, scale, background, outline} = pose;
 
         use config::PoseModel::*;
-        let model = match model {
+        let scene = match model {
             GltfFrame {gltf, animation, frame} => {
-                let model_path = gltf.resolve(base_dir);
-                let model = GltfFile::load_file(model_path)?;
+                let file_path = gltf.resolve(base_dir);
+                let gltf_file = GltfFile::load_file(file_path)?;
                 //FIXME: Change to `as_deref` instead of `as_ref().map(...)` when this issue is
                 // resolved: https://github.com/rust-lang/rust/issues/50264
                 // To understand this code: https://stackoverflow.com/a/31234028/551904
-                model.frame(animation.as_ref().map(|s| &**s), frame)
+                gltf_file.frame(animation.as_ref().map(|s| &**s), frame)
             },
             Model(path) => {
                 let model_path = path.resolve(base_dir);
@@ -59,7 +59,7 @@ impl Pose {
         };
 
         Ok(Self {
-            model,
+            scene,
             path: path.resolve(base_dir),
             width,
             height,
@@ -88,7 +88,7 @@ impl Pose {
         let view = self.camera.view();
         let projection = self.camera.projection();
 
-        crate::render(&mut color, &mut depth, view, projection, &self.model,
+        crate::render(&mut color, &mut depth, view, projection, &self.scene,
             self.outline_thickness, self.outline_color);
 
         //FIXME: Could optimize the case of scale == 1
