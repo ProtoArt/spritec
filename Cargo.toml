@@ -15,7 +15,7 @@ authors = [
 edition = "2018"
 
 [dependencies]
-euc = "0.2"
+euc = "0.4"
 tobj = "0.1"
 vek = { version = "0.9", features = ["serde"] }
 image = "0.22"
