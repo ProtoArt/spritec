@@ -3,6 +3,7 @@ use euc::{Target, buffer::Buffer2d};
 /// Scales the given source buffer into the target buffer by directly copying each value. The given
 /// function is applied to each value before it is written into the target buffer.
 ///
+/// # Safety
 /// The dimensions of the target buffer must be an even multiple of the dimensions of the source.
 pub fn scale_map<T, U, F>(target: &mut Buffer2d<U>, source: &Buffer2d<T>, f: F)
     where T: Clone + Copy,
@@ -50,6 +51,7 @@ pub fn scale_with<T: Clone + Copy, F: FnMut([usize; 2], T)>(
 
 /// Copy the entire source buffer into the given target buffer starting at the given offset.
 ///
+/// # Safety
 /// Unsafe because no bounds checking is performed.
 pub unsafe fn copy<T: Clone + Copy>(target: &mut Buffer2d<T>, source: &Buffer2d<T>, (x, y): (usize, usize)) {
     copy_map(target, source, (x, y), |p| p)
@@ -58,6 +60,7 @@ pub unsafe fn copy<T: Clone + Copy>(target: &mut Buffer2d<T>, source: &Buffer2d<
 /// Copy the entire source buffer into the given target buffer starting at the given offset.
 /// Applies the given function to each value before writing to the target buffer.
 ///
+/// # Safety
 /// Unsafe because no bounds checking is performed.
 pub unsafe fn copy_map<T, U, F>(target: &mut Buffer2d<U>, source: &Buffer2d<T>, (x, y): (usize, usize), f: F)
     where T: Clone + Copy,
