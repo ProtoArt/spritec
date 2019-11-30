@@ -48,7 +48,7 @@ pub fn load_file(path: impl AsRef<Path>) -> Result<Model, LoaderError> {
     let path = path.as_ref();
     match path.extension().and_then(OsStr::to_str) {
         Some("obj") => obj::load_file(path).map_err(Into::into),
-        Some("gltf") => gltf::load_file(path).map_err(Into::into),
+        Some("gltf") | Some("glb") => gltf::load_file(path).map_err(Into::into),
         _ => Err(LoaderError::UnsupportedFileExtension {path: path.to_path_buf()}),
     }
 }
