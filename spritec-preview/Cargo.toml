@@ -12,5 +12,5 @@ edition = "2018"
 [dependencies]
 spritec = { path = ".." }
 euc = "0.2"
-minifb = "0.12"
+minifb = "0.14"
 vek = "0.9"
