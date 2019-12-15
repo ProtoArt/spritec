@@ -2,50 +2,25 @@ pub mod gltf;
 pub mod obj;
 
 use std::path::{Path, PathBuf};
-use std::error::Error;
 use std::ffi::OsStr;
-use std::fmt;
+
+use thiserror::Error;
 
 use crate::model::Model;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum LoaderError {
-    ObjError(tobj::LoadError),
-    GltfError(::gltf::Error),
+    #[error("{0}")]
+    ObjError(#[from] tobj::LoadError),
+    #[error("{0}")]
+    GltfError(#[from] ::gltf::Error),
+    #[error("Unsupported file extension: {path:?}")]
     UnsupportedFileExtension {path: PathBuf},
-}
-
-impl From<tobj::LoadError> for LoaderError {
-    fn from(err: tobj::LoadError) -> Self {
-        LoaderError::ObjError(err)
-    }
-}
-
-impl From<::gltf::Error> for LoaderError {
-    fn from(err: ::gltf::Error) -> Self {
-        LoaderError::GltfError(err)
-    }
-}
-
-impl Error for LoaderError {}
-
-impl fmt::Display for LoaderError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use LoaderError::*;
-        match self {
-            ObjError(err) => write!(f, "{}", err),
-            GltfError(err) => write!(f, "{}", err),
-            UnsupportedFileExtension {path} => {
-                write!(f, "Unsupported file extension: `{}`", path.display())
-            },
-        }
-    }
 }
 
 /// Load a model based on the file extension of its path. OBJ files will be used as is. For glTF
 /// files, the model will be used as loaded, regardless of the animations present in the file.
-pub fn load_file(path: impl AsRef<Path>) -> Result<Model, LoaderError> {
-    let path = path.as_ref();
+pub fn load_file(path: &Path) -> Result<Model, LoaderError> {
     match path.extension().and_then(OsStr::to_str) {
         Some("obj") => obj::load_file(path).map_err(Into::into),
         Some("gltf") | Some("glb") => gltf::load_file(path).map_err(Into::into),

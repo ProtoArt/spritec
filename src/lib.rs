@@ -21,58 +21,12 @@
 )]
 #![deny(bare_trait_objects)] // Prefer Box<dyn Trait> over Box<Trait>
 
-pub mod color;
 pub mod config;
-pub mod loaders;
-pub mod scale;
-pub mod shader;
 pub mod tasks;
-pub mod model;
 
-use euc::{Pipeline, rasterizer, buffer::Buffer2d};
-use vek::{Mat4, Vec3, Vec4, Rgba};
-
-use crate::shader::DiffuseLight;
-use crate::model::Model;
-use crate::shader::{CelShader, OutlineShader};
-
-pub fn render(
-    color: &mut Buffer2d<Rgba<f32>>,
-    depth: &mut Buffer2d<f32>,
-    view: Mat4<f32>,
-    projection: Mat4<f32>,
-    model: &Model,
-    outline_thickness: f32,
-    outline_color: Rgba<f32>,
-) {
-    for mesh in &model.meshes {
-        // The model matrix
-        let model = mesh.transform();
-        // Must be multiplied backwards since each point to be multiplied will be on the right
-        let mvp = projection * view * model;
-
-        OutlineShader {
-            mvp,
-
-            mesh,
-
-            outline_color,
-            outline_thickness,
-        }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), color, depth);
-
-        CelShader {
-            mvp,
-            model_inverse_transpose: model.inverted().transposed(),
-
-            mesh,
-
-            light: DiffuseLight {
-                direction: Vec3::from(view * Vec4::up()),
-                color: Rgba::white(),
-                intensity: 1.0,
-            },
-
-            ambient_intensity: 0.5,
-        }.draw::<rasterizer::Triangles<_>, _>(mesh.indices(), color, depth);
-    }
-}
+mod color;
+mod loaders;
+mod scale;
+mod renderer;
+mod camera;
+mod model;
