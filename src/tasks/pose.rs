@@ -2,15 +2,15 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::num::{NonZeroUsize, NonZeroU32};
 
-use euc::buffer::Buffer2d;
 use image::ImageBuffer;
 use vek::Rgba;
 
 use crate::config;
 use crate::model::Model;
-use crate::shader::Camera;
+use crate::camera::Camera;
 use crate::color::vek_rgba_to_image_rgba;
 use crate::loaders::{self, LoaderError, gltf::GltfFile};
+use crate::renderer::ThreadRenderContext;
 use crate::scale::scale_with;
 
 #[derive(Debug)]
@@ -54,7 +54,7 @@ impl Pose {
             },
             Model(path) => {
                 let model_path = path.resolve(base_dir);
-                loaders::load_file(model_path)?
+                loaders::load_file(&model_path)?
             },
         };
 
@@ -77,13 +77,13 @@ impl Pose {
     }
 
     /// Draw the image and write the result to the configured file
-    pub fn generate(&self) -> Result<(), io::Error> {
+    pub fn generate(&self, ctx: &ThreadRenderContext) -> Result<(), io::Error> {
         let size = self.size();
-        // An unscaled version of the final image
-        let mut color = Buffer2d::new(size, self.background);
-        let mut depth = Buffer2d::new(size, 1.0);
-
         let [width, height] = size;
+
+        // An unscaled version of the final image
+        let mut renderer = ctx.begin_render((width as u32, height as u32));
+        renderer.clear(self.background);
 
         let view = self.camera.view();
         let projection = self.camera.projection();

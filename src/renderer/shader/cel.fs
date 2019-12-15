@@ -23,6 +23,8 @@ in vec3 v_position;
 
 out vec4 color;
 
+// A Cel/Toon shader implementation
+// Initial version based on this article: http://rbwhitaker.wikidot.com/toon-shader
 void main() {
     // Calculate diffuse light amount
     // max() is used to bottom out at zero if the dot product is negative
