@@ -28,8 +28,6 @@
 // This is why we try to keep a single context per thread. That context is made current and we
 // leave it that way.
 
-use std::path::Path;
-
 use glium::{
     Program,
     texture::RawImage2d,
@@ -40,11 +38,10 @@ use glium::glutin::{
     dpi::PhysicalSize,
     event_loop::EventLoop,
 };
-use image::{ImageBuffer, DynamicImage};
+use image::{RgbaImage, imageops};
 use thiserror::Error;
 
 use super::Renderer;
-use super::geometry_cache::{ModelRef, GeometryCache, RenderLoaderError};
 
 #[derive(Debug, Error)]
 pub enum ContextCreationError {
@@ -75,8 +72,6 @@ pub struct ThreadRenderContext {
     display: Headless,
     /// The shader programs used during rendering
     shaders: Shaders,
-    /// The data stored on the GPU
-    geometry: GeometryCache,
 }
 
 impl ThreadRenderContext {
@@ -126,13 +121,7 @@ impl ThreadRenderContext {
                 cel: cel_shader,
                 outline: outline_shader,
             },
-            geometry: GeometryCache::default(),
         })
-    }
-
-    /// Loads geometry from the given path and prepares it for rendering
-    pub fn load_file(&mut self, path: &Path) -> Result<ModelRef, RenderLoaderError> {
-        self.geometry.load_file(&self.display, path)
     }
 
     /// Returns a new renderer that can be used for drawing
@@ -142,21 +131,21 @@ impl ThreadRenderContext {
             "bug: images larger than 2048x2048 are not supported yet!");
 
         Renderer {
+            display: &self.display,
             shaders: &self.shaders,
-            geometry: &self.geometry,
             target: self.display.draw(),
         }
     }
 
     /// Takes a screenshot of the current buffer and returns it as an image buffer
-    pub fn finish_render(&mut self) -> Result<DynamicImage, glium::ReadError> {
+    pub fn finish_render(&mut self) -> Result<RgbaImage, glium::ReadError> {
         // Wait for any pending draw calls to finish
         self.display.finish();
 
         let image: RawImage2d<u8> = self.display.read_front_buffer()?;
-        let image = ImageBuffer::from_raw(image.width, image.height, image.data.into_owned())
+        let image = RgbaImage::from_raw(image.width, image.height, image.data.into_owned())
             .expect("bug: provided buffer was not big enough");
-        let image = DynamicImage::ImageRgba8(image).flipv();
+        let image = imageops::flip_vertical(&image);
 
         Ok(image)
     }

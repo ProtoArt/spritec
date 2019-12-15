@@ -1,5 +1,4 @@
 mod thread_render_context;
-mod geometry_cache;
 mod uniform_map;
 mod render_mesh;
 mod render_material;
@@ -7,21 +6,22 @@ mod render_light;
 
 pub use thread_render_context::ThreadRenderContext;
 pub use render_mesh::RenderMeshCreationError;
-pub use geometry_cache::{ModelRef, RenderLoaderError};
 
 use vek::{Rgba, Mat4, Vec3, Vec4};
 use glium::{Frame, Surface};
+use glium::backend::glutin::headless::Headless;
+
+use crate::model::Model;
 
 use thread_render_context::Shaders;
-use geometry_cache::GeometryCache;
 use uniform_map::UniformMap;
 use render_mesh::RenderMesh;
 use render_light::RenderDirectionalLight;
 
 /// A renderer that allows you to draw models
 pub struct Renderer<'a> {
+    display: &'a Headless,
     shaders: &'a Shaders,
-    geometry: &'a GeometryCache,
     target: Frame,
 }
 
@@ -32,7 +32,7 @@ impl<'a> Renderer<'a> {
 
     pub fn render(
         &mut self,
-        model: ModelRef,
+        model: &Model,
         view: Mat4<f32>,
         projection: Mat4<f32>,
         outline_thickness: f32,
@@ -66,8 +66,9 @@ impl<'a> Renderer<'a> {
         outline_uniforms.insert("outline_thickness", outline_thickness);
         outline_uniforms.insert("outline_color", outline_color.into_array());
 
-        let model = self.geometry.model(model);
         for mesh in &model.meshes {
+            //TODO: Handle this error properly once we implement model caching
+            let mesh = &RenderMesh::new(self.display, mesh).expect("bug: unable to upload mesh");
             let RenderMesh {indices, positions, normals, material, model_transform} = mesh;
             let model_view = view * (*model_transform);
             let mvp = projection * model_view;
