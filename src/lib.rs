@@ -23,9 +23,10 @@
 
 pub mod config;
 pub mod tasks;
+pub mod renderer;
 
 mod loaders;
 mod scale;
-mod renderer;
 mod camera;
 mod model;
+mod light;

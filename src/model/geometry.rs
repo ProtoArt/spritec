@@ -82,8 +82,8 @@ impl Mesh {
     }
 
     /// Returns the material associated with this mesh
-    pub fn material(&self) -> &Material {
-        &self.material
+    pub fn material(&self) -> Arc<Material> {
+        self.material.clone()
     }
 
     /// Returns the model transformation for this mesh. All vertices of this mesh must have this

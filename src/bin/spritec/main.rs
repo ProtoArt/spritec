@@ -17,7 +17,11 @@ mod args;
 use std::error::Error;
 
 use structopt::StructOpt;
-use spritec::{config::TaskConfig, tasks::{Spritesheet, Pose}};
+use spritec::{
+    config::TaskConfig,
+    tasks::{Spritesheet, Pose},
+    renderer::ThreadRenderContext,
+};
 
 use crate::args::AppArgs;
 
@@ -26,16 +30,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     let TaskConfig {spritesheets, poses} = args.load_config()?;
     let base_dir = args.base_directory()?;
 
+    // Safe because we guarantee that no other OpenGL context will be created on this thread
+    let mut ctx = unsafe { ThreadRenderContext::new()? };
+
     // These loops should not be parallelised. Rendering is done in parallel on the
     // GPU and is orchestrated by the renderer. Trying to do that here with threads
     // will only create contention.
     for sheet in spritesheets {
         let sheet = Spritesheet::from_config(sheet, &base_dir)?;
-        sheet.generate()?;
+        sheet.generate(&mut ctx)?;
     }
     for pose in poses {
         let pose = Pose::from_config(pose, &base_dir)?;
-        pose.generate()?;
+        pose.generate(&mut ctx)?;
     }
 
     Ok(())

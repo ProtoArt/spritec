@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::sync::Arc;
 
 use vek::{Vec3, Mat4};
 use glium::{
@@ -11,9 +12,7 @@ use glium::{
 };
 use thiserror::Error;
 
-use crate::model::Mesh;
-
-use super::render_material::RenderMaterial;
+use crate::model::{Mesh, Material};
 
 #[derive(Debug, Error)]
 pub enum RenderMeshCreationError {
@@ -34,7 +33,7 @@ pub struct RenderMesh {
     pub indices: IndexBuffer<u32>,
     pub positions: VertexBuffer<Vec3<f32>>,
     pub normals: VertexBuffer<Vec3<f32>>,
-    pub material: RenderMaterial,
+    pub material: Arc<Material>,
     pub model_transform: Mat4<f32>,
 }
 
@@ -66,7 +65,7 @@ impl RenderMesh {
                 POSITION_ATTR_TYPE.get_size_bytes())? },
             normals: unsafe { VertexBuffer::new_raw(display, mesh.normals(), normal_bindings,
                 NORMAL_ATTR_TYPE.get_size_bytes())? },
-            material: RenderMaterial::new(mesh.material()),
+            material: mesh.material(),
             model_transform: mesh.transform(),
         })
     }

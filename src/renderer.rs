@@ -1,8 +1,6 @@
 mod thread_render_context;
-mod uniform_map;
 mod render_mesh;
-mod render_material;
-mod render_light;
+mod shader;
 
 pub use thread_render_context::ThreadRenderContext;
 pub use render_mesh::RenderMeshCreationError;
@@ -12,11 +10,12 @@ use glium::{Frame, Surface};
 use glium::backend::glutin::headless::Headless;
 
 use crate::model::Model;
+use crate::light::DirectionalLight;
 
+use shader::cel::{CelUniforms, Cel};
+use shader::outline::{OutlineUniforms, Outline};
 use thread_render_context::Shaders;
-use uniform_map::UniformMap;
 use render_mesh::RenderMesh;
-use render_light::RenderDirectionalLight;
 
 /// A renderer that allows you to draw models
 pub struct Renderer<'a> {
@@ -51,20 +50,12 @@ impl<'a> Renderer<'a> {
         };
 
         // Once we have support for lights, light info will come from elsewhere
-        let light = RenderDirectionalLight {
+        let light = DirectionalLight {
             direction: Vec3::from(view * Vec4::up()),
             color: Rgba::white(),
             intensity: 1.0,
         };
         let ambient_intensity = 0.5;
-
-        let mut cel_uniforms = UniformMap::default();
-        cel_uniforms.insert("ambient_intensity", ambient_intensity);
-        cel_uniforms.insert_nested("light", light.to_uniforms());
-
-        let mut outline_uniforms = UniformMap::default();
-        outline_uniforms.insert("outline_thickness", outline_thickness);
-        outline_uniforms.insert("outline_color", outline_color.into_array());
 
         for mesh in &model.meshes {
             //TODO: Handle this error properly once we implement model caching
@@ -74,13 +65,21 @@ impl<'a> Renderer<'a> {
             let mvp = projection * model_view;
             let model_view_inverse_transpose = model_view.inverted().transposed();
 
-            cel_uniforms.insert("mvp", mvp.into_col_arrays());
-            cel_uniforms.insert("model_view_inverse_transpose", model_view_inverse_transpose.into_col_arrays());
-            cel_uniforms.insert_nested("material", material.to_uniforms());
+            let cel_uniforms = Cel::from(CelUniforms {
+                mvp,
+                model_view_inverse_transpose,
+                light: &light,
+                ambient_intensity,
+                material,
+            });
 
             self.target.draw((positions, normals), indices, &self.shaders.cel, &cel_uniforms, &params)?;
 
-            outline_uniforms.insert("mvp", mvp.into_col_arrays());
+            let outline_uniforms = Outline::from(OutlineUniforms {
+                mvp,
+                outline_thickness,
+                outline_color,
+            });
 
             self.target.draw((positions, normals), indices, &self.shaders.outline, &outline_uniforms, &params)?;
         }
