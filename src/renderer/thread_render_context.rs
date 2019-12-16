@@ -31,7 +31,6 @@
 use glium::{
     Program,
     texture::RawImage2d,
-    backend::glutin::headless::Headless,
 };
 use glium::glutin::{
     ContextBuilder,
@@ -60,6 +59,10 @@ pub struct Shaders {
     pub outline: Program,
 }
 
+// Having this alias allows us to swap Headless with Display during debugging
+pub type Display = glium::backend::glutin::headless::Headless;
+//pub type Display = glium::backend::glutin::Display;
+
 /// A render context that is only allowed to be used on a single thread. Only *one* instance of
 /// this struct should be created per thread.
 pub struct ThreadRenderContext {
@@ -69,7 +72,7 @@ pub struct ThreadRenderContext {
     _event_loop: EventLoop<()>,
     /// The OpenGL context and display. Assumes that the OpenGL context that is current on this
     /// thread will never change.
-    display: Headless,
+    display: Display,
     /// The shader programs used during rendering
     shaders: Shaders,
 }
@@ -91,14 +94,20 @@ impl ThreadRenderContext {
         };
 
         let event_loop = EventLoop::new();
+
         let ctx = ContextBuilder::new()
             // A 24-bit depth buffer is pretty typical for most OpenGL applications
             .with_depth_buffer(24)
             .build_headless(&event_loop, size)?;
+        let display = Display::new(ctx)?;
 
-        // Unsafe because the resulting display will assume that the current OpenGL context will
-        // never change.
-        let display = Headless::new(ctx)?;
+        // This code is useful for debugging when `type Display = glium::backend::glutin::Display`
+        //let window_builder = glium::glutin::window::WindowBuilder::new()
+        //    .with_inner_size(glium::glutin::dpi::LogicalSize::from_physical(size, 4.0));
+        //let context_builder = ContextBuilder::new()
+        //    // A 24-bit depth buffer is pretty typical for most OpenGL applications
+        //    .with_depth_buffer(24);
+        //let display = Display::new(window_builder, context_builder, &event_loop).unwrap();
 
         let cel_shader = Program::from_source(
             &display,
