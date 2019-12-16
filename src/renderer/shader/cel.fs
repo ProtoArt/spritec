@@ -1,8 +1,11 @@
 #version 140
 
 struct DirectionalLight {
+    // The **normalized** direction of the diffuse light being cast on the model
     vec3 direction;
+    // The color of the diffuse light
     vec4 color;
+    // The intensity of the diffuse light
     float intensity;
 }
 
