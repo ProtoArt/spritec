@@ -1,19 +1,29 @@
 use std::io;
 use std::path::{Path, PathBuf};
 use std::borrow::Cow;
-use std::num::{NonZeroUsize, NonZeroU32};
+use std::num::NonZeroU32;
 
+use thiserror::Error;
 use rayon::prelude::*;
-use euc::{buffer::Buffer2d, Target};
-use image::ImageBuffer;
+use image::RgbaImage;
 use vek::Rgba;
 
 use crate::config;
 use crate::model::Model;
-use crate::shader::Camera;
-use crate::color::vek_rgba_to_image_rgba;
+use crate::camera::Camera;
 use crate::loaders::{self, LoaderError, gltf::GltfFile};
-use crate::scale::{copy, scale_with};
+use crate::renderer::ThreadRenderContext;
+use crate::scale::copy;
+
+#[derive(Debug, Error)]
+pub enum SpritesheetError {
+    #[error("{0}")]
+    DrawError(#[from] glium::DrawError),
+    #[error("{0}")]
+    ReadError(#[from] glium::ReadError),
+    #[error("{0}")]
+    IOError(#[from] io::Error),
+}
 
 /// The dimensions of an image (in pixels)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -60,33 +70,38 @@ impl Spritesheet {
     }
 
     /// Draw the spritesheet and write the result to the configured file
-    pub fn generate(&self) -> Result<(), io::Error> {
+    pub fn generate(&self, ctx: &mut ThreadRenderContext) -> Result<(), SpritesheetError> {
         let ImageSize {width, height} = self.image_size();
 
         // An unscaled version of the final image
-        let mut sheet = Buffer2d::new([width as usize, height as usize], self.background);
+        let mut sheet = RgbaImage::new(width, height);
 
         let mut y_offset = 0;
         for anim in &self.animations {
             let frame_size = anim.frame_size();
-            let mut color = Buffer2d::new(frame_size, self.background);
-            let mut depth = Buffer2d::new(frame_size, 1.0);
 
-            let [frame_width, frame_height] = frame_size;
+            let (frame_width, frame_height) = frame_size;
 
             let view = anim.camera.view();
             let projection = anim.camera.projection();
 
-            for (i, frame) in anim.frames.iter().enumerate() {
-                crate::render(&mut color, &mut depth, view, projection, &*frame,
-                    anim.outline_thickness, anim.outline_color);
+            for (i, frame_model) in (1..).zip(anim.frames.iter()) {
+                // Perform rendering, then drop Renderer so that drawing operations get flushed
+                {
+                    let mut renderer = ctx.begin_render(frame_size);
+                    renderer.clear(self.background);
+                    renderer.render(&*frame_model, view, projection,
+                        anim.outline_thickness, anim.outline_color)?;
+                }
+
+                let render_image = ctx.finish_render()?;
+                //TODO: This is a temporary hack to work around the fact that we don't know how to
+                // resize the context
+                let mut image = RgbaImage::new(frame_width, frame_height);
+                crate::scale::truncate_centered(&render_image, &mut image);
 
                 let x_offset = i * frame_width;
-                // Unsafe because we are guaranteeing that the provided offset is not out of bounds
-                unsafe { copy(&mut sheet, &color, (x_offset, y_offset)); }
-
-                color.clear(self.background);
-                depth.clear(1.0);
+                copy(&image, &mut sheet, (x_offset, y_offset));
             }
 
             y_offset += frame_height;
@@ -94,15 +109,12 @@ impl Spritesheet {
 
         //FIXME: Could optimize the case of scale == 1
         let scale = self.scale.get();
-        let mut img = ImageBuffer::new(width * scale, height * scale);
-        let img_size = [img.width() as usize, img.height() as usize];
+        let mut scaled_image = RgbaImage::new(width * scale, height * scale);
+        crate::scale::scale(&sheet, &mut scaled_image);
 
-        scale_with(img_size, &sheet, |[x, y], rgba| {
-            let pixel = img.get_pixel_mut(x as u32, y as u32);
-            *pixel = vek_rgba_to_image_rgba(rgba);
-        });
+        scaled_image.save(&self.path)?;
 
-        img.save(&self.path)
+        Ok(())
     }
 }
 
@@ -110,9 +122,9 @@ impl Spritesheet {
 pub struct Animation {
     frames: AnimationFrames,
     /// The width at which to render each frame
-    frame_width: NonZeroUsize,
+    frame_width: NonZeroU32,
     /// The height at which to render each frame
-    frame_height: NonZeroUsize,
+    frame_height: NonZeroU32,
     /// The camera perspective from which to render each frame
     camera: Camera,
     /// The outline thickness to use when drawing each frame
@@ -139,12 +151,12 @@ impl Animation {
 
     /// Returns the total width of all the animation frames adjacent to each other
     pub fn width(&self) -> u32 {
-        (self.frames.len() * self.frame_width.get()) as u32
+        self.frames.len() as u32 * self.frame_width.get()
     }
 
     /// Returns the [width, height] dimensions of each frame of this animation
-    pub fn frame_size(&self) -> [usize; 2] {
-        [self.frame_width.get(), self.frame_height.get()]
+    pub fn frame_size(&self) -> (u32, u32) {
+        (self.frame_width.get(), self.frame_height.get())
     }
 }
 
@@ -186,7 +198,7 @@ impl AnimationFrames {
             Models(models) => AnimationFrames::Models(
                 models.into_iter()
                     .map(|path| path.resolve(base_dir))
-                    .map(loaders::load_file).collect::<Result<_, _>>()?
+                    .map(|path| loaders::load_file(&path)).collect::<Result<_, _>>()?
             ),
         })
     }

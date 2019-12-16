@@ -24,7 +24,6 @@
 pub mod config;
 pub mod tasks;
 
-mod color;
 mod loaders;
 mod scale;
 mod renderer;

@@ -19,7 +19,7 @@ pub struct UniformMap {
 }
 
 impl Uniforms for UniformMap {
-    fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, visit: F) {
+    fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut visit: F) {
         for (name, value) in &self.uniforms {
             visit(name, *value);
         }

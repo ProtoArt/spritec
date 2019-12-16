@@ -1,48 +1,53 @@
-use euc::{Target, buffer::Buffer2d};
+use image::RgbaImage;
 
-/// Scales the given source buffer into the target buffer by directly copying each value. The given
-/// function is applied to each value before it is written into the target buffer.
+/// Truncates a source buffer to the dimensions of the target
 ///
-/// # Safety
-/// The dimensions of the target buffer must be an even multiple of the dimensions of the source.
-pub fn scale_map<T, U, F>(target: &mut Buffer2d<U>, source: &Buffer2d<T>, f: F)
-    where T: Clone + Copy,
-          U: Clone + Copy,
-          F: Fn(T) -> U,
-{
-    // Unsafe because we are guaranteeing that these indexes are not out of bounds
-    scale_with(target.size(), source, |pos, value| unsafe { target.set(pos, f(value)); })
+/// Aligns the target so it copies the pixels in the center/middle of the source
+pub fn truncate_centered(source: &RgbaImage, target: &mut RgbaImage) {
+    let source_width = source.width();
+    let source_height = source.height();
+
+    let target_width = target.width();
+    let target_height = target.height();
+
+    assert!(target_width <= source_width);
+    assert!(target_height <= source_height);
+
+    let offset_x = source_width / 2 - target_width / 2;
+    let offset_y = source_height / 2 - target_height / 2;
+    copy(source, target, (offset_x, offset_y));
 }
 
-/// Scales the given source buffer into some target size by calling the given function with a
-/// position on the target buffer and the value to place there. Each provided target position is
-/// guaranteed to be within the bounds of target_width and target_height.
+/// Scales the given source image to fit into the target image.
 ///
-/// The dimensions of the target buffer must be an even multiple of the dimensions of the source.
-pub fn scale_with<T: Clone + Copy, F: FnMut([usize; 2], T)>(
-    [target_width, target_height]: [usize; 2],
-    source: &Buffer2d<T>,
-    mut f: F,
-) {
-    let [source_width, source_height] = source.size();
+/// The target image dimensions must be a multiple of the source image dimensions. No interpolation
+/// is performed during the scaling operation.
+pub fn scale(source: &RgbaImage, target: &mut RgbaImage) {
+    let source_width = source.width();
+    let source_height = source.height();
+
+    let target_width = target.width();
+    let target_height = target.height();
+
     let scale_x = target_width / source_width;
     let scale_y = target_height / source_height;
 
     // Check for truncating division. Should only fail if the dimensions are not even multiples
     // of each other.
-    debug_assert_eq!(source_width * scale_x, target_width);
-    debug_assert_eq!(source_height * scale_y, target_height);
+    assert_eq!(source_width * scale_x, target_width);
+    assert_eq!(source_height * scale_y, target_height);
 
     // Blit the pixels with no anti-aliasing
-    for i in 0..source_width {
-        for j in 0..source_height {
-            // Unsafe because we are guaranteeing that these indexes are not out of bounds
-            let color = unsafe { *source.get([i, j]) };
+    for x in 0..source_width {
+        for y in 0..source_height {
+            let pixel = *source.get_pixel(x, y);
 
             // Copy the color to every pixel in the scaled box
-            for sx in 0..scale_x {
-                for sy in 0..scale_y {
-                    f([i * scale_x + sx, j * scale_y + sy], color);
+            for i in 0..scale_x {
+                for j in 0..scale_y {
+                    let sx = x * scale_x + i;
+                    let sy = y * scale_y + j;
+                    target.put_pixel(sx, sy, pixel);
                 }
             }
         }
@@ -50,29 +55,18 @@ pub fn scale_with<T: Clone + Copy, F: FnMut([usize; 2], T)>(
 }
 
 /// Copy the entire source buffer into the given target buffer starting at the given offset.
-///
-/// # Safety
-/// Unsafe because no bounds checking is performed.
-pub unsafe fn copy<T: Clone + Copy>(target: &mut Buffer2d<T>, source: &Buffer2d<T>, (x, y): (usize, usize)) {
-    copy_map(target, source, (x, y), |p| p)
-}
+pub fn copy(source: &RgbaImage, target: &mut RgbaImage, (offset_x, offset_y): (u32, u32)) {
+    let source_width = source.width();
+    let source_height = source.height();
 
-/// Copy the entire source buffer into the given target buffer starting at the given offset.
-/// Applies the given function to each value before writing to the target buffer.
-///
-/// # Safety
-/// Unsafe because no bounds checking is performed.
-pub unsafe fn copy_map<T, U, F>(target: &mut Buffer2d<U>, source: &Buffer2d<T>, (x, y): (usize, usize), f: F)
-    where T: Clone + Copy,
-          U: Clone + Copy,
-          F: Fn(T) -> U,
-{
-    let [source_width, source_height] = source.size();
+    for x in 0..source_width {
+        for y in 0..source_height {
+            let pixel = *source.get_pixel(x, y);
 
-    for i in 0..source_width {
-        for j in 0..source_height {
-            let value = f(*source.get([i, j]));
-            target.set([x + i, y + j], value);
+            // Copy the color to every pixel in the scaled box
+            let cx = x + offset_x;
+            let cy = y + offset_y;
+            target.put_pixel(cx, cy, pixel);
         }
     }
 }
