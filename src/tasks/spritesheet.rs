@@ -87,7 +87,7 @@ impl Spritesheet {
             let view = anim.camera.view();
             let projection = anim.camera.projection();
 
-            for (i, frame_model) in (1..).zip(anim.frames.iter()) {
+            for (i, frame_model) in (0..).zip(anim.frames.iter()) {
                 // Perform rendering, then drop Renderer so that drawing operations get flushed
                 {
                     let mut renderer = ctx.begin_render(frame_size);
