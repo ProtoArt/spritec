@@ -1,17 +1,26 @@
 use std::io;
 use std::path::{Path, PathBuf};
-use std::num::{NonZeroUsize, NonZeroU32};
+use std::num::NonZeroU32;
 
-use image::ImageBuffer;
+use thiserror::Error;
+use image::RgbaImage;
 use vek::Rgba;
 
 use crate::config;
 use crate::model::Model;
 use crate::camera::Camera;
-use crate::color::vek_rgba_to_image_rgba;
 use crate::loaders::{self, LoaderError, gltf::GltfFile};
 use crate::renderer::ThreadRenderContext;
-use crate::scale::scale_with;
+
+#[derive(Debug, Error)]
+pub enum PoseError {
+    #[error("{0}")]
+    DrawError(#[from] glium::DrawError),
+    #[error("{0}")]
+    ReadError(#[from] glium::ReadError),
+    #[error("{0}")]
+    IOError(#[from] io::Error),
+}
 
 #[derive(Debug)]
 pub struct Pose {
@@ -20,9 +29,9 @@ pub struct Pose {
     /// The absolute path to output the generated image
     path: PathBuf,
     /// The width at which to render each frame
-    width: NonZeroUsize,
+    width: NonZeroU32,
     /// The height at which to render each frame
-    height: NonZeroUsize,
+    height: NonZeroU32,
     /// The camera perspective from which to render each frame
     camera: Camera,
     /// A scale factor to apply to the generated image. The image is scaled without interpolation.
@@ -71,36 +80,38 @@ impl Pose {
         })
     }
 
-    /// Returns the [width, height] dimensions of the generated image
-    pub fn size(&self) -> [usize; 2] {
-        [self.width.get(), self.height.get()]
-    }
-
     /// Draw the image and write the result to the configured file
-    pub fn generate(&self, ctx: &ThreadRenderContext) -> Result<(), io::Error> {
-        let size = self.size();
-        let [width, height] = size;
-
-        // An unscaled version of the final image
-        let mut renderer = ctx.begin_render((width as u32, height as u32));
-        renderer.clear(self.background);
+    pub fn generate(&self, ctx: &mut ThreadRenderContext) -> Result<(), PoseError> {
+        let width = self.width.get();
+        let height = self.height.get();
 
         let view = self.camera.view();
         let projection = self.camera.projection();
 
-        crate::render(&mut color, &mut depth, view, projection, &self.model,
-            self.outline_thickness, self.outline_color);
+        // Perform rendering, then drop Renderer so that drawing operations get flushed
+        {
+            // An unscaled version of the final image
+            let mut renderer = ctx.begin_render((width, height));
+            renderer.clear(self.background);
 
-        //FIXME: Could optimize the case of scale == 1
+            renderer.render(&self.model, view, projection,
+                self.outline_thickness, self.outline_color)?;
+        }
+
+        let render_image = ctx.finish_render()?;
+
+        //TODO: This is a temporary hack to work around the fact that we don't know how to resize
+        // the context
+        let mut image = RgbaImage::new(width, height);
+        crate::scale::truncate_centered(&render_image, &mut image);
+
+        //TODO: Could optimize the case of scale == 1
         let scale = self.scale.get();
-        let mut img = ImageBuffer::new(width as u32 * scale, height as u32 * scale);
-        let img_size = [img.width() as usize, img.height() as usize];
+        let mut scaled_image = RgbaImage::new(width * scale, height * scale);
+        crate::scale::scale(&image, &mut scaled_image);
 
-        scale_with(img_size, &color, |[x, y], rgba| {
-            let pixel = img.get_pixel_mut(x as u32, y as u32);
-            *pixel = vek_rgba_to_image_rgba(rgba);
-        });
+        scaled_image.save(&self.path)?;
 
-        img.save(&self.path)
+        Ok(())
     }
 }

@@ -41,12 +41,12 @@ pub struct RenderMesh {
 impl RenderMesh {
     pub fn new(display: &Headless, mesh: &Mesh) -> Result<Self, RenderMeshCreationError> {
         const POSITION_ATTR_TYPE: AttributeType = AttributeType::F32F32F32;
-        static POSITION_BINDINGS: VertexFormat = Cow::Borrowed(&[
+        let position_bindings: VertexFormat = Cow::Borrowed(&[
             // This name must correspond to the name in our shaders
             (Cow::Borrowed("position"), 0, POSITION_ATTR_TYPE, false),
         ]);
         const NORMAL_ATTR_TYPE: AttributeType = AttributeType::F32F32F32;
-        static NORMAL_BINDINGS: VertexFormat = Cow::Borrowed(&[
+        let normal_bindings: VertexFormat = Cow::Borrowed(&[
             // This name must correspond to the name in our shaders
             (Cow::Borrowed("normal"), 0, NORMAL_ATTR_TYPE, false),
         ]);
@@ -62,9 +62,9 @@ impl RenderMesh {
             // should have the same layout as a C struct with three 32-bit floating point values.
             //TODO: Use BufferMode::Immutable here too. glium doesn't currently have a
             // new_raw_immutable method.
-            positions: unsafe { VertexBuffer::new_raw(display, mesh.positions(), POSITION_BINDINGS,
+            positions: unsafe { VertexBuffer::new_raw(display, mesh.positions(), position_bindings,
                 POSITION_ATTR_TYPE.get_size_bytes())? },
-            normals: unsafe { VertexBuffer::new_raw(display, mesh.normals(), NORMAL_BINDINGS,
+            normals: unsafe { VertexBuffer::new_raw(display, mesh.normals(), normal_bindings,
                 NORMAL_ATTR_TYPE.get_size_bytes())? },
             material: RenderMaterial::new(mesh.material()),
             model_transform: mesh.transform(),
