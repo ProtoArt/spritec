@@ -7,11 +7,11 @@ struct DirectionalLight {
     vec4 color;
     // The intensity of the diffuse light
     float intensity;
-}
+};
 
 struct Material {
     vec4 diffuse_color;
-}
+};
 
 // Light parameters
 uniform DirectionalLight light;
@@ -31,7 +31,7 @@ out vec4 color;
 void main() {
     // Calculate diffuse light amount
     // max() is used to bottom out at zero if the dot product is negative
-    float diffuse_intensity = max(dot(v_normal, u_light), 0.0);
+    float diffuse_intensity = max(dot(v_normal, light.direction), 0.0);
 
     // Calculate what would normally be the final color, including texturing and
     // diffuse lighting
