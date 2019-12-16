@@ -17,8 +17,8 @@ void main() {
     // If we draw this expanded object in the outline color and then draw the
     // original object on top, only the additional "outline" portion will
     // remain. Thus drawing a crude approximation of an outline.
-    position += normal * outline_thickness;
+    vec3 outline_position = position + normal * outline_thickness;
 
     // Transforms the position to screen space
-    gl_Position = mvp * vec4(position, 1.0);
+    gl_Position = mvp * vec4(outline_position, 1.0);
 }

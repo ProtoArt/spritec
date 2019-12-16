@@ -25,10 +25,12 @@ pub struct Renderer<'a> {
 }
 
 impl<'a> Renderer<'a> {
+    /// Clears the screen and resets the depth buffer
     pub fn clear(&mut self, background: Rgba<f32>) {
         self.target.clear_color_and_depth(background.into_tuple(), 1.0);
     }
 
+    /// Draw the given model with the given parameters
     pub fn render(
         &mut self,
         model: &Model,
@@ -85,5 +87,10 @@ impl<'a> Renderer<'a> {
         }
 
         Ok(())
+    }
+
+    /// This method must be called before the Renderer is dropped
+    pub fn finish(self) -> Result<(), glium::SwapBuffersError> {
+        self.target.finish()
     }
 }

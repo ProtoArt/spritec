@@ -17,6 +17,8 @@ pub enum PoseError {
     #[error("{0}")]
     DrawError(#[from] glium::DrawError),
     #[error("{0}")]
+    SwapBuffersError(#[from] glium::SwapBuffersError),
+    #[error("{0}")]
     ReadError(#[from] glium::ReadError),
     #[error("{0}")]
     IOError(#[from] io::Error),
@@ -96,6 +98,8 @@ impl Pose {
 
             renderer.render(&self.model, view, projection,
                 self.outline_thickness, self.outline_color)?;
+
+            renderer.finish()?;
         }
 
         let render_image = ctx.finish_render()?;
