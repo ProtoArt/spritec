@@ -7,19 +7,18 @@ pub use render_mesh::RenderMeshCreationError;
 
 use vek::{Rgba, Mat4, Vec3, Vec4};
 use glium::{Frame, Surface};
-use glium::backend::glutin::headless::Headless;
 
 use crate::model::Model;
 use crate::light::DirectionalLight;
 
 use shader::cel::{CelUniforms, Cel};
 use shader::outline::{OutlineUniforms, Outline};
-use thread_render_context::Shaders;
+use thread_render_context::{Display, Shaders};
 use render_mesh::RenderMesh;
 
 /// A renderer that allows you to draw models
 pub struct Renderer<'a> {
-    display: &'a Headless,
+    display: &'a Display,
     shaders: &'a Shaders,
     target: Frame,
 }

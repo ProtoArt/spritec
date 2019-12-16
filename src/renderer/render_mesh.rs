@@ -8,11 +8,11 @@ use glium::{
     VertexFormat,
     index::{self, PrimitiveType},
     vertex::{self, AttributeType},
-    backend::glutin::headless::Headless,
 };
 use thiserror::Error;
 
 use crate::model::{Mesh, Material};
+use crate::renderer::Display;
 
 #[derive(Debug, Error)]
 pub enum RenderMeshCreationError {
@@ -38,7 +38,7 @@ pub struct RenderMesh {
 }
 
 impl RenderMesh {
-    pub fn new(display: &Headless, mesh: &Mesh) -> Result<Self, RenderMeshCreationError> {
+    pub fn new(display: &Display, mesh: &Mesh) -> Result<Self, RenderMeshCreationError> {
         const POSITION_ATTR_TYPE: AttributeType = AttributeType::F32F32F32;
         let position_bindings: VertexFormat = Cow::Borrowed(&[
             // This name must correspond to the name in our shaders
