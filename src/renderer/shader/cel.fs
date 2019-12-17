@@ -54,8 +54,10 @@ void main() {
         color *= 0.1;
     }
 
-    // Gamma correction is NOT necessary here because GL_FRAMEBUFFER_SRGB is set
-    // See: https://docs.rs/glium/0.26.0-alpha5/glium/texture/index.html#about-srgb
+    // Gamma correction
+    // Technique from: https://learnopengl.com/Advanced-Lighting/Gamma-Correction
+    float gamma = 2.2;
+    color = pow(color, vec4(1.0/gamma));
 
     // Reassign the final alpha because we don't actually want the calculations above to
     // influence this value
