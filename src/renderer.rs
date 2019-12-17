@@ -2,11 +2,11 @@ mod thread_render_context;
 mod render_mesh;
 mod shader;
 
-pub use thread_render_context::ThreadRenderContext;
+pub use thread_render_context::*;
 pub use render_mesh::RenderMeshCreationError;
 
 use vek::{Rgba, Mat4, Vec3, Vec4};
-use glium::{Frame, Surface};
+use glium::{Surface, framebuffer::SimpleFrameBuffer};
 
 use crate::model::Model;
 use crate::light::DirectionalLight;
@@ -18,9 +18,10 @@ use render_mesh::RenderMesh;
 
 /// A renderer that allows you to draw models
 pub struct Renderer<'a> {
+    //TODO: Delete this once it is no longer needed in the code below
     display: &'a Display,
     shaders: &'a Shaders,
-    target: Frame,
+    target: SimpleFrameBuffer<'a>,
 }
 
 impl<'a> Renderer<'a> {
@@ -86,10 +87,5 @@ impl<'a> Renderer<'a> {
         }
 
         Ok(())
-    }
-
-    /// This method must be called before the Renderer is dropped
-    pub fn finish(self) -> Result<(), glium::SwapBuffersError> {
-        self.target.finish()
     }
 }

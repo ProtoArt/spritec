@@ -1,33 +1,5 @@
 use image::RgbaImage;
 
-/// Truncates a source buffer to the dimensions of the target
-///
-/// Aligns the target so it copies the pixels in the center/middle of the source
-pub fn truncate_centered(source: &RgbaImage, target: &mut RgbaImage) {
-    let source_width = source.width();
-    let source_height = source.height();
-
-    let target_width = target.width();
-    let target_height = target.height();
-
-    assert!(target_width <= source_width);
-    assert!(target_height <= source_height);
-
-    // The offset within the source to copy pixels from
-    let offset_x = source_width / 2 - target_width / 2;
-    let offset_y = source_height / 2 - target_height / 2;
-
-    for x in 0..target_width {
-        for y in 0..target_height {
-            let source_x = x + offset_x;
-            let source_y = y + offset_y;
-            let pixel = *source.get_pixel(source_x, source_y);
-
-            target.put_pixel(x, y, pixel);
-        }
-    }
-}
-
 /// Scales the given source image to fit into the target image.
 ///
 /// The target image dimensions must be a multiple of the source image dimensions. No interpolation

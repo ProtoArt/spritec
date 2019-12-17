@@ -10,10 +10,12 @@ use crate::config;
 use crate::model::Model;
 use crate::camera::Camera;
 use crate::loaders::{self, LoaderError, gltf::GltfFile};
-use crate::renderer::ThreadRenderContext;
+use crate::renderer::{ThreadRenderContext, BeginRenderError};
 
 #[derive(Debug, Error)]
 pub enum PoseError {
+    #[error("{0}")]
+    BeginRenderError(#[from] BeginRenderError),
     #[error("{0}")]
     DrawError(#[from] glium::DrawError),
     #[error("{0}")]
@@ -90,24 +92,13 @@ impl Pose {
         let view = self.camera.view();
         let projection = self.camera.projection();
 
-        // Perform rendering, then drop Renderer so that drawing operations get flushed
-        {
-            // An unscaled version of the final image
-            let mut renderer = ctx.begin_render((width, height));
-            renderer.clear(self.background);
+        // An unscaled version of the final image
+        let (render_id, mut renderer) = ctx.begin_render((width, height))?;
+        renderer.clear(self.background);
+        renderer.render(&self.model, view, projection,
+            self.outline_thickness, self.outline_color)?;
 
-            renderer.render(&self.model, view, projection,
-                self.outline_thickness, self.outline_color)?;
-
-            renderer.finish()?;
-        }
-
-        let render_image = ctx.finish_render()?;
-
-        //TODO: This is a temporary hack to work around the fact that we don't know how to resize
-        // the context
-        let mut image = RgbaImage::new(width, height);
-        crate::scale::truncate_centered(&render_image, &mut image);
+        let image = ctx.finish_render(render_id)?;
 
         //TODO: Could optimize the case of scale == 1
         let scale = self.scale.get();

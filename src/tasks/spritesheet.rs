@@ -12,11 +12,13 @@ use crate::config;
 use crate::model::Model;
 use crate::camera::Camera;
 use crate::loaders::{self, LoaderError, gltf::GltfFile};
-use crate::renderer::ThreadRenderContext;
+use crate::renderer::{ThreadRenderContext, BeginRenderError};
 use crate::scale::copy;
 
 #[derive(Debug, Error)]
 pub enum SpritesheetError {
+    #[error("{0}")]
+    BeginRenderError(#[from] BeginRenderError),
     #[error("{0}")]
     DrawError(#[from] glium::DrawError),
     #[error("{0}")]
@@ -88,20 +90,12 @@ impl Spritesheet {
             let projection = anim.camera.projection();
 
             for (i, frame_model) in (0..).zip(anim.frames.iter()) {
-                // Perform rendering, then drop Renderer so that drawing operations get flushed
-                {
-                    let mut renderer = ctx.begin_render(frame_size);
-                    renderer.clear(self.background);
-                    renderer.render(&*frame_model, view, projection,
-                        anim.outline_thickness, anim.outline_color)?;
-                    renderer.finish()?;
-                }
+                let (render_id, mut renderer) = ctx.begin_render(frame_size)?;
+                renderer.clear(self.background);
+                renderer.render(&*frame_model, view, projection,
+                    anim.outline_thickness, anim.outline_color)?;
 
-                let render_image = ctx.finish_render()?;
-                //TODO: This is a temporary hack to work around the fact that we don't know how to
-                // resize the context
-                let mut image = RgbaImage::new(frame_width, frame_height);
-                crate::scale::truncate_centered(&render_image, &mut image);
+                let image = ctx.finish_render(render_id)?;
 
                 let x_offset = i * frame_width;
                 copy(&image, &mut sheet, (x_offset, y_offset));

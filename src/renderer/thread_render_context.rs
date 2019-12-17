@@ -30,7 +30,15 @@
 
 use glium::{
     Program,
-    texture::RawImage2d,
+    framebuffer::SimpleFrameBuffer,
+    texture::{
+        RawImage2d,
+        Texture2d,
+        UncompressedFloatFormat,
+        MipmapsOption,
+        DepthTexture2d,
+        DepthFormat,
+    },
 };
 use glium::glutin::{
     ContextBuilder,
@@ -52,12 +60,33 @@ pub enum ContextCreationError {
     ProgramCreationError(#[from] glium::ProgramCreationError),
 }
 
-pub struct Shaders {
+#[derive(Debug, Error)]
+pub enum BeginRenderError {
+    #[error("{0}")]
+    TextureCreationError(#[from] glium::texture::TextureCreationError),
+    #[error("{0}")]
+    FrameBufferValidationError(#[from] glium::framebuffer::ValidationError),
+}
+
+pub(in super) struct Shaders {
     /// The cel shader used for drawing the sprites
     pub cel: Program,
     /// The outline shader used for drawing an outline around the sprites
     pub outline: Program,
 }
+
+/// The data backing one of the Renderers
+struct RenderData {
+    color_texture: Texture2d,
+    depth_texture: DepthTexture2d,
+}
+
+/// The ID of the data associated with a Renderer
+///
+/// This can be used ot read the data after rendering has been performed. The struct is *not*
+/// Clone or Copy, which helps enforce that the data is read once and then destroyed.
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub struct RenderId(usize);
 
 // Having this alias allows us to swap Headless with Display during debugging
 pub type Display = glium::backend::glutin::headless::Headless;
@@ -75,6 +104,8 @@ pub struct ThreadRenderContext {
     display: Display,
     /// The shader programs used during rendering
     shaders: Shaders,
+    /// The data backing each Renderer
+    render_data: Vec<RenderData>,
 }
 
 impl ThreadRenderContext {
@@ -85,12 +116,10 @@ impl ThreadRenderContext {
     /// By calling this function, you guarantee that no other OpenGL contexts will be made current
     /// on this thread.
     pub unsafe fn new() -> Result<Self, ContextCreationError> {
-        // At this point, we don't know what size we'll need, so we just pick anything
+        // This size does not matter because we do not render to the screen
         let size = PhysicalSize {
-            //TODO: We'll want a smaller default size once we figure out how to properly resize the
-            // context.
-            width: 2048.0,
-            height: 2048.0,
+            width: 500.0,
+            height: 500.0,
         };
 
         let event_loop = EventLoop::new();
@@ -130,28 +159,42 @@ impl ThreadRenderContext {
                 cel: cel_shader,
                 outline: outline_shader,
             },
+            render_data: Vec::new(),
         })
     }
 
     /// Returns a new renderer that can be used for drawing
-    pub fn begin_render(&mut self, (width, height): (u32, u32)) -> Renderer {
-        //TODO: Figure out how to actually resize the context
-        assert!(width <= 2048 && height <= 2048,
-            "bug: images larger than 2048x2048 are not supported yet!");
+    pub fn begin_render(&mut self, (width, height): (u32, u32)) -> Result<(RenderId, Renderer), BeginRenderError> {
+        let color_texture = Texture2d::empty_with_format(&self.display,
+            UncompressedFloatFormat::F32F32F32F32, MipmapsOption::NoMipmap, width, height)?;
+        let depth_texture = DepthTexture2d::empty_with_format(&self.display, DepthFormat::F32,
+            MipmapsOption::NoMipmap, width, height)?;
 
-        Renderer {
+        self.render_data.push(RenderData {
+            color_texture,
+            depth_texture,
+        });
+        let data = &self.render_data.last().unwrap();
+
+        let target = SimpleFrameBuffer::with_depth_buffer(&self.display, &data.color_texture,
+            &data.depth_texture)?;
+
+        let render_id = RenderId(self.render_data.len() - 1);
+        Ok((render_id, Renderer {
             display: &self.display,
             shaders: &self.shaders,
-            target: self.display.draw(),
-        }
+            target,
+        }))
     }
 
-    /// Takes a screenshot of the current buffer and returns it as an image buffer
-    pub fn finish_render(&mut self) -> Result<RgbaImage, glium::ReadError> {
+    /// Returns the image that was rendered
+    pub fn finish_render(&mut self, render_id: RenderId) -> Result<RgbaImage, glium::ReadError> {
         // Wait for any pending draw calls to finish
         self.display.finish();
 
-        let image: RawImage2d<u8> = self.display.read_front_buffer()?;
+        let RenderId(id) = render_id;
+        let data = self.render_data.remove(id);
+        let image: RawImage2d<u8> = data.color_texture.read();
         let image = RgbaImage::from_raw(image.width, image.height, image.data.into_owned())
             .expect("bug: provided buffer was not big enough");
         let image = imageops::flip_vertical(&image);
