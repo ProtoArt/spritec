@@ -39,15 +39,27 @@ impl<'a> Renderer<'a> {
         outline_thickness: f32,
         outline_color: Rgba<f32>,
     ) -> Result<(), glium::DrawError> {
-        let params = glium::DrawParameters {
+        let cel_params = glium::DrawParameters {
             depth: glium::Depth {
                 test: glium::draw_parameters::DepthTest::IfLess,
                 write: true,
-                // Not enabling backface culling for now because we do not know if the meshes are
-                // closed or not. See the last part of the tutorial below:
-                // https://github.com/glium/glium/blob/125be3580ccfb4e3924005aa5b092069c050a922/book/tuto-11-backface-culling.md#backface-culling-in-glium
                 ..Default::default()
             },
+            // Not enabling backface culling for now because we do not know if the meshes are
+            // closed or not. See the last part of the tutorial below:
+            // https://github.com/glium/glium/blob/125be3580ccfb4e3924005aa5b092069c050a922/book/tuto-11-backface-culling.md#backface-culling-in-glium
+            ..Default::default()
+        };
+        let outline_params = glium::DrawParameters {
+            depth: glium::Depth {
+                test: glium::draw_parameters::DepthTest::IfLess,
+                write: true,
+                ..Default::default()
+            },
+            // Enabling backface culling, but flipping the test so that *only* the back faces will
+            // be rendered. Without this, the slightly larger outline mesh would always render over
+            // the regular cel shaded mesh.
+            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullCounterClockwise,
             ..Default::default()
         };
 
@@ -75,7 +87,8 @@ impl<'a> Renderer<'a> {
                 material,
             });
 
-            self.target.draw((positions, normals), indices, &self.shaders.cel, &cel_uniforms, &params)?;
+            self.target.draw((positions, normals), indices, &self.shaders.cel,
+                &cel_uniforms, &cel_params)?;
 
             let outline_uniforms = Outline::from(OutlineUniforms {
                 mvp,
@@ -83,7 +96,8 @@ impl<'a> Renderer<'a> {
                 outline_color,
             });
 
-            self.target.draw((positions, normals), indices, &self.shaders.outline, &outline_uniforms, &params)?;
+            self.target.draw((positions, normals), indices, &self.shaders.outline,
+                &outline_uniforms, &outline_params)?;
         }
 
         Ok(())
