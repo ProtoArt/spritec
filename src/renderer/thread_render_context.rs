@@ -51,20 +51,17 @@ use thiserror::Error;
 use super::Renderer;
 
 #[derive(Debug, Error)]
+#[error(transparent)]
 pub enum ContextCreationError {
-    #[error(transparent)]
     CreationError(#[from] glium::glutin::CreationError),
-    #[error(transparent)]
     IncompatibleOpenGl(#[from] glium::IncompatibleOpenGl),
-    #[error(transparent)]
     ProgramCreationError(#[from] glium::ProgramCreationError),
 }
 
 #[derive(Debug, Error)]
+#[error(transparent)]
 pub enum BeginRenderError {
-    #[error(transparent)]
     TextureCreationError(#[from] glium::texture::TextureCreationError),
-    #[error(transparent)]
     FrameBufferValidationError(#[from] glium::framebuffer::ValidationError),
 }
 

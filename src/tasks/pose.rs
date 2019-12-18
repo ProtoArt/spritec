@@ -13,16 +13,12 @@ use crate::loaders::{self, LoaderError, gltf::GltfFile};
 use crate::renderer::{ThreadRenderContext, BeginRenderError};
 
 #[derive(Debug, Error)]
+#[error(transparent)]
 pub enum PoseError {
-    #[error(transparent)]
     BeginRenderError(#[from] BeginRenderError),
-    #[error(transparent)]
     DrawError(#[from] glium::DrawError),
-    #[error(transparent)]
     SwapBuffersError(#[from] glium::SwapBuffersError),
-    #[error(transparent)]
     ReadError(#[from] glium::ReadError),
-    #[error(transparent)]
     IOError(#[from] io::Error),
 }
 
