@@ -30,8 +30,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let TaskConfig {spritesheets, poses} = args.load_config()?;
     let base_dir = args.base_directory()?;
 
-    // Safe because we guarantee that no other OpenGL context will be created on this thread
-    let mut ctx = unsafe { ThreadRenderContext::new()? };
+    let mut ctx = ThreadRenderContext::new()?;
 
     // These loops should not be parallelised. Rendering is done in parallel on the
     // GPU and is orchestrated by the renderer. Trying to do that here with threads
