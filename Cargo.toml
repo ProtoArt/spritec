@@ -1,8 +1,3 @@
-[workspace]
-members = [
-  "spritec-preview",
-]
-
 [package]
 name = "spritec"
 version = "0.1.0"
