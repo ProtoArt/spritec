@@ -178,11 +178,10 @@ impl ThreadRenderContext {
 
     /// Returns the image that was rendered
     pub fn finish_render(&mut self, render_id: RenderId) -> Result<RgbaImage, glium::ReadError> {
-        // Wait for any pending draw calls to finish
-        self.display.finish();
-
         let RenderId(id) = render_id;
         let data = self.render_data.remove(id);
+        // This stops and performs the read synchronously. For max parallelism, we'd probably want
+        // read_to_pixel_buffer().
         let image: RawImage2d<u8> = data.color_texture.read();
         let image = RgbaImage::from_raw(image.width, image.height, image.data.into_owned())
             .expect("bug: provided buffer was not big enough");
