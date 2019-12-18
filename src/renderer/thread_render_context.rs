@@ -52,19 +52,19 @@ use super::Renderer;
 
 #[derive(Debug, Error)]
 pub enum ContextCreationError {
-    #[error("{0}")]
+    #[error(transparent)]
     CreationError(#[from] glium::glutin::CreationError),
-    #[error("{0}")]
+    #[error(transparent)]
     IncompatibleOpenGl(#[from] glium::IncompatibleOpenGl),
-    #[error("{0}")]
+    #[error(transparent)]
     ProgramCreationError(#[from] glium::ProgramCreationError),
 }
 
 #[derive(Debug, Error)]
 pub enum BeginRenderError {
-    #[error("{0}")]
+    #[error(transparent)]
     TextureCreationError(#[from] glium::texture::TextureCreationError),
-    #[error("{0}")]
+    #[error(transparent)]
     FrameBufferValidationError(#[from] glium::framebuffer::ValidationError),
 }
 
