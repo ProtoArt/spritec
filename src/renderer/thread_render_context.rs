@@ -162,6 +162,7 @@ impl ThreadRenderContext {
             color_texture,
             depth_texture,
         });
+        // This unwrap() will never panic because we just pushed data into the Vec
         let data = &self.render_data.last().unwrap();
 
         let target = SimpleFrameBuffer::with_depth_buffer(&self.display, &data.color_texture,
