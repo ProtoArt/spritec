@@ -15,10 +15,9 @@ use crate::model::{Mesh, Material};
 use crate::renderer::Display;
 
 #[derive(Debug, Error)]
+#[error(transparent)]
 pub enum RenderMeshCreationError {
-    #[error(transparent)]
     IndexBufferCreationError(#[from] index::BufferCreationError),
-    #[error(transparent)]
     VertexBufferCreationError(#[from] vertex::BufferCreationError),
 }
 
