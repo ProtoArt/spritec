@@ -111,11 +111,8 @@ pub struct ThreadRenderContext {
 impl ThreadRenderContext {
     /// Creates a new thread renderer.
     ///
-    /// # Safety
-    ///
-    /// By calling this function, you guarantee that no other OpenGL contexts will be made current
-    /// on this thread.
-    pub unsafe fn new() -> Result<Self, ContextCreationError> {
+    /// No other OpenGL context should be made current on this thread while this value exists.
+    pub fn new() -> Result<Self, ContextCreationError> {
         // This size does not matter because we do not render to the screen
         let size = PhysicalSize {
             width: 500.0,
