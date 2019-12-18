@@ -83,7 +83,7 @@ struct RenderData {
 
 /// The ID of the data associated with a Renderer
 ///
-/// This can be used ot read the data after rendering has been performed. The struct is *not*
+/// This can be used to read the data after rendering has been performed. The struct is *not*
 /// Clone or Copy, which helps enforce that the data is read once and then destroyed.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct RenderId(usize);
@@ -99,8 +99,7 @@ pub struct ThreadRenderContext {
     ///
     /// We still need to keep it around though because dropping it may cause issues (maybe?)
     _event_loop: EventLoop<()>,
-    /// The OpenGL context and display. Assumes that the OpenGL context that is current on this
-    /// thread will never change.
+    /// The OpenGL context and display
     display: Display,
     /// The shader programs used during rendering
     shaders: Shaders,
