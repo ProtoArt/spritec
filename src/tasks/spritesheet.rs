@@ -17,15 +17,15 @@ use crate::scale::copy;
 
 #[derive(Debug, Error)]
 pub enum SpritesheetError {
-    #[error("{0}")]
+    #[error(transparent)]
     BeginRenderError(#[from] BeginRenderError),
-    #[error("{0}")]
+    #[error(transparent)]
     DrawError(#[from] glium::DrawError),
-    #[error("{0}")]
+    #[error(transparent)]
     SwapBuffersError(#[from] glium::SwapBuffersError),
-    #[error("{0}")]
+    #[error(transparent)]
     ReadError(#[from] glium::ReadError),
-    #[error("{0}")]
+    #[error(transparent)]
     IOError(#[from] io::Error),
 }
 

@@ -10,9 +10,9 @@ use crate::model::Model;
 
 #[derive(Debug, Error)]
 pub enum LoaderError {
-    #[error("{0}")]
+    #[error(transparent)]
     ObjError(#[from] tobj::LoadError),
-    #[error("{0}")]
+    #[error(transparent)]
     GltfError(#[from] ::gltf::Error),
     #[error("Unsupported file extension: {path:?}")]
     UnsupportedFileExtension {path: PathBuf},
