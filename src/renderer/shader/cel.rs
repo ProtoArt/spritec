@@ -20,9 +20,9 @@ pub struct CelUniforms<'a> {
 pub struct Cel {
     mvp: UniformValue<'static>,
     model_view_inverse_transpose: UniformValue<'static>,
-    light: NestedUniforms<DirectionalLightUniform>,
+    light: DirectionalLightUniform,
     ambient_intensity: UniformValue<'static>,
-    material: NestedUniforms<MaterialUniform>,
+    material: MaterialUniform,
 }
 
 impl Uniforms for Cel {
@@ -44,9 +44,9 @@ impl<'a> From<CelUniforms<'a>> for Cel {
         Self {
             mvp: UniformValue::Mat4(mvp.into_col_arrays()),
             model_view_inverse_transpose: UniformValue::Mat4(model_view_inverse_transpose.into_col_arrays()),
-            light: NestedUniforms::new(DirectionalLightUniform::new(light)),
+            light: DirectionalLightUniform::new(light),
             ambient_intensity: UniformValue::Float(ambient_intensity),
-            material: NestedUniforms::new(MaterialUniform::new(material)),
+            material: MaterialUniform::new(material),
         }
     }
 }
