@@ -184,7 +184,7 @@ impl ThreadRenderContext {
         // read_to_pixel_buffer().
         let image: RawImage2d<u8> = data.color_texture.read();
         let image = RgbaImage::from_raw(image.width, image.height, image.data.into_owned())
-            .expect("bug: provided buffer was not big enough");
+            .expect("bug: image data buffer did not match expected size for width and height");
         let image = imageops::flip_vertical(&image);
 
         Ok(image)
