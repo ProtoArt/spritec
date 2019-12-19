@@ -21,65 +21,12 @@
 )]
 #![deny(bare_trait_objects)] // Prefer Box<dyn Trait> over Box<Trait>
 
-pub mod color;
 pub mod config;
-pub mod loaders;
-pub mod scale;
-pub mod shader;
 pub mod tasks;
-pub mod model;
+pub mod renderer;
 
-use euc::{Pipeline, rasterizer, buffer::Buffer2d};
-use vek::{Mat4, Vec3, Vec4, Rgba};
-
-use crate::shader::DiffuseLight;
-use crate::model::Scene;
-use crate::shader::{CelShader, OutlineShader};
-
-pub fn render(
-    color: &mut Buffer2d<Rgba<f32>>,
-    depth: &mut Buffer2d<f32>,
-    view: Mat4<f32>,
-    projection: Mat4<f32>,
-    scene: &Scene,
-    outline_thickness: f32,
-    outline_color: Rgba<f32>,
-) {
-    let view_projection_matrix = projection * view;
-
-    for node in scene.gather_nodes() {
-        // Only render nodes with geometry data
-        if let Some(meshes) = node.meshes() {
-            for mesh in meshes {
-                let model_transform = mesh.transform();
-                let mvp = view_projection_matrix * model_transform;
-                OutlineShader {
-                    mvp,
-                    mesh,
-                    outline_color,
-                    outline_thickness
-                }.draw::<rasterizer::Triangles<_>, _>(
-                    mesh.indices(),
-                    color,
-                    depth
-                );
-
-                CelShader {
-                    mvp,
-                    model_inverse_transpose: model_transform.inverted().transposed(),
-                    mesh,
-                    light: DiffuseLight {
-                        direction: Vec3::from(view * Vec4::up()),
-                        color: Rgba::white(),
-                        intensity: 1.0,
-                    },
-                    ambient_intensity: 0.5,
-                }.draw::<rasterizer::Triangles<_>, _>(
-                    mesh.indices(),
-                    color,
-                    depth
-                );
-            }
-        }
-    }
-}
+mod loaders;
+mod scale;
+mod camera;
+mod model;
+mod light;

@@ -1,8 +1,8 @@
-use std::num::{NonZeroUsize, NonZeroU32};
+use std::num::NonZeroU32;
 
 use vek::{Rgba};
 use serde::{Serialize, Deserialize};
-use crate::shader::Camera;
+use crate::camera::Camera;
 
 /// A newtype around PathBuf to force the path to be resolved relative to a base directory before
 /// it can be used. Good to prevent something that is pretty easy to do accidentally.
@@ -56,9 +56,9 @@ pub struct Spritesheet {
 pub struct Animation {
     pub frames: AnimationFrames,
     /// The width at which to render each frame (in pixels)
-    pub frame_width: NonZeroUsize,
+    pub frame_width: NonZeroU32,
     /// The height at which to render each frame (in pixels)
-    pub frame_height: NonZeroUsize,
+    pub frame_height: NonZeroU32,
     /// The camera perspective from which to render each frame
     pub camera: PresetCamera,
     /// The outline to use when drawing each frame. (default: no outline)
@@ -94,9 +94,9 @@ pub struct Pose {
     /// The path to output the generated image, relative to configuration file
     pub path: UnresolvedPath,
     /// The width at which to render each frame (in pixels)
-    pub width: NonZeroUsize,
+    pub width: NonZeroU32,
     /// The height at which to render each frame (in pixels)
-    pub height: NonZeroUsize,
+    pub height: NonZeroU32,
     /// The camera perspective from which to render each frame
     pub camera: PresetCamera,
     /// A scale factor to apply to the generated image. The image is scaled without interpolation.

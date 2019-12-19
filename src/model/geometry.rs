@@ -11,7 +11,7 @@ pub struct Mesh {
     positions: Vec<Vec3<f32>>,
     /// The normal of each vertex of the model
     normals: Vec<Vec3<f32>>,
-    /// The material associated with this mesh (if any)
+    /// The material associated with this mesh
     material: Arc<Material>,
     /// The model transformation represents the center of the mesh, all vertices in the model are
     /// relative to this. This is also known as the "world" transformation.
@@ -73,19 +73,19 @@ impl Mesh {
         &self.indices
     }
 
-    /// Returns the position for the given index
-    pub fn position(&self, index: usize) -> Vec3<f32> {
-        self.positions[index]
+    /// Returns the positions of the vertices in this mesh
+    pub fn positions(&self) -> &[Vec3<f32>] {
+        &self.positions
     }
 
-    /// Returns the normal for the given index
-    pub fn normal(&self, index: usize) -> Vec3<f32> {
-        self.normals[index]
+    /// Returns the normals of the vertices in this mesh
+    pub fn normals(&self) -> &[Vec3<f32>] {
+        &self.normals
     }
 
     /// Returns the material associated with this mesh
-    pub fn material(&self) -> &Material {
-        &self.material
+    pub fn material(&self) -> Arc<Material> {
+        self.material.clone()
     }
 
     /// Returns the model transformation for this mesh. All vertices of this mesh must have this
