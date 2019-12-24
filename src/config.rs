@@ -121,9 +121,9 @@ pub enum PoseModel {
         /// The name of the animation to select. Can be omitted if there is only a single animation
         /// or if there is no animation.
         animation: Option<String>,
-        /// The specific animation frame to render. The default is to render the first frame (or
-        /// the loaded pose of the model if there is no animation)
-        frame: Option<usize>,
+        /// The specific time in the animation to render. The default is to render the start of
+        /// the animation, or the default pose of the model if there is no animation.
+        time: Option<f32>,
     },
     /// A single filename. An OBJ file will be used as is. For a glTF file, the model will be
     /// rendered as loaded regardless of the animations present in the file.
