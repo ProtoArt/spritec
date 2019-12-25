@@ -34,7 +34,7 @@ impl LayoutNode {
 
     pub fn iter_targets(self) -> LayoutTargetIter {
         LayoutTargetIter {
-            node: self,
+            node: Some(self),
             current: 0,
         }
     }
@@ -97,7 +97,7 @@ pub struct LayoutOffset {
 
 /// Iterator over layout nodes and the target area they should be drawn into
 pub struct LayoutTargetIter {
-    node: LayoutNode,
+    node: Option<LayoutNode>,
     current: u32,
 }
 
@@ -105,24 +105,25 @@ impl Iterator for LayoutTargetIter {
     type Item = (LayoutOffset, LayoutNode);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let &mut Self {node, current} = self;
-
         use LayoutNode::*;
-        match node {
-            Render(render) => if current > 0 {
-                None
-            } else {
+        match self.node.take() {
+            None => None,
+
+            Some(node@Render(_)) => {
                 // Draw from the corner over the entire image
                 let target = LayoutOffset {x: 0, y: 0};
-
-                self.current += 1;
                 Some((target, node))
             },
 
-            Grid(grid) => if current >= grid.cells.len() as u32 {
-                None
-            } else {
-                let &GridLayout {cell_width, cell_height, rows, cols, ..} = &grid;
+            Some(Grid(grid)) => {
+                let GridLayout {mut cells, cell_width, cell_height, rows, cols} = grid;
+
+                // Stop once there are no more cells to yield
+                if cells.is_empty() {
+                    return None;
+                }
+
+                let current = self.current;
 
                 let row = current / cols.get();
                 let col = current / cols.get();
@@ -132,6 +133,17 @@ impl Iterator for LayoutTargetIter {
                 };
 
                 self.current += 1;
+
+                let node = cells.remove(0);
+                // Reconstruct the node with the remaining cells
+                self.node = Some(LayoutNode::Grid(GridLayout {
+                    cells,
+                    cell_width,
+                    cell_height,
+                    rows,
+                    cols,
+                }));
+
                 Some((target, node))
             },
         }

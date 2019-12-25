@@ -48,7 +48,7 @@ use glium::glutin::{
 use image::RgbaImage;
 use thiserror::Error;
 
-use crate::query3d::QueryError;
+use crate::query3d::{QueryBackend, QueryError};
 
 use super::{Renderer, Render, RenderGeometry, Size, FileQuery, layout::LayoutNode};
 
@@ -240,9 +240,9 @@ impl ThreadRenderContext {
             let RenderGeometry {geometry, outline} = model;
             let FileQuery {query, file} = geometry;
 
-            let file = file.lock().expect("bug: file lock was poisoned");
-            for model in file.query_geometry(query) {
-                renderer.render(&model, view, projection, &outline)?;
+            let mut file = file.lock().expect("bug: file lock was poisoned");
+            for model in file.query_geometry(query)? {
+                renderer.render(model, view, projection, &outline)?;
             }
         }
 

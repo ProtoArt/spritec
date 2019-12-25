@@ -6,12 +6,17 @@ use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 
+use crate::model::Model;
+
+use super::query::GeometryQuery;
+
 #[derive(Debug, Error)]
 #[error(transparent)]
 pub enum QueryError {
 }
 
 pub trait QueryBackend {
+    fn query_geometry(&mut self, query: GeometryQuery) -> Result<Vec<&Model>, QueryError>;
 }
 
 #[derive(Debug, Error)]
@@ -47,4 +52,12 @@ impl File {
 }
 
 impl QueryBackend for File {
+    fn query_geometry(&mut self, query: GeometryQuery) -> Result<Vec<&Model>, QueryError> {
+        use File::*;
+        match self {
+            Objs(objs) => objs.query_geometry(query),
+            Gltf(gltf) => gltf.query_geometry(query),
+            Blend(blend) => blend.query_geometry(query),
+        }
+    }
 }
