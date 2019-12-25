@@ -2,6 +2,7 @@ mod file_cache;
 
 pub use file_cache::*;
 
+use std::sync::Arc;
 use std::path::Path;
 use std::num::NonZeroU32;
 
@@ -42,7 +43,7 @@ pub fn generate_pose_job(
             size: Size {width, height},
             scale,
             background,
-            camera: RenderCamera::Camera(camera.into()),
+            camera: RenderCamera::Camera(Arc::new(camera.into())),
             lights: Vec::new(), // TODO
             models: vec![RenderGeometry {
                 geometry: match model {
@@ -107,7 +108,7 @@ pub fn generate_spritesheet_job(
                         size: frame_size,
                         scale,
                         background,
-                        camera: RenderCamera::Camera(camera.clone()),
+                        camera: RenderCamera::Camera(Arc::new(camera.clone())),
                         lights: Vec::new(), // TODO
                         models: vec![RenderGeometry {
                             geometry: FileQuery {
@@ -147,7 +148,7 @@ pub fn generate_spritesheet_job(
                         size: frame_size,
                         scale,
                         background,
-                        camera: RenderCamera::Camera(camera.clone()),
+                        camera: RenderCamera::Camera(Arc::new(camera.clone())),
                         lights: Vec::new(), //TODO
                         models: vec![RenderGeometry {
                             geometry: FileQuery {

@@ -3,8 +3,10 @@ use std::sync::Arc;
 
 use rayon::iter::{ParallelIterator, IntoParallelIterator};
 
+use crate::camera::Camera;
+use crate::light::DirectionalLight;
 use crate::model::{Mesh, Material, Model};
-use crate::query3d::{GeometryQuery, GeometryFilter, AnimationQuery};
+use crate::query3d::{GeometryQuery, GeometryFilter, AnimationQuery, CameraQuery, LightQuery};
 
 use super::{QueryBackend, QueryError};
 
@@ -13,7 +15,7 @@ use super::{QueryBackend, QueryError};
 pub struct ObjFile {
     // This representation is sufficient for GeometryFilter::Scene, but it will need to
     // change once we add in more advanced filtering (e.g. by name)
-    model: Model,
+    model: Arc<Model>,
 }
 
 impl ObjFile {
@@ -32,25 +34,33 @@ impl ObjFile {
             .collect();
 
         Ok(Self {
-            model: Model {meshes},
+            model: Arc::new(Model {meshes}),
         })
     }
 }
 
 impl QueryBackend for ObjFile {
-    fn query_geometry(&mut self, query: GeometryQuery) -> Result<Vec<&Model>, QueryError> {
+    fn query_geometry(&mut self, query: &GeometryQuery) -> Result<Vec<Arc<Model>>, QueryError> {
         let GeometryQuery {models, animation} = query;
 
         // OBJ files do not support animations
         if let Some(AnimationQuery {name, ..}) = animation {
-            return Err(QueryError::UnknownAnimation {name});
+            return Err(QueryError::UnknownAnimation {name: name.clone()});
         }
 
         use GeometryFilter::*;
         match models {
-            Scene {name: None} => Ok(vec![&self.model]),
+            Scene {name: None} => Ok(vec![self.model.clone()]),
             // OBJ files do not contain any named scenes
-            Scene {name: Some(name)} => Err(QueryError::UnknownScene {name}),
+            Scene {name: Some(name)} => Err(QueryError::UnknownScene {name: name.clone()}),
         }
+    }
+
+    fn query_camera(&mut self, query: &CameraQuery) -> Result<Arc<Camera>, QueryError> {
+        unimplemented!()
+    }
+
+    fn query_lights(&mut self, query: &LightQuery) -> Result<Vec<Arc<DirectionalLight>>, QueryError> {
+        unimplemented!()
     }
 }

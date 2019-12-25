@@ -1,13 +1,16 @@
 pub mod obj;
 pub mod gltf;
 
+use std::sync::Arc;
 use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 
 use crate::model::Model;
+use crate::camera::Camera;
+use crate::light::DirectionalLight;
 
-use super::query::GeometryQuery;
+use super::query::{GeometryQuery, CameraQuery, LightQuery};
 
 #[derive(Debug, Error)]
 pub enum QueryError {
@@ -19,7 +22,9 @@ pub enum QueryError {
 }
 
 pub trait QueryBackend {
-    fn query_geometry(&mut self, query: GeometryQuery) -> Result<Vec<&Model>, QueryError>;
+    fn query_geometry(&mut self, query: &GeometryQuery) -> Result<Vec<Arc<Model>>, QueryError>;
+    fn query_camera(&mut self, query: &CameraQuery) -> Result<Arc<Camera>, QueryError>;
+    fn query_lights(&mut self, query: &LightQuery) -> Result<Vec<Arc<DirectionalLight>>, QueryError>;
 }
 
 #[derive(Debug, Error)]
@@ -54,11 +59,27 @@ impl File {
 }
 
 impl QueryBackend for File {
-    fn query_geometry(&mut self, query: GeometryQuery) -> Result<Vec<&Model>, QueryError> {
+    fn query_geometry(&mut self, query: &GeometryQuery) -> Result<Vec<Arc<Model>>, QueryError> {
         use File::*;
         match self {
             Obj(objs) => objs.query_geometry(query),
             Gltf(gltf) => gltf.query_geometry(query),
+        }
+    }
+
+    fn query_camera(&mut self, query: &CameraQuery) -> Result<Arc<Camera>, QueryError> {
+        use File::*;
+        match self {
+            Obj(objs) => objs.query_camera(query),
+            Gltf(gltf) => gltf.query_camera(query),
+        }
+    }
+
+    fn query_lights(&mut self, query: &LightQuery) -> Result<Vec<Arc<DirectionalLight>>, QueryError> {
+        use File::*;
+        match self {
+            Obj(objs) => objs.query_lights(query),
+            Gltf(gltf) => gltf.query_lights(query),
         }
     }
 }

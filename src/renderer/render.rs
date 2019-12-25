@@ -6,7 +6,7 @@ use vek::Rgba;
 use crate::config;
 use crate::camera::Camera;
 use crate::light::DirectionalLight;
-use crate::query3d::{GeometryQuery, LightQuery, CameraQuery, File, QueryError};
+use crate::query3d::{GeometryQuery, LightQuery, CameraQuery, File, QueryError, QueryBackend};
 
 #[derive(Debug)]
 pub struct Render {
@@ -90,32 +90,38 @@ impl From<config::Outline> for Outline {
 
 #[derive(Debug)]
 pub enum RenderCamera {
-    Camera(Camera),
+    Camera(Arc<Camera>),
     Query(FileQuery<CameraQuery>),
 }
 
 impl RenderCamera {
-    pub fn into_camera(self) -> Result<Camera, QueryError> {
+    pub fn fetch_camera(&self) -> Result<Arc<Camera>, QueryError> {
         use RenderCamera::*;
         match self {
-            Camera(cam) => Ok(cam),
-            Query(_) => unimplemented!(),
+            Camera(cam) => Ok(cam.clone()),
+            Query(FileQuery {query, file}) => {
+                let mut file = file.lock().expect("bug: file lock was poisoned");
+                file.query_camera(query)
+            },
         }
     }
 }
 
 #[derive(Debug)]
 pub enum RenderLight {
-    Light(DirectionalLight),
+    Light(Arc<DirectionalLight>),
     Query(FileQuery<LightQuery>),
 }
 
 impl RenderLight {
-    pub fn into_light(self) -> Result<DirectionalLight, QueryError> {
+    pub fn fetch_lights(&self) -> Result<Vec<Arc<DirectionalLight>>, QueryError> {
         use RenderLight::*;
         match self {
-            Light(light) => Ok(light),
-            Query(_) => unimplemented!(),
+            Light(light) => Ok(vec![light.clone()]),
+            Query(FileQuery {query, file}) => {
+                let mut file = file.lock().expect("bug: file lock was poisoned");
+                file.query_lights(query)
+            },
         }
     }
 }
