@@ -1,23 +1,19 @@
-mod node;
-mod render;
-
-pub use node::*;
-pub use render::*;
-
 use std::io;
 use std::path::PathBuf;
 
 use thiserror::Error;
 
-use crate::renderer::{ThreadRenderContext, BeginRenderError};
+use super::{
+    RenderNode,
+    ThreadRenderContext,
+    DrawLayoutError,
+    layout::LayoutNode,
+};
 
 #[derive(Debug, Error)]
 #[error(transparent)]
 pub enum JobError {
-    BeginRenderError(#[from] BeginRenderError),
-    DrawError(#[from] glium::DrawError),
-    SwapBuffersError(#[from] glium::SwapBuffersError),
-    ReadError(#[from] glium::ReadError),
+    DrawLayoutError(#[from] DrawLayoutError),
     IOError(#[from] io::Error),
 }
 
@@ -30,6 +26,13 @@ pub struct RenderJob {
 
 impl RenderJob {
     pub fn execute(self, ctx: &mut ThreadRenderContext) -> Result<(), JobError> {
-        unimplemented!()
+        let Self {output_path, root} = self;
+
+        let layout = LayoutNode::from(root);
+
+        let image = ctx.draw(layout)?;
+        image.save(&output_path)?;
+
+        Ok(())
     }
 }

@@ -1,3 +1,5 @@
+//! Additional image utilities that extend the ones provided by the image crate
+
 use image::RgbaImage;
 
 /// Scales the given source image to fit into the target image.

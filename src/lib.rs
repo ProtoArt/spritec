@@ -24,11 +24,10 @@
 pub mod config;
 pub mod tasks;
 pub mod renderer;
-pub mod job;
 pub mod query3d;
 
 mod loaders;
-mod scale;
+mod imageops;
 mod camera;
 mod model;
 mod light;

@@ -45,10 +45,12 @@ use glium::glutin::{
     dpi::PhysicalSize,
     event_loop::EventLoop,
 };
-use image::{RgbaImage, imageops};
+use image::RgbaImage;
 use thiserror::Error;
 
-use super::Renderer;
+use crate::query3d::QueryError;
+
+use super::{Renderer, Render, RenderGeometry, Size, FileQuery, layout::LayoutNode};
 
 #[derive(Debug, Error)]
 #[error(transparent)]
@@ -63,6 +65,15 @@ pub enum ContextCreationError {
 pub enum BeginRenderError {
     TextureCreationError(#[from] glium::texture::TextureCreationError),
     FrameBufferValidationError(#[from] glium::framebuffer::ValidationError),
+}
+
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub enum DrawLayoutError {
+    BeginRenderError(#[from] BeginRenderError),
+    DrawError(#[from] glium::DrawError),
+    ReadError(#[from] glium::ReadError),
+    QueryError(#[from] QueryError),
 }
 
 pub(in super) struct Shaders {
@@ -149,7 +160,11 @@ impl ThreadRenderContext {
     }
 
     /// Returns a new renderer that can be used for drawing
-    pub fn begin_render(&mut self, (width, height): (u32, u32)) -> Result<(RenderId, Renderer), BeginRenderError> {
+    pub fn begin_render(&mut self, size: Size) -> Result<(RenderId, Renderer), BeginRenderError> {
+        let Size {width, height} = size;
+        let width = width.get();
+        let height = height.get();
+
         let color_texture = Texture2d::empty_with_format(&self.display,
             UncompressedFloatFormat::F32F32F32F32, MipmapsOption::NoMipmap, width, height)?;
         let depth_texture = DepthTexture2d::empty_with_format(&self.display, DepthFormat::F32,
@@ -182,8 +197,62 @@ impl ThreadRenderContext {
         let image: RawImage2d<u8> = data.color_texture.read();
         let image = RgbaImage::from_raw(image.width, image.height, image.data.into_owned())
             .expect("bug: image data buffer did not match expected size for width and height");
-        let image = imageops::flip_vertical(&image);
+        let image = image::imageops::flip_vertical(&image);
 
         Ok(image)
+    }
+
+    /// Draws the given layout, returning the image that was rendered
+    pub fn draw(&mut self, layout: LayoutNode) -> Result<RgbaImage, DrawLayoutError> {
+        let Size {width, height} = layout.size();
+
+        // An unscaled version of the final image
+        let mut final_image = RgbaImage::new(width.get(), height.get());
+
+        for (offset, node) in layout.iter_targets() {
+            use LayoutNode::*;
+            match node {
+                Render(render) => {
+                    let image = self.draw_render(render)?;
+                    crate::imageops::copy(&image, &mut final_image, (offset.x, offset.y));
+                },
+                Grid(_) => {
+                    let image = self.draw(node)?;
+                    crate::imageops::copy(&image, &mut final_image, (offset.x, offset.y));
+                },
+            }
+        }
+
+        Ok(final_image)
+    }
+
+    fn draw_render(&mut self, render: Render) -> Result<RgbaImage, DrawLayoutError> {
+        let Render {size, scale, background, camera, lights, models} = render;
+
+        let camera = camera.to_camera()?;
+        let view = camera.view();
+        let projection = camera.projection();
+
+        let (render_id, mut renderer) = self.begin_render(size)?;
+        renderer.clear(background);
+
+        for model in models {
+            let RenderGeometry {geometry, outline} = model;
+            let FileQuery {query, file} = geometry;
+
+            let file = file.lock().expect("bug: file lock was poisoned");
+            for model in file.query_geometry(query) {
+                renderer.render(&model, view, projection, &outline)?;
+            }
+        }
+
+        let image = self.finish_render(render_id)?;
+
+        //TODO: Could optimize the case of scale == 1
+        let scale = scale.get();
+        let mut scaled_image = RgbaImage::new(size.width.get() * scale, size.height.get() * scale);
+        crate::imageops::scale(&image, &mut scaled_image);
+
+        Ok(scaled_image)
     }
 }

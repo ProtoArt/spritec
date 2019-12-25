@@ -20,10 +20,9 @@ use std::path::Path;
 use structopt::StructOpt;
 use spritec::{
     tasks::{self, WeakFileCache},
-    job::RenderJob,
     query3d::FileError,
     config::{TaskConfig, Spritesheet, Pose},
-    renderer::ThreadRenderContext,
+    renderer::{ThreadRenderContext, RenderJob},
 };
 
 use crate::args::AppArgs;

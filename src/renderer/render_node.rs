@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use super::Render;
 
 #[derive(Debug)]
@@ -10,16 +12,16 @@ pub enum RenderNode {
 #[derive(Debug)]
 pub struct RenderLayout {
     pub nodes: Vec<RenderNode>,
-    pub layout: Layout,
+    pub layout: LayoutType,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Layout {
+pub enum LayoutType {
   /// All renders are placed in a regular grid with the given number of columns
-  Grid { cols: usize },
+  Grid { cols: NonZeroU32 },
 
   //TODO: This is an example of a layout we could have in the future
   // Tightly packs all sprites into an image of width at most the given value. The packing is not
   // guaranteed to be a regular grid.
-  //Packed { width: u32 },
+  //Packed { width: NonZeroU32 },
 }

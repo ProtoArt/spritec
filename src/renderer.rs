@@ -1,9 +1,16 @@
 mod thread_render_context;
 mod render_mesh;
 mod shader;
+mod render_node;
+mod render;
+mod job;
+mod layout;
 
 pub use thread_render_context::*;
-pub use render_mesh::RenderMeshCreationError;
+pub use render_mesh::*;
+pub use render_node::*;
+pub use render::*;
+pub use job::*;
 
 use vek::{Rgba, Mat4, Vec3, Vec4};
 use glium::{Surface, framebuffer::SimpleFrameBuffer};
@@ -13,8 +20,6 @@ use crate::light::DirectionalLight;
 
 use shader::cel::{CelUniforms, Cel};
 use shader::outline::{OutlineUniforms, Outline};
-use thread_render_context::{Display, Shaders};
-use render_mesh::RenderMesh;
 
 /// A renderer that allows you to draw models
 pub struct Renderer<'a> {
@@ -36,8 +41,7 @@ impl<'a> Renderer<'a> {
         model: &Model,
         view: Mat4<f32>,
         projection: Mat4<f32>,
-        outline_thickness: f32,
-        outline_color: Rgba<f32>,
+        outline: &render::Outline,
     ) -> Result<(), glium::DrawError> {
         let cel_params = glium::DrawParameters {
             depth: glium::Depth {
@@ -92,8 +96,8 @@ impl<'a> Renderer<'a> {
 
             let outline_uniforms = Outline::from(OutlineUniforms {
                 mvp,
-                outline_thickness,
-                outline_color,
+                outline_thickness: outline.thickness,
+                outline_color: outline.color,
             });
 
             self.target.draw((positions, normals), indices, &self.shaders.outline,
