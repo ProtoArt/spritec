@@ -11,8 +11,12 @@ use crate::model::Model;
 use super::query::GeometryQuery;
 
 #[derive(Debug, Error)]
-#[error(transparent)]
 pub enum QueryError {
+    #[error("Could not find scene named `{name}` in model file")]
+    UnknownScene {name: String},
+    #[error("Could not find animation named `{}` in model file",
+        .name.as_deref().unwrap_or("<unnamed>"))]
+    UnknownAnimation {name: Option<String>},
 }
 
 pub trait QueryBackend {

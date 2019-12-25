@@ -1,10 +1,10 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GeometryQuery {
     pub models: GeometryFilter,
     pub animation: Option<AnimationQuery>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum GeometryFilter {
     /// Returns all the geometry in the given scene
     Scene {
@@ -19,7 +19,7 @@ impl GeometryFilter {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AnimationQuery {
     /// The name of the animation to look in or None if the default animation should be used
     pub name: Option<String>,
@@ -30,7 +30,7 @@ pub struct AnimationQuery {
 /// Represents the position in a given animation
 ///
 /// Not all variants are supported by all file formats.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AnimationPosition {
     /// The time in the global animation clock
     Time(f32),
@@ -47,7 +47,7 @@ pub enum AnimationPosition {
     Frame(usize),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum CameraQuery {
     /// Returns the first camera in the given scene
     FirstInScene {
@@ -56,7 +56,7 @@ pub enum CameraQuery {
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum LightQuery {
     /// Returns the first light in the given scene
     FirstInScene {
