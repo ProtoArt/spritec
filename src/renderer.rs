@@ -18,8 +18,8 @@ use glium::{Surface, framebuffer::SimpleFrameBuffer};
 use crate::model::Model;
 use crate::light::DirectionalLight;
 
-use shader::cel::{CelUniforms, Cel};
-use shader::outline::{OutlineUniforms, Outline};
+use shader::cel::{CelUniforms};
+use shader::outline::{OutlineUniforms};
 
 /// A renderer that allows you to draw models
 pub struct Renderer<'a> {
@@ -41,7 +41,7 @@ impl<'a> Renderer<'a> {
         model: &Model,
         view: Mat4<f32>,
         projection: Mat4<f32>,
-        outline: &render::Outline,
+        outline: &Outline,
     ) -> Result<(), glium::DrawError> {
         let cel_params = glium::DrawParameters {
             depth: glium::Depth {
@@ -83,7 +83,7 @@ impl<'a> Renderer<'a> {
             let mvp = projection * model_view;
             let model_view_inverse_transpose = model_view.inverted().transposed();
 
-            let cel_uniforms = Cel::from(CelUniforms {
+            let cel_uniforms = shader::cel::Cel::from(CelUniforms {
                 mvp,
                 model_view_inverse_transpose,
                 light: &light,
@@ -94,7 +94,7 @@ impl<'a> Renderer<'a> {
             self.target.draw((positions, normals), indices, &self.shaders.cel,
                 &cel_uniforms, &cel_params)?;
 
-            let outline_uniforms = Outline::from(OutlineUniforms {
+            let outline_uniforms = shader::outline::Outline::from(OutlineUniforms {
                 mvp,
                 outline_thickness: outline.thickness,
                 outline_color: outline.color,

@@ -95,7 +95,7 @@ pub enum RenderCamera {
 }
 
 impl RenderCamera {
-    pub fn to_camera(self) -> Result<Camera, QueryError> {
+    pub fn into_camera(self) -> Result<Camera, QueryError> {
         use RenderCamera::*;
         match self {
             Camera(cam) => Ok(cam),
@@ -111,7 +111,7 @@ pub enum RenderLight {
 }
 
 impl RenderLight {
-    pub fn to_light(self) -> Result<DirectionalLight, QueryError> {
+    pub fn into_light(self) -> Result<DirectionalLight, QueryError> {
         use RenderLight::*;
         match self {
             Light(light) => Ok(light),

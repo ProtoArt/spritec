@@ -75,15 +75,32 @@ pub enum AnimationFrames {
         gltf: UnresolvedPath,
         /// The name of the animation to select. Can be omitted if there is only a single animation
         animation: Option<String>,
-        /// The frame to start the animation from (default: 0)
+        /// The "global" animation time at which to start the animation (default: 0.0)
         #[serde(default)]
-        start_frame: usize,
-        /// The frame to end the animation at (default: last frame of the animation)
-        end_frame: Option<usize>,
+        start_time: f32,
+        /// The "global" animation time at which to end the animation (default: time of the last
+        /// keyframe in the animation)
+        end_time: Option<f32>,
+        /// The number of steps to take between the start and end time.
+        ///
+        /// This is the number of frames that will be drawn in the spritesheet.
+        steps: NonZeroU32,
     },
+
     /// An array of filenames. OBJ files will be used as is. For glTF files, the model will be used
     /// as loaded regardless of the animations present in the file.
     Models(Vec<UnresolvedPath>),
+}
+
+impl AnimationFrames {
+    /// Returns the number of frame images to be created
+    pub fn len(&self) -> u32 {
+        use AnimationFrames::*;
+        match self {
+            GltfFrames {steps, ..} => steps.get(),
+            Models(models) => models.len() as u32,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,3 +1,4 @@
+pub mod multi;
 pub mod obj;
 pub mod gltf;
 pub mod blend;
@@ -30,16 +31,17 @@ pub enum FileError {
 
 #[derive(Debug)]
 pub enum File {
-    Objs(obj::ObjFiles),
+    Obj(obj::ObjFile),
     Gltf(gltf::GltfFile),
     Blend(blend::BlendFile),
+    Multi(multi::MultiFile),
 }
 
 impl File {
     /// Opens a 3D file based on its extension
     pub fn open(path: &Path) -> Result<Self, FileError> {
         match path.extension().and_then(|p| p.to_str()) {
-            Some("obj") => Ok(File::Objs(obj::ObjFiles::open(path)?)),
+            Some("obj") => Ok(File::Obj(obj::ObjFile::open(path)?)),
             Some("gltf") | Some("glb") => Ok(File::Gltf(gltf::GltfFile::open(path)?)),
             _ => Err(FileError::UnsupportedFileExtension {path: path.to_path_buf()}),
         }
@@ -55,9 +57,10 @@ impl QueryBackend for File {
     fn query_geometry(&mut self, query: GeometryQuery) -> Result<Vec<&Model>, QueryError> {
         use File::*;
         match self {
-            Objs(objs) => objs.query_geometry(query),
+            Obj(objs) => objs.query_geometry(query),
             Gltf(gltf) => gltf.query_geometry(query),
             Blend(blend) => blend.query_geometry(query),
+            Multi(multi) => multi.query_geometry(query),
         }
     }
 }

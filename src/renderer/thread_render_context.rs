@@ -216,9 +216,14 @@ impl ThreadRenderContext {
                     let image = self.draw_render(render)?;
                     crate::imageops::copy(&image, &mut final_image, (offset.x, offset.y));
                 },
+
                 Grid(_) => {
                     let image = self.draw(node)?;
                     crate::imageops::copy(&image, &mut final_image, (offset.x, offset.y));
+                },
+
+                Empty {..} => {
+                    // Draw nothing
                 },
             }
         }
@@ -229,7 +234,7 @@ impl ThreadRenderContext {
     fn draw_render(&mut self, render: Render) -> Result<RgbaImage, DrawLayoutError> {
         let Render {size, scale, background, camera, lights, models} = render;
 
-        let camera = camera.to_camera()?;
+        let camera = camera.into_camera()?;
         let view = camera.view();
         let projection = camera.projection();
 

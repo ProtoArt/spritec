@@ -5,22 +5,19 @@ use crate::query3d::GeometryQuery;
 
 use super::{QueryBackend, QueryError};
 
-/// Represents one or more OBJ files
-///
-/// With multiple OBJ files, each file can be treated as an animation frame, indexed by frame
-/// number only.
+/// Represents a single OBJ file
 #[derive(Debug)]
-pub struct ObjFiles {
+pub struct ObjFile {
 }
 
-impl ObjFiles {
-    /// Opens an OBJ file
+impl ObjFile {
+    /// Opens a OBJ file
     pub fn open(path: &Path) -> Result<Self, tobj::LoadError> {
         unimplemented!()
     }
 }
 
-impl QueryBackend for ObjFiles {
+impl QueryBackend for ObjFile {
     fn query_geometry(&mut self, query: GeometryQuery) -> Result<Vec<&Model>, QueryError> {
         unimplemented!()
     }

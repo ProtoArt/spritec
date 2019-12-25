@@ -1,11 +1,13 @@
 use std::num::NonZeroU32;
 
-use super::Render;
+use super::{Render, Size};
 
 #[derive(Debug)]
 pub enum RenderNode {
     Render(Render),
     Layout(RenderLayout),
+    /// An empty slot, used to create a gap/empty cell in the layout
+    Empty {size: Size},
 }
 
 /// Lays out one or more nodes in the given configuration

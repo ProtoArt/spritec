@@ -6,6 +6,8 @@ use super::{Render, RenderNode, RenderLayout, LayoutType, Size};
 pub enum LayoutNode {
     Render(Render),
     Grid(GridLayout),
+    /// An empty slot, used to create a gap/empty cell in the layout
+    Empty {size: Size},
 }
 
 impl From<RenderNode> for LayoutNode {
@@ -18,6 +20,7 @@ impl From<RenderNode> for LayoutNode {
                 let layout_nodes = nodes.into_iter().map(Into::into).collect();
                 LayoutNode::Grid(GridLayout::new(layout_nodes, cols))
             },
+            Empty {size} => LayoutNode::Empty {size},
         }
     }
 }
@@ -29,6 +32,7 @@ impl LayoutNode {
         match self {
             Render(render) => render.size,
             Grid(grid) => grid.size(),
+            Empty {size} => *size,
         }
     }
 
@@ -109,7 +113,7 @@ impl Iterator for LayoutTargetIter {
         match self.node.take() {
             None => None,
 
-            Some(node@Render(_)) => {
+            Some(node@Render(_)) | Some(node@Empty {..}) => {
                 // Draw from the corner over the entire image
                 let target = LayoutOffset {x: 0, y: 0};
                 Some((target, node))
