@@ -57,10 +57,26 @@ impl QueryBackend for ObjFile {
     }
 
     fn query_camera(&mut self, query: &CameraQuery) -> Result<Arc<Camera>, QueryError> {
-        unimplemented!()
+        // OBJ files do not support cameras
+        // This code still does the work to produce useful errors
+        match query {
+            CameraQuery::FirstInScene {name: None} => Err(QueryError::NoCameraFound),
+            // OBJ files do not contain any named scenes
+            CameraQuery::FirstInScene {name: Some(name)} => Err(QueryError::UnknownScene {
+                name: name.clone(),
+            }),
+        }
     }
 
     fn query_lights(&mut self, query: &LightQuery) -> Result<Vec<Arc<DirectionalLight>>, QueryError> {
-        unimplemented!()
+        // OBJ files do not support lights
+        // This code still does the work to produce useful errors
+        match query {
+            LightQuery::FirstInScene {name: None} => Err(QueryError::NoLightsFound),
+            // OBJ files do not contain any named scenes
+            LightQuery::FirstInScene {name: Some(name)} => Err(QueryError::UnknownScene {
+                name: name.clone(),
+            }),
+        }
     }
 }
