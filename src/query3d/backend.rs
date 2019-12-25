@@ -1,4 +1,3 @@
-pub mod multi;
 pub mod obj;
 pub mod gltf;
 pub mod blend;
@@ -34,7 +33,6 @@ pub enum File {
     Obj(obj::ObjFile),
     Gltf(gltf::GltfFile),
     Blend(blend::BlendFile),
-    Multi(multi::MultiFile),
 }
 
 impl File {
@@ -60,7 +58,6 @@ impl QueryBackend for File {
             Obj(objs) => objs.query_geometry(query),
             Gltf(gltf) => gltf.query_geometry(query),
             Blend(blend) => blend.query_geometry(query),
-            Multi(multi) => multi.query_geometry(query),
         }
     }
 }

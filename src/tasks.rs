@@ -139,11 +139,10 @@ pub fn generate_spritesheet_job(
             },
 
             Models(models) => {
-                let frames = models.len();
-                let resolved_paths = models.into_iter().map(|path| path.resolve(base_dir));
-                let file = file_cache.open_multi(resolved_paths)?;
+                // Use each model as a frame in the animation
+                for (frame, model_path) in models.into_iter().enumerate() {
+                    let file = file_cache.open(&model_path.resolve(base_dir))?;
 
-                for frame in 0..frames {
                     nodes.push(RenderNode::Render(Render {
                         size: frame_size,
                         scale,
@@ -161,7 +160,7 @@ pub fn generate_spritesheet_job(
                                     })
                                 },
 
-                                file: file.clone(),
+                                file,
                             },
 
                             outline: outline.clone(),

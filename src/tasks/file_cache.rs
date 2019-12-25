@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, Weak};
 use std::collections::HashMap;
 
-use crate::query3d::{File, FileError, multi};
+use crate::query3d::{File, FileError};
 
 /// A cache for Rc<File> that will only keep weak references.
 ///
@@ -30,15 +30,6 @@ impl WeakFileCache {
     /// Opens a glTF file
     pub fn open_gltf(&mut self, path: &Path) -> Result<Arc<Mutex<File>>, FileError> {
         self.open_with(path, File::open_gltf)
-    }
-
-    /// Opens multiple 3D model files
-    pub fn open_multi(&mut self, paths: impl Iterator<Item=PathBuf>) -> Result<Arc<Mutex<File>>, FileError> {
-        // We could cache multi-files one day, but given that all of the files inside are cached
-        // already, this isn't high priority.
-        let files = paths.map(|path| self.open(&path)).collect::<Result<Vec<_>, _>>()?;
-        let multi_file = File::Multi(multi::MultiFile::new(files));
-        Ok(Arc::new(Mutex::new(multi_file)))
     }
 
     /// Attempts to retrieve the file from the cache, or opens the file with the given function if
