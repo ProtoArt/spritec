@@ -6,14 +6,17 @@ use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 
-use crate::model::Model;
 use crate::camera::Camera;
 use crate::light::DirectionalLight;
+use crate::renderer::{Display, RenderModel, RenderMeshError};
 
 use super::query::{GeometryQuery, CameraQuery, LightQuery};
 
 #[derive(Debug, Error)]
 pub enum QueryError {
+    #[error(transparent)]
+    RenderMeshError(#[from] RenderMeshError),
+
     #[error("Could not find scene named `{name}` in model file")]
     UnknownScene {name: String},
 
@@ -29,7 +32,7 @@ pub enum QueryError {
 }
 
 pub trait QueryBackend {
-    fn query_geometry(&mut self, query: &GeometryQuery) -> Result<Vec<Arc<Model>>, QueryError>;
+    fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Vec<Arc<RenderModel>>, QueryError>;
     fn query_camera(&mut self, query: &CameraQuery) -> Result<Arc<Camera>, QueryError>;
     fn query_lights(&mut self, query: &LightQuery) -> Result<Vec<Arc<DirectionalLight>>, QueryError>;
 }
@@ -66,11 +69,11 @@ impl File {
 }
 
 impl QueryBackend for File {
-    fn query_geometry(&mut self, query: &GeometryQuery) -> Result<Vec<Arc<Model>>, QueryError> {
+    fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Vec<Arc<RenderModel>>, QueryError> {
         use File::*;
         match self {
-            Obj(objs) => objs.query_geometry(query),
-            Gltf(gltf) => gltf.query_geometry(query),
+            Obj(objs) => objs.query_geometry(query, display),
+            Gltf(gltf) => gltf.query_geometry(query, display),
         }
     }
 

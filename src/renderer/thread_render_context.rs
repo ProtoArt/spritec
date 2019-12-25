@@ -246,7 +246,8 @@ impl ThreadRenderContext {
             let FileQuery {query, file} = geometry;
 
             let mut file = file.lock().expect("bug: file lock was poisoned");
-            for model in file.query_geometry(&query)? {
+            let models = file.query_geometry(&query, renderer.display())?;
+            for model in models {
                 renderer.render(&*model, view, projection, &outline)?;
             }
         }

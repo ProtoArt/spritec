@@ -15,21 +15,25 @@ pub use job::*;
 use vek::{Rgba, Mat4, Vec3, Vec4};
 use glium::{Surface, framebuffer::SimpleFrameBuffer};
 
-use crate::model::Model;
 use crate::light::DirectionalLight;
 
-use shader::cel::{CelUniforms};
-use shader::outline::{OutlineUniforms};
+use shader::cel::CelUniforms;
+use shader::outline::OutlineUniforms;
 
 /// A renderer that allows you to draw models
 pub struct Renderer<'a> {
-    //TODO: Delete this once it is no longer needed in the code below
+    // Kept here to allow us to lazily upload geometry to the GPU even while rendering
     display: &'a Display,
     shaders: &'a Shaders,
     target: SimpleFrameBuffer<'a>,
 }
 
 impl<'a> Renderer<'a> {
+    /// Returns the display being drawn on by this renderer
+    pub fn display(&self) -> &Display {
+        &self.display
+    }
+
     /// Clears the screen and resets the depth buffer
     pub fn clear(&mut self, background: Rgba<f32>) {
         self.target.clear_color_and_depth(background.into_tuple(), 1.0);
@@ -38,7 +42,7 @@ impl<'a> Renderer<'a> {
     /// Draw the given model with the given parameters
     pub fn render(
         &mut self,
-        model: &Model,
+        model: &RenderModel,
         view: Mat4<f32>,
         projection: Mat4<f32>,
         outline: &Outline,
@@ -76,8 +80,6 @@ impl<'a> Renderer<'a> {
         let ambient_intensity = 0.5;
 
         for mesh in &model.meshes {
-            //TODO: Handle this error properly once we implement model caching
-            let mesh = &RenderMesh::new(self.display, mesh).expect("bug: unable to upload mesh");
             let RenderMesh {indices, positions, normals, material, model_transform} = mesh;
             let model_view = view * (*model_transform);
             let mvp = projection * model_view;

@@ -16,7 +16,7 @@ use crate::renderer::Display;
 
 #[derive(Debug, Error)]
 #[error(transparent)]
-pub enum RenderMeshCreationError {
+pub enum RenderMeshError {
     IndexBufferCreationError(#[from] index::BufferCreationError),
     VertexBufferCreationError(#[from] vertex::BufferCreationError),
 }
@@ -37,7 +37,7 @@ pub struct RenderMesh {
 }
 
 impl RenderMesh {
-    pub fn new(display: &Display, mesh: &Mesh) -> Result<Self, RenderMeshCreationError> {
+    pub fn new(display: &Display, mesh: &Mesh) -> Result<Self, RenderMeshError> {
         const POSITION_ATTR_TYPE: AttributeType = AttributeType::F32F32F32;
         let position_bindings: VertexFormat = Cow::Borrowed(&[
             // This name must correspond to the name in our shaders

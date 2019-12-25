@@ -3,7 +3,7 @@ use std::path::Path;
 
 use crate::camera::Camera;
 use crate::light::DirectionalLight;
-use crate::model::Model;
+use crate::renderer::{Display, RenderModel};
 use crate::query3d::{GeometryQuery, CameraQuery, LightQuery};
 
 use super::{QueryBackend, QueryError};
@@ -21,7 +21,7 @@ impl GltfFile {
 }
 
 impl QueryBackend for GltfFile {
-    fn query_geometry(&mut self, query: &GeometryQuery) -> Result<Vec<Arc<Model>>, QueryError> {
+    fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Vec<Arc<RenderModel>>, QueryError> {
         unimplemented!()
     }
 
