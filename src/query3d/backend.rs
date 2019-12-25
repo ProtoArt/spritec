@@ -1,6 +1,5 @@
 pub mod obj;
 pub mod gltf;
-pub mod blend;
 
 use std::path::{Path, PathBuf};
 
@@ -36,7 +35,6 @@ pub enum FileError {
 pub enum File {
     Obj(obj::ObjFile),
     Gltf(gltf::GltfFile),
-    Blend(blend::BlendFile),
 }
 
 impl File {
@@ -61,7 +59,6 @@ impl QueryBackend for File {
         match self {
             Obj(objs) => objs.query_geometry(query),
             Gltf(gltf) => gltf.query_geometry(query),
-            Blend(blend) => blend.query_geometry(query),
         }
     }
 }
