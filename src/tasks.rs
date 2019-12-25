@@ -140,7 +140,7 @@ pub fn generate_spritesheet_job(
 
             Models(models) => {
                 // Use each model as a frame in the animation
-                for (frame, model_path) in models.into_iter().enumerate() {
+                for model_path in models {
                     let file = file_cache.open(&model_path.resolve(base_dir))?;
 
                     nodes.push(RenderNode::Render(Render {
@@ -153,11 +153,8 @@ pub fn generate_spritesheet_job(
                             geometry: FileQuery {
                                 query: GeometryQuery {
                                     models: GeometryFilter::all_in_default_scene(),
-
-                                    animation: Some(AnimationQuery {
-                                        name: None,
-                                        position: AnimationPosition::Frame(frame),
-                                    })
+                                    // Use the default state of the scene
+                                    animation: None,
                                 },
 
                                 file,

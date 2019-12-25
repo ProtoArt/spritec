@@ -30,7 +30,7 @@ impl LayoutNode {
         use LayoutNode::*;
 
         match self {
-            Render(render) => render.size,
+            Render(render) => render.total_size(),
             Grid(grid) => grid.size(),
             Empty {size} => *size,
         }
@@ -130,7 +130,7 @@ impl Iterator for LayoutTargetIter {
                 let current = self.current;
 
                 let row = current / cols.get();
-                let col = current / cols.get();
+                let col = current % cols.get();
                 let target = LayoutOffset {
                     x: col * cell_width.get(),
                     y: row * cell_height.get(),
