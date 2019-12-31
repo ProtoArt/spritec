@@ -20,7 +20,7 @@
                     ],
                     "intensity" : 1000,
                     "type" : "point",
-                    "name" : "Light"
+                    "name" : "front_light"
                 }
             ]
         }
@@ -46,7 +46,7 @@
                     "light" : 0
                 }
             },
-            "name" : "Light_Orientation",
+            "name" : "front_light_Orientation",
             "rotation" : [
                 -0.7071067690849304,
                 0,
@@ -58,7 +58,7 @@
             "children" : [
                 0
             ],
-            "name" : "Light",
+            "name" : "front_light",
             "rotation" : [
                 0.16907575726509094,
                 0.7558803558349609,
@@ -73,7 +73,7 @@
         },
         {
             "camera" : 0,
-            "name" : "Camera_Orientation",
+            "name" : "perspective_Orientation",
             "rotation" : [
                 -0.7071067690849304,
                 0,
@@ -85,7 +85,7 @@
             "children" : [
                 2
             ],
-            "name" : "Camera",
+            "name" : "perspective",
             "rotation" : [
                 0.4301598072052002,
                 0.39007413387298584,
@@ -95,7 +95,7 @@
             "translation" : [
                 9.60444450378418,
                 7.209439277648926,
-                8.23590087890625
+                7.0659284591674805
             ]
         },
         {
@@ -114,15 +114,15 @@
             ],
             "name" : "front",
             "rotation" : [
-                0.6909515261650085,
+                0.5330834984779358,
                 0,
                 0,
-                0.7229011058807373
+                0.8460626602172852
             ],
             "translation" : [
                 0,
-                0.4779626131057739,
-                24.224538803100586
+                5.080667495727539,
+                10.61879825592041
             ]
         },
         {
@@ -419,7 +419,7 @@
         },
         {
             "mesh" : 0,
-            "name" : "Icosphere",
+            "name" : "bigboi",
             "skin" : 0
         },
         {
@@ -427,12 +427,12 @@
                 22,
                 21
             ],
-            "name" : "Armature"
+            "name" : "bigboi_skeleton"
         }
     ],
     "cameras" : [
         {
-            "name" : "Camera",
+            "name" : "perspective",
             "perspective" : {
                 "yfov" : 0.6911112070083618,
                 "zfar" : 100,
@@ -442,13 +442,12 @@
         },
         {
             "name" : "front",
-            "orthographic" : {
-                "xmag" : 9,
-                "ymag" : 9,
+            "perspective" : {
+                "yfov" : 0.6911112070083618,
                 "zfar" : 1000,
                 "znear" : 0.10000000149011612
             },
-            "type" : "orthographic"
+            "type" : "perspective"
         },
         {
             "name" : "right",
@@ -725,7 +724,7 @@
                     }
                 }
             ],
-            "name" : "ArmatureAction.002",
+            "name" : "walk",
             "samplers" : [
                 {
                     "input" : 37,
@@ -1086,7 +1085,7 @@
                 19,
                 18
             ],
-            "name" : "Armature"
+            "name" : "bigboi_skeleton"
         }
     ],
     "accessors" : [
