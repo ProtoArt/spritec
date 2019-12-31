@@ -84,7 +84,7 @@ camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
 
 [[poses]]
 model = "obj/bigboi_000010.obj"
-path = "../../pose000010.png"
+path = "../../pose000002.png"
 width = 64
 height = 64
 scale = 2
@@ -92,7 +92,7 @@ camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
 
 [[poses]]
 model = "obj/bigboi_000020.obj"
-path = "../../pose000020.png"
+path = "../../pose000003.png"
 width = 64
 height = 64
 scale = 2
@@ -100,7 +100,7 @@ camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
 
 [[poses]]
 model = "obj/bigboi_000030.obj"
-path = "../../pose000030.png"
+path = "../../pose000004.png"
 width = 64
 height = 64
 scale = 2
