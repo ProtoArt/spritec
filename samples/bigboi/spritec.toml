@@ -7,17 +7,11 @@ path = "../../spritesheet0.png"
 scale = 2
 
 [[spritesheets.animations]]
-frames = { gltf = "gltf/bigboi_rigged.gltf", start_frame = 0, end_frame = 3 }
+frames = { gltf = "gltf/bigboi.gltf", start_frame = 0, end_frame = 3 }
 frame_width = 64
 frame_height = 64
 camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
 outline = { thickness = 0.15 }
-
-[[spritesheets.animations]]
-frames = { gltf = "gltf/bigboi_rigged.gltf", start_frame = 4, end_frame = 7 }
-frame_width = 64
-frame_height = 64
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
 
 
 [[spritesheets]]
