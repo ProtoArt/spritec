@@ -26,22 +26,10 @@ scale = 2
 
 [[spritesheets.animations]]
 frames = [
-  "obj/bigboi_rigged_000001.obj",
-  "obj/bigboi_rigged_000002.obj",
-  "obj/bigboi_rigged_000003.obj",
-  "obj/bigboi_rigged_000004.obj",
-]
-frame_width = 64
-frame_height = 64
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
-outline = { thickness = 0.15 }
-
-[[spritesheets.animations]]
-frames = [
-  "obj/bigboi_rigged_000005.obj",
-  "obj/bigboi_rigged_000006.obj",
-  "obj/bigboi_rigged_000007.obj",
-  "obj/bigboi_rigged_000008.obj",
+  "obj/bigboi_000001.obj",
+  "obj/bigboi_000010.obj",
+  "obj/bigboi_000020.obj",
+  "obj/bigboi_000030.obj",
 ]
 frame_width = 64
 frame_height = 64
@@ -55,21 +43,10 @@ scale = 2
 
 [[spritesheets.animations]]
 frames = [
-  "obj/bigboi_rigged_000001.obj",
-  "obj/bigboi_rigged_000002.obj",
-  "obj/bigboi_rigged_000003.obj",
-  "obj/bigboi_rigged_000004.obj",
-]
-frame_width = 64
-frame_height = 64
-camera = "PerspectiveRight"
-
-[[spritesheets.animations]]
-frames = [
-  "obj/bigboi_rigged_000005.obj",
-  "obj/bigboi_rigged_000006.obj",
-  "obj/bigboi_rigged_000007.obj",
-  "obj/bigboi_rigged_000008.obj",
+  "obj/bigboi_000001.obj",
+  "obj/bigboi_000010.obj",
+  "obj/bigboi_000020.obj",
+  "obj/bigboi_000030.obj",
 ]
 frame_width = 64
 frame_height = 64
@@ -81,10 +58,10 @@ path = "../../spritesheet3.png"
 
 [[spritesheets.animations]]
 frames = [
-  "obj/bigboi_rigged_000001.obj",
-  "obj/bigboi_rigged_000002.obj",
-  "obj/bigboi_rigged_000003.obj",
-  "obj/bigboi_rigged_000004.obj",
+  "obj/bigboi_000001.obj",
+  "obj/bigboi_000010.obj",
+  "obj/bigboi_000020.obj",
+  "obj/bigboi_000030.obj",
 ]
 frame_width = 64
 frame_height = 64
@@ -92,32 +69,10 @@ camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
 
 [[spritesheets.animations]]
 frames = [
-  "obj/bigboi_rigged_000005.obj",
-  "obj/bigboi_rigged_000006.obj",
-  "obj/bigboi_rigged_000007.obj",
-  "obj/bigboi_rigged_000008.obj",
-]
-frame_width = 64
-frame_height = 64
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
-
-[[spritesheets.animations]]
-frames = [
-  "obj/bigboi_rigged_000001.obj",
-  "obj/bigboi_rigged_000002.obj",
-  "obj/bigboi_rigged_000003.obj",
-  "obj/bigboi_rigged_000004.obj",
-]
-frame_width = 64
-frame_height = 64
-camera = "PerspectiveRight"
-
-[[spritesheets.animations]]
-frames = [
-  "obj/bigboi_rigged_000005.obj",
-  "obj/bigboi_rigged_000006.obj",
-  "obj/bigboi_rigged_000007.obj",
-  "obj/bigboi_rigged_000008.obj",
+  "obj/bigboi_000001.obj",
+  "obj/bigboi_000010.obj",
+  "obj/bigboi_000020.obj",
+  "obj/bigboi_000030.obj",
 ]
 frame_width = 64
 frame_height = 64
@@ -125,8 +80,8 @@ camera = "PerspectiveRight"
 
 
 [[poses]]
-# Or { gltf = "gltf/bigboi_rigged.gltf", frame = 0 }
-model = "obj/bigboi_rigged_000001.obj"
+# Or { gltf = "gltf/bigboi.gltf", frame = 0 }
+model = "obj/bigboi_000001.obj"
 path = "../../pose000001.png"
 width = 64
 height = 64
@@ -134,56 +89,24 @@ scale = 2
 camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
 
 [[poses]]
-model = "obj/bigboi_rigged_000002.obj"
-path = "../../pose000002.png"
+model = "obj/bigboi_000010.obj"
+path = "../../pose000010.png"
 width = 64
 height = 64
 scale = 2
 camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
 
 [[poses]]
-model = "obj/bigboi_rigged_000003.obj"
-path = "../../pose000003.png"
+model = "obj/bigboi_000020.obj"
+path = "../../pose000020.png"
 width = 64
 height = 64
 scale = 2
 camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
 
 [[poses]]
-model = "obj/bigboi_rigged_000004.obj"
-path = "../../pose000004.png"
-width = 64
-height = 64
-scale = 2
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
-
-[[poses]]
-model = "obj/bigboi_rigged_000005.obj"
-path = "../../pose000005.png"
-width = 64
-height = 64
-scale = 2
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
-
-[[poses]]
-model = "obj/bigboi_rigged_000006.obj"
-path = "../../pose000006.png"
-width = 64
-height = 64
-scale = 2
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
-
-[[poses]]
-model = "obj/bigboi_rigged_000007.obj"
-path = "../../pose000007.png"
-width = 64
-height = 64
-scale = 2
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
-
-[[poses]]
-model = "obj/bigboi_rigged_000008.obj"
-path = "../../pose000008.png"
+model = "obj/bigboi_000030.obj"
+path = "../../pose000030.png"
 width = 64
 height = 64
 scale = 2
