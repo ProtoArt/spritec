@@ -39,9 +39,9 @@ pub fn generate_pose_job(
 
     Ok(RenderJob {
         output_path: path.resolve(base_dir),
+        scale,
         root: RenderNode::Render(Render {
             size: Size {width, height},
-            scale,
             background,
             camera: RenderCamera::Camera(Arc::new(camera.into())),
             lights: Vec::new(), // TODO
@@ -106,7 +106,6 @@ pub fn generate_spritesheet_job(
 
                     nodes.push(RenderNode::Render(Render {
                         size: frame_size,
-                        scale,
                         background,
                         camera: RenderCamera::Camera(Arc::new(camera.clone())),
                         lights: Vec::new(), // TODO
@@ -146,7 +145,6 @@ pub fn generate_spritesheet_job(
 
                     nodes.push(RenderNode::Render(Render {
                         size: frame_size,
-                        scale,
                         background,
                         camera: RenderCamera::Camera(Arc::new(camera.clone())),
                         lights: Vec::new(), //TODO
@@ -176,6 +174,7 @@ pub fn generate_spritesheet_job(
 
     Ok(RenderJob {
         output_path: path.resolve(base_dir),
+        scale,
         root: RenderNode::Layout(RenderLayout {
             nodes,
             layout: LayoutType::Grid {

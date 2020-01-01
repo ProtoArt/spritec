@@ -12,9 +12,6 @@ use crate::query3d::{GeometryQuery, LightQuery, CameraQuery, File, QueryError, Q
 pub struct Render {
     /// The size at which to render the generated image
     pub size: Size,
-    /// A scale factor to apply to the generated image. The image is scaled without interpolation.
-    /// The value must be greater than zero.
-    pub scale: NonZeroU32,
     /// The background color of the generated image
     pub background: Rgba<f32>,
     /// The camera perspective from which to render each frame
@@ -23,17 +20,6 @@ pub struct Render {
     pub lights: Vec<RenderLight>,
     /// The models to draw in the rendered image
     pub models: Vec<RenderGeometry>,
-}
-
-impl Render {
-    pub fn total_size(&self) -> Size {
-        let scale = self.scale.get();
-        // This code is safe because two non-zero values multiplied by each other is still non-zero
-        Size {
-            width: unsafe { NonZeroU32::new_unchecked(self.size.width.get() * scale) },
-            height: unsafe { NonZeroU32::new_unchecked(self.size.height.get() * scale) },
-        }
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

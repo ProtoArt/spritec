@@ -28,6 +28,8 @@
 // This is why we try to keep a single context per thread. That context is made current and we
 // leave it that way.
 
+use std::num::NonZeroU32;
+
 use glium::{
     Program,
     framebuffer::SimpleFrameBuffer,
@@ -49,6 +51,7 @@ use image::RgbaImage;
 use thiserror::Error;
 
 use crate::query3d::{QueryBackend, QueryError};
+use crate::imageops::{scale_to_fit, copy};
 
 use super::{Renderer, Render, RenderGeometry, Size, FileQuery, layout::LayoutNode};
 
@@ -202,24 +205,35 @@ impl ThreadRenderContext {
         Ok(image)
     }
 
+    /// Scales the given image up, with no anti-aliasing or other interpolation of any kind.
+    pub fn scale(&mut self, image: &RgbaImage, scale: NonZeroU32) -> Result<RgbaImage, DrawLayoutError> {
+        //TODO: Do this scaling using the GPU. Should the error type still be DrawLayoutError?
+
+        //TODO: Could optimize the case of scale == 1
+        let scale = scale.get();
+        let (width, height) = image.dimensions();
+        let mut scaled_image = RgbaImage::new(width * scale, height * scale);
+        scale_to_fit(&image, &mut scaled_image);
+
+        Ok(scaled_image)
+    }
+
     /// Draws the given layout, returning the image that was rendered
     pub fn draw(&mut self, layout: LayoutNode) -> Result<RgbaImage, DrawLayoutError> {
         let Size {width, height} = layout.size();
 
-        // An unscaled version of the final image
         let mut final_image = RgbaImage::new(width.get(), height.get());
-
         for (offset, node) in layout.iter_targets() {
             use LayoutNode::*;
             match node {
                 Render(render) => {
                     let image = self.draw_render(render)?;
-                    crate::imageops::copy(&image, &mut final_image, (offset.x, offset.y));
+                    copy(&image, &mut final_image, (offset.x, offset.y));
                 },
 
                 Grid(_) => {
                     let image = self.draw(node)?;
-                    crate::imageops::copy(&image, &mut final_image, (offset.x, offset.y));
+                    copy(&image, &mut final_image, (offset.x, offset.y));
                 },
 
                 Empty {..} => {
@@ -232,7 +246,7 @@ impl ThreadRenderContext {
     }
 
     fn draw_render(&mut self, render: Render) -> Result<RgbaImage, DrawLayoutError> {
-        let Render {size, scale, background, camera, lights, models} = render;
+        let Render {size, background, camera, lights, models} = render;
 
         let camera = camera.fetch_camera()?;
         let view = camera.view();
@@ -253,12 +267,6 @@ impl ThreadRenderContext {
         }
 
         let image = self.finish_render(render_id)?;
-
-        //TODO: Could optimize the case of scale == 1
-        let scale = scale.get();
-        let mut scaled_image = RgbaImage::new(size.width.get() * scale, size.height.get() * scale);
-        crate::imageops::scale(&image, &mut scaled_image);
-
-        Ok(scaled_image)
+        Ok(image)
     }
 }

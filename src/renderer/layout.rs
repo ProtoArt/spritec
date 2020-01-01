@@ -30,7 +30,7 @@ impl LayoutNode {
         use LayoutNode::*;
 
         match self {
-            Render(render) => render.total_size(),
+            Render(render) => render.size,
             Grid(grid) => grid.size(),
             Empty {size} => *size,
         }
