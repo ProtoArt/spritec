@@ -89,9 +89,9 @@ impl QueryBackend for ObjFile {
         // OBJ files do not support lights
         // This code still does the work to produce useful errors
         match query {
-            LightQuery::FirstInScene {name: None} => Err(QueryError::NoLightsFound),
+            LightQuery::Scene {name: None} => Err(QueryError::NoLightsFound),
             // OBJ files do not contain any named scenes
-            LightQuery::FirstInScene {name: Some(name)} => Err(QueryError::UnknownScene {
+            LightQuery::Scene {name: Some(name)} => Err(QueryError::UnknownScene {
                 name: name.clone(),
             }),
         }

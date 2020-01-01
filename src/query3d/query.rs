@@ -58,8 +58,8 @@ pub enum CameraQuery {
 
 #[derive(Debug, Clone)]
 pub enum LightQuery {
-    /// Returns the first light in the given scene
-    FirstInScene {
+    /// Returns all the lights in the given scene
+    Scene {
         /// The name of the scene to look in or None if the default scene should be used
         name: Option<String>,
     },
