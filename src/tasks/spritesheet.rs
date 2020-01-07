@@ -9,7 +9,7 @@ use image::RgbaImage;
 use vek::Rgba;
 
 use crate::config;
-use crate::model::Model;
+use crate::model::Scene;
 use crate::camera::Camera;
 use crate::loaders::{self, LoaderError, gltf::GltfFile};
 use crate::renderer::{ThreadRenderContext, BeginRenderError};
@@ -166,8 +166,8 @@ pub enum AnimationFrames {
         /// The frame to end the animation at
         end_frame: usize,
     },
-    /// An array of models to render for each frame
-    Models(Vec<Model>),
+    /// An array of scenes to render for each frame
+    Scenes(Vec<Scene>),
 }
 
 impl AnimationFrames {
@@ -188,8 +188,8 @@ impl AnimationFrames {
 
                 AnimationFrames::GltfFrames {model, animation, start_frame, end_frame}
             },
-            Models(models) => AnimationFrames::Models(
-                models.into_iter()
+            Scenes(scenes) => AnimationFrames::Scenes(
+                scenes.into_iter()
                     .map(|path| path.resolve(base_dir))
                     .map(|path| loaders::load_file(&path)).collect::<Result<_, _>>()?
             ),
@@ -201,19 +201,19 @@ impl AnimationFrames {
         use AnimationFrames::*;
         match self {
             GltfFrames {start_frame, end_frame, ..} => end_frame - start_frame + 1,
-            Models(frames) => frames.len(),
+            Scenes(scenes) => scenes.len(),
         }
     }
 
     /// Returns an iterator to the frames in this animation
-    pub fn iter(&self) -> impl Iterator<Item=Cow<Model>> {
+    pub fn iter(&self) -> impl Iterator<Item=Cow<Scene>> {
         // Having this method avoids the awkward syntax: (&self.frames).into_iter()
         self.into_iter()
     }
 }
 
 impl<'a> IntoIterator for &'a AnimationFrames {
-    type Item = Cow<'a, Model>;
+    type Item = Cow<'a, Scene>;
     type IntoIter = Box<dyn Iterator<Item=Self::Item> + 'a>;
 
     /// Returns an iterator over each model (frame) of this animation
@@ -226,7 +226,7 @@ impl<'a> IntoIterator for &'a AnimationFrames {
                 // To understand this code: https://stackoverflow.com/a/31234028/551904
                 Cow::Owned(model.frame(animation.as_ref().map(|s| &**s), Some(frame)))
             })),
-            Models(models) => Box::new(models.iter().map(Cow::Borrowed)),
+            Scenes(scenes) => Box::new(scenes.iter().map(Cow::Borrowed)),
         }
     }
 }

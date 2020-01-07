@@ -8,7 +8,7 @@ pub use render_mesh::RenderMeshCreationError;
 use vek::{Rgba, Mat4, Vec3, Vec4};
 use glium::{Surface, framebuffer::SimpleFrameBuffer};
 
-use crate::model::Model;
+use crate::model::Scene;
 use crate::light::DirectionalLight;
 
 use shader::cel::{CelUniforms, Cel};
@@ -33,7 +33,7 @@ impl<'a> Renderer<'a> {
     /// Draw the given model with the given parameters
     pub fn render(
         &mut self,
-        model: &Model,
+        scene: &Scene,
         view: Mat4<f32>,
         projection: Mat4<f32>,
         outline_thickness: f32,
@@ -71,7 +71,8 @@ impl<'a> Renderer<'a> {
         };
         let ambient_intensity = 0.5;
 
-        for mesh in &model.meshes {
+        let meshes = scene.gather_nodes().map(|node| node.meshes()).flatten().flatten();
+        for mesh in meshes {
             //TODO: Handle this error properly once we implement model caching
             let mesh = &RenderMesh::new(self.display, mesh).expect("bug: unable to upload mesh");
             let RenderMesh {indices, positions, normals, material, model_transform} = mesh;
