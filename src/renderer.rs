@@ -15,6 +15,7 @@ pub use job::*;
 use vek::{Rgba, Mat4, Vec3, Vec4};
 use glium::{Surface, framebuffer::SimpleFrameBuffer};
 
+use crate::model::Scene;
 use crate::light::DirectionalLight;
 
 use shader::cel::CelUniforms;
@@ -42,7 +43,7 @@ impl<'a> Renderer<'a> {
     /// Draw the given model with the given parameters
     pub fn render(
         &mut self,
-        model: &RenderModel,
+        scene: &Scene,
         view: Mat4<f32>,
         projection: Mat4<f32>,
         outline: &Outline,

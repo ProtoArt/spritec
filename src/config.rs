@@ -86,10 +86,9 @@ pub enum AnimationFrames {
         /// This is the number of frames that will be drawn in the spritesheet.
         steps: NonZeroU32,
     },
-
-    /// An array of filenames. OBJ files will be used as is. For glTF files, the model will be used
+    /// An array of filenames. OBJ files will be used as is. For glTF files, the scene will be used
     /// as loaded regardless of the animations present in the file.
-    Models(Vec<UnresolvedPath>),
+    Scenes(Vec<UnresolvedPath>),
 }
 
 impl AnimationFrames {

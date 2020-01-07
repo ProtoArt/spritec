@@ -54,6 +54,8 @@ impl Mesh {
         let normals: Vec<_> = reader.read_normals().expect("Failed to read glTF normals")
             .map(|data| Vec3::new(data[0], data[1], data[2]))
             .collect();
+
+        // This assumes that the material index is the index into materials
         let material = primitive.material().index().map(|id| materials[id].clone()).unwrap_or_default();
 
         // Not handling optional normals yet
