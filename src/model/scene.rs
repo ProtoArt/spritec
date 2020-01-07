@@ -68,7 +68,7 @@ impl Scene {
         // Since obj files don't use identifiers, let's just choose `1`.
         node_map.insert(1, node.clone());
 
-        Ok(Scene {node_map, nodes: vec![node.clone()]})
+        Ok(Scene {node_map, nodes: vec![node]})
     }
 
     /// Collect all nodes in a scene and return it
