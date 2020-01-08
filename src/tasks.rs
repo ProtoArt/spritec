@@ -9,7 +9,6 @@ use std::num::NonZeroU32;
 use interpolation::lerp;
 
 use crate::config;
-use crate::camera::Camera;
 use crate::query3d::{
     FileError,
     GeometryQuery,
@@ -25,8 +24,8 @@ use crate::renderer::{
     Render,
     Size,
     Outline,
+    Camera,
     RenderCamera,
-    RenderGeometry,
     FileQuery,
 };
 
@@ -43,32 +42,29 @@ pub fn generate_pose_job(
         root: RenderNode::Render(Render {
             size: Size {width, height},
             background,
-            camera: RenderCamera::Camera(Arc::new(camera.into())),
+            camera: RenderCamera::Camera(Arc::new(config_to_camera(camera))),
             lights: Vec::new(), // TODO
-            models: vec![RenderGeometry {
-                geometry: match model {
-                    config::PoseModel::GltfFrame {gltf, animation, time} => FileQuery {
-                        query: GeometryQuery {
-                            models: GeometryFilter::all_in_default_scene(),
-                            animation: Some(AnimationQuery {
-                                name: animation,
-                                position: AnimationPosition::Time(time.unwrap_or(0.0)),
-                            }),
-                        },
-                        file: file_cache.open_gltf(&gltf.resolve(base_dir))?,
+            geometry: match model {
+                config::PoseModel::GltfFrame {gltf, animation, time} => FileQuery {
+                    query: GeometryQuery {
+                        models: GeometryFilter::all_in_default_scene(),
+                        animation: Some(AnimationQuery {
+                            name: animation,
+                            position: AnimationPosition::Time(time.unwrap_or(0.0)),
+                        }),
                     },
-
-                    config::PoseModel::Model(path) => FileQuery {
-                        query: GeometryQuery {
-                            models: GeometryFilter::all_in_default_scene(),
-                            animation: None,
-                        },
-                        file: file_cache.open(&path.resolve(base_dir))?,
-                    },
+                    file: file_cache.open_gltf(&gltf.resolve(base_dir))?,
                 },
 
-                outline: outline.into(),
-            }],
+                config::PoseModel::Model(path) => FileQuery {
+                    query: GeometryQuery {
+                        models: GeometryFilter::all_in_default_scene(),
+                        animation: None,
+                    },
+                    file: file_cache.open(&path.resolve(base_dir))?,
+                },
+            },
+            outline: config_to_outline(outline),
         }),
     })
 }
@@ -90,8 +86,8 @@ pub fn generate_spritesheet_job(
         let extra = cols - anim.frames.len();
 
         let config::Animation {frames, frame_width, frame_height, camera, outline} = anim;
-        let camera: Camera = camera.into();
-        let outline: Outline = outline.into();
+        let camera = config_to_camera(camera);
+        let outline = config_to_outline(outline);
 
         let frame_size = Size {width: frame_width, height: frame_height};
 
@@ -109,31 +105,28 @@ pub fn generate_spritesheet_job(
                         background,
                         camera: RenderCamera::Camera(Arc::new(camera.clone())),
                         lights: Vec::new(), // TODO
-                        models: vec![RenderGeometry {
-                            geometry: FileQuery {
-                                query: GeometryQuery {
-                                    models: GeometryFilter::all_in_default_scene(),
+                        geometry: FileQuery {
+                            query: GeometryQuery {
+                                models: GeometryFilter::all_in_default_scene(),
 
-                                    animation: Some(AnimationQuery {
-                                        name: name.clone(),
-                                        position: match end_time {
-                                            Some(end_time) => AnimationPosition::Time(
-                                                lerp(&start_time, &end_time, &weight)
-                                            ),
+                                animation: Some(AnimationQuery {
+                                    name: name.clone(),
+                                    position: match end_time {
+                                        Some(end_time) => AnimationPosition::Time(
+                                            lerp(&start_time, &end_time, &weight)
+                                        ),
 
-                                            None => AnimationPosition::RelativeTime {
-                                                start_time,
-                                                weight,
-                                            },
-                                        }
-                                    })
-                                },
-
-                                file: file.clone(),
+                                        None => AnimationPosition::RelativeTime {
+                                            start_time,
+                                            weight,
+                                        },
+                                    }
+                                })
                             },
 
-                            outline: outline.clone(),
-                        }],
+                            file: file.clone(),
+                        },
+                        outline: outline.clone(),
                     }));
                 }
             },
@@ -148,19 +141,16 @@ pub fn generate_spritesheet_job(
                         background,
                         camera: RenderCamera::Camera(Arc::new(camera.clone())),
                         lights: Vec::new(), //TODO
-                        models: vec![RenderGeometry {
-                            geometry: FileQuery {
-                                query: GeometryQuery {
-                                    models: GeometryFilter::all_in_default_scene(),
-                                    // Use the default state of the scene
-                                    animation: None,
-                                },
-
-                                file,
+                        geometry: FileQuery {
+                            query: GeometryQuery {
+                                models: GeometryFilter::all_in_default_scene(),
+                                // Use the default state of the scene
+                                animation: None,
                             },
 
-                            outline: outline.clone(),
-                        }],
+                            file,
+                        },
+                        outline: outline.clone(),
                     }));
                 }
             },
@@ -182,4 +172,20 @@ pub fn generate_spritesheet_job(
             },
         }),
     })
+}
+
+fn config_to_camera(cam: config::PresetCamera) -> Camera {
+    use config::PresetCamera::*;
+    let cam = match cam {
+        Perspective(persp) => persp.into(),
+        Custom(cam) => cam,
+    };
+
+    unimplemented!()
+}
+
+fn config_to_outline(outline: config::Outline) -> Outline {
+    let config::Outline {thickness, color} = outline;
+
+    Outline {thickness, color}
 }

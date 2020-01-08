@@ -1,8 +1,7 @@
 use std::num::NonZeroU32;
 
-use vek::{Rgba};
+use vek::{Vec3, Rgba};
 use serde::{Serialize, Deserialize};
-use crate::camera::Camera;
 
 /// A newtype around PathBuf to force the path to be resolved relative to a base directory before
 /// it can be used. Good to prevent something that is pretty easy to do accidentally.
@@ -88,7 +87,7 @@ pub enum AnimationFrames {
     },
     /// An array of filenames. OBJ files will be used as is. For glTF files, the scene will be used
     /// as loaded regardless of the animations present in the file.
-    Scenes(Vec<UnresolvedPath>),
+    Models(Vec<UnresolvedPath>),
 }
 
 impl AnimationFrames {
@@ -185,6 +184,56 @@ pub enum Perspective {
     PerspectiveRight,
     PerspectiveTop,
     PerspectiveBottom,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[serde(default)]
+pub struct Camera {
+    /// The position of the camera in world coordinates
+    eye: Vec3<f32>,
+    /// The target position that the camera should be looking at
+    target: Vec3<f32>,
+    /// The aspect ratio of the viewport
+    aspect_ratio: f32,
+    /// Field of view angle in the y-direction - the "opening angle" of the camera in radians
+    fov_y: f32,
+    /// Coordinate of the near clipping plane on the camera's local z-axis
+    near_z: f32,
+    /// Coordinate of the far clipping plane on the camera's local z-axis
+    ///
+    /// If None, a special "infinite projection matrix" will be used.
+    far_z: Option<f32>,
+}
+
+impl Default for Camera {
+    fn default() -> Self {
+        Self {
+            eye: Vec3::zero(),
+            target: Vec3::forward_rh(),
+            aspect_ratio: 1.0,
+            fov_y: 30.0f32.to_radians(),
+            near_z: 0.01,
+            far_z: Some(100.0),
+        }
+    }
+}
+
+impl From<Perspective> for Camera {
+    fn from(persp: Perspective) -> Self {
+
+        // NOTE: PerspectiveLeft means point the camera to the left side of the model
+        use Perspective::*;
+        let eye = match persp {
+            PerspectiveFront => Vec3 {x: 0.0, y: 0.0, z: 8.5},
+            PerspectiveBack => Vec3 {x: 0.0, y: 0.0, z: -8.5},
+            PerspectiveLeft => Vec3 {x: -8.5, y: 0.0, z: 0.0},
+            PerspectiveRight => Vec3 {x: 8.5, y: 0.0, z: 0.0},
+            PerspectiveTop => Vec3 {x: 0.0, y: 8.5, z: -1.0},
+            PerspectiveBottom => Vec3 {x: 0.0, y: -8.5, z: -1.0},
+        };
+        Camera {eye, ..Default::default()}
+    }
 }
 
 fn default_scale_factor() -> NonZeroU32 { NonZeroU32::new(1).unwrap() }

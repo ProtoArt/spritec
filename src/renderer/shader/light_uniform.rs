@@ -1,6 +1,6 @@
 use glium::uniforms::{Uniforms, UniformValue};
 
-use crate::light::DirectionalLight;
+use crate::renderer::DirectionalLight;
 
 /// This struct must match the `DirectionalLight` struct in our shaders
 pub struct DirectionalLightUniform {

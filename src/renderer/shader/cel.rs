@@ -1,8 +1,8 @@
 use vek::Mat4;
 use glium::uniforms::{Uniforms, UniformValue};
 
-use crate::light::DirectionalLight;
-use crate::model::Material;
+use crate::scene::Material;
+use crate::renderer::DirectionalLight;
 
 use super::nested_uniforms::NestedUniforms;
 pub use super::light_uniform::DirectionalLightUniform;

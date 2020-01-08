@@ -1,22 +1,25 @@
 mod thread_render_context;
-mod render_mesh;
-mod shader;
+mod shader_geometry;
 mod render_node;
 mod render;
 mod job;
+mod light;
+mod camera;
+
 mod layout;
+mod shader;
+mod imageops;
 
 pub use thread_render_context::*;
-pub use render_mesh::*;
+pub use shader_geometry::*;
 pub use render_node::*;
 pub use render::*;
 pub use job::*;
+pub use light::*;
+pub use camera::*;
 
 use vek::{Rgba, Mat4, Vec3, Vec4};
 use glium::{Surface, framebuffer::SimpleFrameBuffer};
-
-use crate::model::Scene;
-use crate::light::DirectionalLight;
 
 use shader::cel::CelUniforms;
 use shader::outline::OutlineUniforms;
@@ -43,7 +46,7 @@ impl<'a> Renderer<'a> {
     /// Draw the given model with the given parameters
     pub fn render(
         &mut self,
-        scene: &Scene,
+        geometry: &ShaderGeometry,
         view: Mat4<f32>,
         projection: Mat4<f32>,
         outline: &Outline,
@@ -72,7 +75,7 @@ impl<'a> Renderer<'a> {
             ..Default::default()
         };
 
-        // Once we have support for lights, light info will come from elsewhere
+        //TODO: Once we have support for lights, light info will come from elsewhere
         let light = DirectionalLight {
             direction: Vec3::from(view * Vec4::up()),
             color: Rgba::white(),
@@ -80,32 +83,30 @@ impl<'a> Renderer<'a> {
         };
         let ambient_intensity = 0.5;
 
-        for mesh in &model.meshes {
-            let RenderMesh {indices, positions, normals, material, model_transform} = mesh;
-            let model_view = view * (*model_transform);
-            let mvp = projection * model_view;
-            let model_view_inverse_transpose = model_view.inverted().transposed();
+        let ShaderGeometry {indices, positions, normals, material, model_transform} = geometry;
+        let model_view = view * (*model_transform);
+        let mvp = projection * model_view;
+        let model_view_inverse_transpose = model_view.inverted().transposed();
 
-            let cel_uniforms = shader::cel::Cel::from(CelUniforms {
-                mvp,
-                model_view_inverse_transpose,
-                light: &light,
-                ambient_intensity,
-                material,
-            });
+        let cel_uniforms = shader::cel::Cel::from(CelUniforms {
+            mvp,
+            model_view_inverse_transpose,
+            light: &light,
+            ambient_intensity,
+            material: &*material,
+        });
 
-            self.target.draw((positions, normals), indices, &self.shaders.cel,
-                &cel_uniforms, &cel_params)?;
+        self.target.draw((positions, normals), indices, &self.shaders.cel,
+            &cel_uniforms, &cel_params)?;
 
-            let outline_uniforms = shader::outline::Outline::from(OutlineUniforms {
-                mvp,
-                outline_thickness: outline.thickness,
-                outline_color: outline.color,
-            });
+        let outline_uniforms = shader::outline::Outline::from(OutlineUniforms {
+            mvp,
+            outline_thickness: outline.thickness,
+            outline_color: outline.color,
+        });
 
-            self.target.draw((positions, normals), indices, &self.shaders.outline,
-                &outline_uniforms, &outline_params)?;
-        }
+        self.target.draw((positions, normals), indices, &self.shaders.outline,
+            &outline_uniforms, &outline_params)?;
 
         Ok(())
     }

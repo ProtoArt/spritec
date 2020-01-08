@@ -18,6 +18,7 @@
     clippy::redundant_closure,
     clippy::len_without_is_empty,
     clippy::large_enum_variant,
+    clippy::unneeded_field_pattern,
 )]
 #![deny(bare_trait_objects)] // Prefer Box<dyn Trait> over Box<Trait>
 
@@ -25,9 +26,4 @@ pub mod config;
 pub mod tasks;
 pub mod renderer;
 pub mod query3d;
-
-mod loaders;
-mod imageops;
-mod camera;
-mod model;
-mod light;
+pub mod scene;

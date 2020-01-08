@@ -1,6 +1,6 @@
 use glium::uniforms::{Uniforms, UniformValue};
 
-use crate::model::Material;
+use crate::scene::Material;
 
 /// This struct must match the `Material` struct in our shaders
 pub struct MaterialUniform {

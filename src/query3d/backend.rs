@@ -6,16 +6,14 @@ use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 
-use crate::camera::Camera;
-use crate::light::DirectionalLight;
-use crate::renderer::{Display, RenderModel, RenderMeshError};
+use crate::renderer::{Display, ShaderGeometry, ShaderGeometryError, Camera, DirectionalLight};
 
 use super::query::{GeometryQuery, CameraQuery, LightQuery};
 
 #[derive(Debug, Error)]
 pub enum QueryError {
     #[error(transparent)]
-    RenderMeshError(#[from] RenderMeshError),
+    ShaderGeometryError(#[from] ShaderGeometryError),
 
     #[error("Could not find scene named `{name}` in model file")]
     UnknownScene {name: String},
@@ -32,9 +30,9 @@ pub enum QueryError {
 }
 
 pub trait QueryBackend {
-    fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Vec<Arc<RenderModel>>, QueryError>;
+    fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Arc<Vec<Arc<ShaderGeometry>>>, QueryError>;
     fn query_camera(&mut self, query: &CameraQuery) -> Result<Arc<Camera>, QueryError>;
-    fn query_lights(&mut self, query: &LightQuery) -> Result<Vec<Arc<DirectionalLight>>, QueryError>;
+    fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<DirectionalLight>>>, QueryError>;
 }
 
 #[derive(Debug, Error)]
@@ -69,7 +67,7 @@ impl File {
 }
 
 impl QueryBackend for File {
-    fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Vec<Arc<RenderModel>>, QueryError> {
+    fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Arc<Vec<Arc<ShaderGeometry>>>, QueryError> {
         use File::*;
         match self {
             Obj(objs) => objs.query_geometry(query, display),
@@ -85,7 +83,7 @@ impl QueryBackend for File {
         }
     }
 
-    fn query_lights(&mut self, query: &LightQuery) -> Result<Vec<Arc<DirectionalLight>>, QueryError> {
+    fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<DirectionalLight>>>, QueryError> {
         use File::*;
         match self {
             Obj(objs) => objs.query_lights(query),

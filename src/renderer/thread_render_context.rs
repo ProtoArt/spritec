@@ -51,9 +51,16 @@ use image::RgbaImage;
 use thiserror::Error;
 
 use crate::query3d::{QueryBackend, QueryError};
-use crate::imageops::{scale_to_fit, copy};
 
-use super::{Renderer, Render, RenderGeometry, Size, FileQuery, layout::LayoutNode};
+use super::{
+    Renderer,
+    Render,
+    Size,
+    FileQuery,
+    Camera,
+    layout::LayoutNode,
+    imageops::{scale_to_fit, copy},
+};
 
 #[derive(Debug, Error)]
 #[error(transparent)]
@@ -246,24 +253,18 @@ impl ThreadRenderContext {
     }
 
     fn draw_render(&mut self, render: Render) -> Result<RgbaImage, DrawLayoutError> {
-        let Render {size, background, camera, lights, models} = render;
-
-        let camera = camera.fetch_camera()?;
-        let view = camera.view();
-        let projection = camera.projection();
+        let Render {size, background, camera, lights, geometry, outline} = render;
+        let FileQuery {query, file} = geometry;
+        let Camera {view, projection} = *camera.fetch_camera()?;
 
         let (render_id, mut renderer) = self.begin_render(size)?;
         renderer.clear(background);
 
-        for model in models {
-            let RenderGeometry {geometry, outline} = model;
-            let FileQuery {query, file} = geometry;
 
-            let mut file = file.lock().expect("bug: file lock was poisoned");
-            let models = file.query_geometry(&query, renderer.display())?;
-            for model in models {
-                renderer.render(&*model, view, projection, &outline)?;
-            }
+        let mut file = file.lock().expect("bug: file lock was poisoned");
+        let geos = file.query_geometry(&query, renderer.display())?;
+        for geo in &*geos {
+            renderer.render(&*geo, view, projection, &outline)?;
         }
 
         let image = self.finish_render(render_id)?;

@@ -1,12 +1,11 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use vek::Mat4;
 use rayon::iter::{ParallelIterator, IntoParallelIterator};
 
-use crate::camera::Camera;
-use crate::light::DirectionalLight;
-use crate::model::{Mesh, Material, Model};
-use crate::renderer::{Display, RenderModel, RenderMesh};
+use crate::scene::{Mesh, Material};
+use crate::renderer::{Display, ShaderGeometry, Camera, DirectionalLight};
 use crate::query3d::{GeometryQuery, GeometryFilter, AnimationQuery, CameraQuery, LightQuery};
 
 use super::{QueryBackend, QueryError};
@@ -17,35 +16,29 @@ pub struct ObjFile {
     // This representation is sufficient for GeometryFilter::Scene, but it will need to
     // change once we add in more advanced filtering (e.g. by name)
 
-    model: Arc<Model>,
+    mesh: Mesh,
     /// The version of this model lazily uploaded to the GPU
-    render_model: Option<Arc<RenderModel>>,
+    scene_geometry: Option<Arc<Vec<Arc<ShaderGeometry>>>>,
 }
 
 impl ObjFile {
     /// Opens a OBJ file
     pub fn open(path: &Path) -> Result<Self, tobj::LoadError> {
-        let (meshes, materials) = tobj::load_obj(path)?;
+        let (models, materials) = tobj::load_obj(path)?;
 
-        let materials: Vec<_> = materials
-            .into_par_iter()
+        let materials: Vec<_> = materials.into_par_iter()
             .map(|mat| Arc::new(Material::from(mat)))
             .collect();
 
-        let meshes = meshes
-            .into_par_iter()
-            .map(|model| Mesh::from_obj(model.mesh, &materials))
-            .collect();
-
         Ok(Self {
-            model: Arc::new(Model {meshes}),
-            render_model: None,
+            mesh: Mesh::from_obj(models, &materials),
+            scene_geometry: None,
         })
     }
 }
 
 impl QueryBackend for ObjFile {
-    fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Vec<Arc<RenderModel>>, QueryError> {
+    fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Arc<Vec<Arc<ShaderGeometry>>>, QueryError> {
         let GeometryQuery {models, animation} = query;
 
         // OBJ files do not support animations
@@ -55,17 +48,17 @@ impl QueryBackend for ObjFile {
 
         use GeometryFilter::*;
         match models {
-            Scene {name: None} => match &self.render_model {
-                Some(render_model) => Ok(vec![render_model.clone()]),
+            Scene {name: None} => match &self.scene_geometry {
+                Some(scene_geometry) => Ok(scene_geometry.clone()),
                 None => {
-                    let render_model = Arc::new(RenderModel {
-                        meshes: self.model.meshes.iter()
-                            .map(|mesh| RenderMesh::new(display, &*mesh))
-                            .collect::<Result<Vec<_>, _>>()?,
-                    });
-                    self.render_model = Some(render_model.clone());
+                    let scene_geometry = Arc::new(self.mesh.geometry.iter()
+                        .map(|geo| {
+                            ShaderGeometry::new(display, geo, Mat4::identity()).map(Arc::new)
+                        })
+                        .collect::<Result<Vec<_>, _>>()?);
+                    self.scene_geometry = Some(scene_geometry.clone());
 
-                    Ok(vec![render_model])
+                    Ok(scene_geometry)
                 },
             },
             // OBJ files do not contain any named scenes
@@ -85,7 +78,7 @@ impl QueryBackend for ObjFile {
         }
     }
 
-    fn query_lights(&mut self, query: &LightQuery) -> Result<Vec<Arc<DirectionalLight>>, QueryError> {
+    fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<DirectionalLight>>>, QueryError> {
         // OBJ files do not support lights
         // This code still does the work to produce useful errors
         match query {

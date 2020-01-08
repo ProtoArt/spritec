@@ -3,10 +3,9 @@ use std::sync::{Arc, Mutex};
 
 use vek::Rgba;
 
-use crate::config;
-use crate::camera::Camera;
-use crate::light::DirectionalLight;
 use crate::query3d::{GeometryQuery, LightQuery, CameraQuery, File, QueryError, QueryBackend};
+
+use super::{Camera, DirectionalLight};
 
 #[derive(Debug)]
 pub struct Render {
@@ -18,8 +17,10 @@ pub struct Render {
     pub camera: RenderCamera,
     /// The lights to use to light the rendered scene
     pub lights: Vec<RenderLight>,
-    /// The models to draw in the rendered image
-    pub models: Vec<RenderGeometry>,
+    /// The geometry to draw in the rendered image
+    pub geometry: FileQuery<GeometryQuery>,
+    /// The outline to use when drawing the geometry
+    pub outline: Outline,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -50,12 +51,6 @@ impl Size {
     }
 }
 
-#[derive(Debug)]
-pub struct RenderGeometry {
-    pub geometry: FileQuery<GeometryQuery>,
-    pub outline: Outline,
-}
-
 #[derive(Debug, Clone)]
 pub struct Outline {
     /// The outline thickness to use when drawing the generated image
@@ -64,14 +59,6 @@ pub struct Outline {
     pub thickness: f32,
     /// The color of the outline to draw
     pub color: Rgba<f32>,
-}
-
-impl From<config::Outline> for Outline {
-    fn from(outline: config::Outline) -> Self {
-        let config::Outline {thickness, color} = outline;
-
-        Self {thickness, color}
-    }
 }
 
 #[derive(Debug)]
@@ -100,10 +87,10 @@ pub enum RenderLight {
 }
 
 impl RenderLight {
-    pub fn fetch_lights(&self) -> Result<Vec<Arc<DirectionalLight>>, QueryError> {
+    pub fn fetch_lights(&self) -> Result<Arc<Vec<Arc<DirectionalLight>>>, QueryError> {
         use RenderLight::*;
         match self {
-            Light(light) => Ok(vec![light.clone()]),
+            Light(light) => Ok(Arc::new(vec![light.clone()])),
             Query(FileQuery {query, file}) => {
                 let mut file = file.lock().expect("bug: file lock was poisoned");
                 file.query_lights(query)
