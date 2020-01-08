@@ -23,7 +23,7 @@ use crate::renderer::{
     RenderNode,
     RenderLayout,
     LayoutType,
-    Render,
+    RenderedImage,
     Size,
     Outline,
     Camera,
@@ -41,7 +41,7 @@ pub fn generate_pose_job(
     Ok(RenderJob {
         output_path: path.resolve(base_dir),
         scale,
-        root: RenderNode::Render(Render {
+        root: RenderNode::RenderedImage(RenderedImage {
             size: Size {width, height},
             background,
             camera: RenderCamera::Camera(Arc::new(config_to_camera(camera))),
@@ -102,7 +102,7 @@ pub fn generate_spritesheet_job(
                 for step in 0..steps {
                     let weight = step as f32 / steps as f32;
 
-                    nodes.push(RenderNode::Render(Render {
+                    nodes.push(RenderNode::RenderedImage(RenderedImage {
                         size: frame_size,
                         background,
                         camera: RenderCamera::Camera(Arc::new(camera.clone())),
@@ -138,7 +138,7 @@ pub fn generate_spritesheet_job(
                 for model_path in models {
                     let file = file_cache.open(&model_path.resolve(base_dir))?;
 
-                    nodes.push(RenderNode::Render(Render {
+                    nodes.push(RenderNode::RenderedImage(RenderedImage {
                         size: frame_size,
                         background,
                         camera: RenderCamera::Camera(Arc::new(camera.clone())),

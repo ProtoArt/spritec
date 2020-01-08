@@ -7,8 +7,9 @@ use crate::query3d::{GeometryQuery, LightQuery, CameraQuery, File, QueryError, Q
 
 use super::{Camera, DirectionalLight};
 
+/// An image that will be rendered using the given information
 #[derive(Debug)]
-pub struct Render {
+pub struct RenderedImage {
     /// The size at which to render the generated image
     pub size: Size,
     /// The background color of the generated image

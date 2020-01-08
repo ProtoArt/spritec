@@ -1,10 +1,10 @@
 use std::num::NonZeroU32;
 
-use super::{Render, Size};
+use super::{RenderedImage, Size};
 
 #[derive(Debug)]
 pub enum RenderNode {
-    Render(Render),
+    RenderedImage(RenderedImage),
     Layout(RenderLayout),
     /// An empty slot, used to create a gap/empty cell in the layout
     Empty {size: Size},

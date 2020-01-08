@@ -54,7 +54,7 @@ use crate::query3d::{QueryBackend, QueryError};
 
 use super::{
     Renderer,
-    Render,
+    RenderedImage,
     Size,
     FileQuery,
     Camera,
@@ -233,8 +233,8 @@ impl ThreadRenderContext {
         for (offset, node) in layout.iter_targets() {
             use LayoutNode::*;
             match node {
-                Render(render) => {
-                    let image = self.draw_render(render)?;
+                RenderedImage(image) => {
+                    let image = self.draw_render(image)?;
                     copy(&image, &mut final_image, (offset.x, offset.y));
                 },
 
@@ -252,8 +252,8 @@ impl ThreadRenderContext {
         Ok(final_image)
     }
 
-    fn draw_render(&mut self, render: Render) -> Result<RgbaImage, DrawLayoutError> {
-        let Render {size, background, camera, lights, geometry, outline} = render;
+    fn draw_render(&mut self, image: RenderedImage) -> Result<RgbaImage, DrawLayoutError> {
+        let RenderedImage {size, background, camera, lights, geometry, outline} = image;
         let FileQuery {query, file} = geometry;
         let Camera {view, projection} = *camera.fetch_camera()?;
 

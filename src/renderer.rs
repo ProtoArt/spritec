@@ -1,7 +1,7 @@
 mod thread_render_context;
 mod shader_geometry;
 mod render_node;
-mod render;
+mod rendered_image;
 mod job;
 mod light;
 mod camera;
@@ -13,7 +13,7 @@ mod imageops;
 pub use thread_render_context::*;
 pub use shader_geometry::*;
 pub use render_node::*;
-pub use render::*;
+pub use rendered_image::*;
 pub use job::*;
 pub use light::*;
 pub use camera::*;

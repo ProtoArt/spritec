@@ -1,10 +1,10 @@
 use std::num::NonZeroU32;
 
-use super::{Render, RenderNode, RenderLayout, LayoutType, Size};
+use super::{RenderedImage, RenderNode, RenderLayout, LayoutType, Size};
 
 #[derive(Debug)]
 pub enum LayoutNode {
-    Render(Render),
+    RenderedImage(RenderedImage),
     Grid(GridLayout),
     /// An empty slot, used to create a gap/empty cell in the layout
     Empty {size: Size},
@@ -15,7 +15,7 @@ impl From<RenderNode> for LayoutNode {
         use RenderNode::*;
         use LayoutType::*;
         match node {
-            Render(render) => LayoutNode::Render(render),
+            RenderedImage(image) => LayoutNode::RenderedImage(image),
             Layout(RenderLayout {nodes, layout: Grid {cols}}) => {
                 let layout_nodes = nodes.into_iter().map(Into::into).collect();
                 LayoutNode::Grid(GridLayout::new(layout_nodes, cols))
@@ -30,7 +30,7 @@ impl LayoutNode {
         use LayoutNode::*;
 
         match self {
-            Render(render) => render.size,
+            RenderedImage(image) => image.size,
             Grid(grid) => grid.size(),
             Empty {size} => *size,
         }
@@ -113,7 +113,7 @@ impl Iterator for LayoutTargetIter {
         match self.node.take() {
             None => None,
 
-            Some(node@Render(_)) | Some(node@Empty {..}) => {
+            Some(node@RenderedImage(_)) | Some(node@Empty {..}) => {
                 // Draw from the corner over the entire image
                 let target = LayoutOffset {x: 0, y: 0};
                 Some((target, node))
