@@ -191,19 +191,19 @@ pub enum Perspective {
 #[serde(default)]
 pub struct Camera {
     /// The position of the camera in world coordinates
-    eye: Vec3<f32>,
+    pub eye: Vec3<f32>,
     /// The target position that the camera should be looking at
-    target: Vec3<f32>,
+    pub target: Vec3<f32>,
     /// The aspect ratio of the viewport
-    aspect_ratio: f32,
+    pub aspect_ratio: f32,
     /// Field of view angle in the y-direction - the "opening angle" of the camera in radians
-    fov_y: f32,
+    pub fov_y: f32,
     /// Coordinate of the near clipping plane on the camera's local z-axis
-    near_z: f32,
+    pub near_z: f32,
     /// Coordinate of the far clipping plane on the camera's local z-axis
     ///
     /// If None, a special "infinite projection matrix" will be used.
-    far_z: Option<f32>,
+    pub far_z: Option<f32>,
 }
 
 impl Default for Camera {

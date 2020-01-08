@@ -6,9 +6,11 @@ use std::sync::Arc;
 use std::path::Path;
 use std::num::NonZeroU32;
 
+use vek::{Mat4, Vec3};
 use interpolation::lerp;
 
 use crate::config;
+use crate::scene::CameraType;
 use crate::query3d::{
     FileError,
     GeometryQuery,
@@ -181,7 +183,18 @@ fn config_to_camera(cam: config::PresetCamera) -> Camera {
         Custom(cam) => cam,
     };
 
-    unimplemented!()
+    let config::Camera {eye, target, aspect_ratio, fov_y, near_z, far_z} = cam;
+    let cam_type = CameraType::Perspective {
+        aspect_ratio,
+        field_of_view_y: fov_y,
+        near_z,
+        far_z,
+    };
+
+    Camera {
+        view: Mat4::look_at_rh(eye, target, Vec3::up()),
+        projection: cam_type.to_projection(),
+    }
 }
 
 fn config_to_outline(outline: config::Outline) -> Outline {
