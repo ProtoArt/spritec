@@ -52,7 +52,7 @@ pub fn generate_pose_job(
                         models: GeometryFilter::all_in_default_scene(),
                         animation: Some(AnimationQuery {
                             name: animation,
-                            position: AnimationPosition::Time(time.unwrap_or(0.0)),
+                            position: AnimationPosition::Time(time),
                         }),
                     },
                     file: file_cache.open_gltf(&gltf.resolve(base_dir))?,
