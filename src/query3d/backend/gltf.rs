@@ -2,11 +2,9 @@ use std::sync::Arc;
 use std::path::Path;
 use std::collections::HashMap;
 
-use vek::Mat4;
-
-use crate::scene::{Scene, TraverseNodes, Mesh, Material, CameraType};
-use crate::renderer::{Display, ShaderGeometry, ShaderGeometryError, Camera, DirectionalLight};
-use crate::query3d::{GeometryQuery, GeometryFilter, AnimationQuery, CameraQuery, LightQuery};
+use crate::scene::{Scene, Traverse, Mesh, Material, CameraType};
+use crate::renderer::{Display, ShaderGeometry, Camera, DirectionalLight};
+use crate::query3d::{GeometryQuery, GeometryFilter, CameraQuery, LightQuery};
 
 use super::{QueryBackend, QueryError};
 
@@ -75,19 +73,16 @@ impl QueryBackend for GltfFile {
                 let scene = &self.scenes[scene_index];
 
                 let mut scene_geo = Vec::new();
-                for root in &scene.roots {
-                    root.try_traverse::<ShaderGeometryError, _>(|parent_trans, node| {
-                        let model_transform = parent_trans * node.transform;
+                for (parent_trans, node) in scene.roots.iter().flat_map(|root| root.traverse()) {
+                    let model_transform = parent_trans * node.transform;
 
-                        if let Some(mesh) = node.mesh() {
-                            for geo in &mesh.geometry {
-                                let geo = ShaderGeometry::new(display, geo, model_transform)?;
-                                scene_geo.push(Arc::new(geo));
-                            }
+                    if let Some(mesh) = node.mesh() {
+                        for geo in &mesh.geometry {
+                            let geo = ShaderGeometry::new(display, geo, model_transform)?;
+                            scene_geo.push(Arc::new(geo));
                         }
+                    }
 
-                        Ok(())
-                    }, Mat4::identity())?;
                 }
 
                 let scene_geo = Arc::new(scene_geo);
