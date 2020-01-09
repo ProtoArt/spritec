@@ -74,7 +74,14 @@ camera = { eye = {x = 8.0, y = 2.6, z = 0}, fov_y = 54 }
 
 
 [[poses]]
-# Or { gltf = "gltf/bigboi.gltf", time = 0 }
+model = { gltf = "gltf/bigboi.gltf", time = 0 }
+path = "../../pose000000.png"
+width = 64
+height = 64
+scale = 2
+camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
+
+[[poses]]
 model = "obj/bigboi_000001.obj"
 path = "../../pose000001.png"
 width = 64
