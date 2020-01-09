@@ -47,7 +47,7 @@ use glium::glutin::{
     dpi::PhysicalSize,
     event_loop::EventLoop,
 };
-use image::RgbaImage;
+use image::{RgbaImage, imageops::flip_vertical};
 use thiserror::Error;
 
 use crate::query3d::{QueryBackend, QueryError};
@@ -207,7 +207,7 @@ impl ThreadRenderContext {
         let image: RawImage2d<u8> = data.color_texture.read();
         let image = RgbaImage::from_raw(image.width, image.height, image.data.into_owned())
             .expect("bug: image data buffer did not match expected size for width and height");
-        let image = image::imageops::flip_vertical(&image);
+        let image = flip_vertical(&image);
 
         Ok(image)
     }
