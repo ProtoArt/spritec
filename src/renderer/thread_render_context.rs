@@ -260,7 +260,6 @@ impl ThreadRenderContext {
         let (render_id, mut renderer) = self.begin_render(size)?;
         renderer.clear(background);
 
-
         let mut file = file.lock().expect("bug: file lock was poisoned");
         let geos = file.query_geometry(&query, renderer.display())?;
         for geo in &*geos {
