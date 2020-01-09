@@ -18,7 +18,7 @@ pub struct Scene {
     /// not support scene names
     pub name: Option<String>,
     /// The root nodes of the scene
-    pub roots: Vec<Node>,
+    pub roots: Vec<Arc<Node>>,
 }
 
 impl Scene {
@@ -30,7 +30,7 @@ impl Scene {
         Self {
             name: Some(scene.name().unwrap_or("").to_string()),
             roots: scene.nodes()
-                .map(|node| Node::from_gltf(node, meshes, cameras))
+                .map(|node| Arc::new(Node::from_gltf(node, meshes, cameras)))
                 .collect(),
         }
     }

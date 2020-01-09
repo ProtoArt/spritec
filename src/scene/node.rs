@@ -91,27 +91,50 @@ impl Node {
 
         Self {data, transform, children}
     }
+
+    pub fn mesh(&self) -> Option<&Arc<Mesh>> {
+        match &self.data {
+            Some(NodeData::Mesh(mesh)) => Some(mesh),
+            _ => None,
+        }
+    }
 }
 
 // An extension trait for Arc<Node> that provides a way to traverse the nodes
 // This needs to be a trait because we can't add methods to Arc<Node> directly
-trait TraverseNodes {
+pub trait TraverseNodes {
     /// Traverse a node hierarchy, calling the given closure with each node and the world transform
     /// of that node's parent. Note that since this is a world transform, it will reflect the total
     /// transformation up the entire hierarchy.
     ///
     /// Set `parent_trans` to `Mat4::identity()` when calling this on the root node of a scene.
-    fn traverse<F: FnMut(Mat4<f32>, &Self)>(&self, f: F, parent_trans: Mat4<f32>);
+    fn try_traverse<E, F>(&self, f: F, parent_trans: Mat4<f32>) -> Result<(), E>
+        where F: FnMut(Mat4<f32>, &Self) -> Result<(), E>;
+
+    /// Same as `try_traverse`, except that the entire hierarchy is always traversed
+    fn traverse<F>(&self, mut f: F, parent_trans: Mat4<f32>)
+        where F: FnMut(Mat4<f32>, &Self)
+    {
+        // Using unwrap() here is safe because we always return Ok(())
+        self.try_traverse::<(), _>(|parent_trans, node| {
+            f(parent_trans, node);
+            Ok(())
+        }, parent_trans).unwrap();
+    }
 }
 
 impl TraverseNodes for Arc<Node> {
-    fn traverse<F: FnMut(Mat4<f32>, &Self)>(&self, mut f: F, parent_trans: Mat4<f32>) {
-        (&mut f)(parent_trans, self);
+    fn try_traverse<E, F>(&self, mut f: F, parent_trans: Mat4<f32>) -> Result<(), E>
+        where F: FnMut(Mat4<f32>, &Self) -> Result<(), E>
+    {
+        (&mut f)(parent_trans, self)?;
 
         // The world transformation of this node
         let world_trans = parent_trans * self.transform;
         for child in &self.children {
-            child.traverse(&mut f, world_trans);
+            child.try_traverse(&mut f, world_trans)?;
         }
+
+        Ok(())
     }
 }
