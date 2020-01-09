@@ -27,7 +27,7 @@ impl<'a> From<gltf::Material<'a>> for Material {
     fn from(mat: gltf::Material<'a>) -> Self {
         let [r, g, b, a] = mat.pbr_metallic_roughness().base_color_factor();
         Self {
-            diffuse_color: Rgba::new(r, g, b, a),
+            diffuse_color: Rgba {r, g, b, a},
         }
     }
 }
