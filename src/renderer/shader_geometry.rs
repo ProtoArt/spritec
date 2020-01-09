@@ -11,7 +11,7 @@ use glium::{
 };
 use thiserror::Error;
 
-use crate::scene::{Mesh, Geometry, Material};
+use crate::scene::{Geometry, Material};
 use crate::renderer::Display;
 
 #[derive(Debug, Error)]
@@ -19,25 +19,6 @@ use crate::renderer::Display;
 pub enum ShaderGeometryError {
     IndexBufferCreationError(#[from] index::BufferCreationError),
     VertexBufferCreationError(#[from] vertex::BufferCreationError),
-}
-
-#[derive(Debug)]
-pub struct ShaderMesh {
-    pub geometry: Vec<ShaderGeometry>,
-}
-
-impl ShaderMesh {
-    pub fn new(
-        display: &Display,
-        mesh: &Mesh,
-        model_transform: Mat4<f32>,
-    ) -> Result<Self, ShaderGeometryError> {
-        Ok(Self {
-            geometry: mesh.geometry.iter()
-                .map(|geo| ShaderGeometry::new(display, geo, model_transform))
-                .collect::<Result<Vec<_>, _>>()?,
-        })
-    }
 }
 
 /// Geometry stored on the GPU
