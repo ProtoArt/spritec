@@ -28,8 +28,6 @@ pub struct AnimationQuery {
 }
 
 /// Represents the position in a given animation
-///
-/// Not all variants are supported by all file formats.
 #[derive(Debug, Clone)]
 pub enum AnimationPosition {
     /// The time in ms on the global animation clock
@@ -44,8 +42,6 @@ pub enum AnimationPosition {
         /// as the time of its last keyframe.
         weight: f32,
     },
-    /// An exact frame number
-    Frame(usize),
 }
 
 #[derive(Debug, Clone)]
