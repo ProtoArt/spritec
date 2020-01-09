@@ -210,11 +210,11 @@ pub struct Camera {
 impl Default for Camera {
     fn default() -> Self {
         Self {
-            eye: Vec3::zero(),
-            target: Vec3::forward_rh(),
+            eye: Vec3 {x: 8.0, y: 8.0, z: 8.0},
+            target: Vec3::zero(),
             aspect_ratio: 1.0,
-            fov_y: 30.0f32.to_radians(),
-            near_z: 0.01,
+            fov_y: 40.0,
+            near_z: 0.1,
             far_z: Some(100.0),
         }
     }
