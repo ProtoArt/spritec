@@ -186,7 +186,7 @@ fn config_to_camera(cam: config::PresetCamera) -> Camera {
     let config::Camera {eye, target, aspect_ratio, fov_y, near_z, far_z} = cam;
     let cam_type = CameraType::Perspective {
         aspect_ratio,
-        field_of_view_y: fov_y,
+        field_of_view_y: fov_y.to_radians(),
         near_z,
         far_z,
     };

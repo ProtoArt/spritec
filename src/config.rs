@@ -197,7 +197,7 @@ pub struct Camera {
     pub target: Vec3<f32>,
     /// The aspect ratio of the viewport
     pub aspect_ratio: f32,
-    /// Field of view angle in the y-direction - the "opening angle" of the camera in radians
+    /// Field of view angle in the y-direction - the "opening angle" of the camera in degrees
     pub fov_y: f32,
     /// Coordinate of the near clipping plane on the camera's local z-axis
     pub near_z: f32,
