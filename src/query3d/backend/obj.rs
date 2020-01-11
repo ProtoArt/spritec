@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use vek::Mat4;
+use crate::math::Mat4;
 use rayon::iter::{ParallelIterator, IntoParallelIterator};
 
 use crate::scene::{Mesh, Material};

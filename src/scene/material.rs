@@ -1,8 +1,8 @@
-use vek::Rgba;
+use crate::math::Rgba;
 
 #[derive(Debug)]
 pub struct Material {
-    pub diffuse_color: Rgba<f32>,
+    pub diffuse_color: Rgba,
 }
 
 impl Default for Material {

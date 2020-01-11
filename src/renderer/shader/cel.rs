@@ -1,4 +1,4 @@
-use vek::Mat4;
+use crate::math::Mat4;
 use glium::uniforms::{Uniforms, UniformValue};
 
 use crate::scene::Material;
@@ -9,8 +9,8 @@ pub use super::light_uniform::DirectionalLightUniform;
 pub use super::material_uniform::MaterialUniform;
 
 pub struct CelUniforms<'a> {
-    pub mvp: Mat4<f32>,
-    pub model_view_inverse_transpose: Mat4<f32>,
+    pub mvp: Mat4,
+    pub model_view_inverse_transpose: Mat4,
     pub light: &'a DirectionalLight,
     pub ambient_intensity: f32,
     pub material: &'a Material,

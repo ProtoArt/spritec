@@ -18,7 +18,7 @@ pub use job::*;
 pub use light::*;
 pub use camera::*;
 
-use vek::{Rgba, Mat4, Vec3, Vec4};
+use crate::math::{Rgba, Mat4, Vec3, Vec4};
 use glium::{Surface, framebuffer::SimpleFrameBuffer};
 
 use shader::cel::CelUniforms;
@@ -39,7 +39,7 @@ impl<'a> Renderer<'a> {
     }
 
     /// Clears the screen and resets the depth buffer
-    pub fn clear(&mut self, background: Rgba<f32>) {
+    pub fn clear(&mut self, background: Rgba) {
         self.target.clear_color_and_depth(background.into_tuple(), 1.0);
     }
 
@@ -47,8 +47,8 @@ impl<'a> Renderer<'a> {
     pub fn render(
         &mut self,
         geometry: &ShaderGeometry,
-        view: Mat4<f32>,
-        projection: Mat4<f32>,
+        view: Mat4,
+        projection: Mat4,
         outline: &Outline,
     ) -> Result<(), glium::DrawError> {
         let cel_params = glium::DrawParameters {

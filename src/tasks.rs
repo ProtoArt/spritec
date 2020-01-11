@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::path::Path;
 use std::num::NonZeroU32;
 
-use vek::{Mat4, Vec3};
+use crate::math::{Mat4, Vec3};
 use interpolation::lerp;
 
 use crate::config;
@@ -186,7 +186,7 @@ fn config_to_camera(cam: config::PresetCamera) -> Camera {
     let config::Camera {eye, target, aspect_ratio, fov_y, near_z, far_z} = cam;
     let cam_type = CameraType::Perspective {
         aspect_ratio,
-        field_of_view_y: fov_y.to_radians(),
+        field_of_view_y: fov_y.into(),
         near_z,
         far_z,
     };

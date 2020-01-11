@@ -1,10 +1,10 @@
-use vek::{Mat4, Rgba};
+use crate::math::{Mat4, Rgba};
 use glium::uniforms::{Uniforms, UniformValue};
 
 pub struct OutlineUniforms {
-    pub mvp: Mat4<f32>,
+    pub mvp: Mat4,
     pub outline_thickness: f32,
-    pub outline_color: Rgba<f32>,
+    pub outline_color: Rgba,
 }
 
 /// This struct must match the uniforms in the outline shaders

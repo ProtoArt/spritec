@@ -1,6 +1,6 @@
 use std::num::NonZeroU32;
 
-use vek::{Vec3, Rgba};
+use crate::math::{Vec3, Rgba, Degrees};
 use serde::{Serialize, Deserialize};
 
 /// A newtype around PathBuf to force the path to be resolved relative to a base directory before
@@ -47,7 +47,7 @@ pub struct Spritesheet {
     pub scale: NonZeroU32,
     /// The background color of the spritesheet (default: transparent black)
     #[serde(default = "default_background")]
-    pub background: Rgba<f32>,
+    pub background: Rgba,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -120,7 +120,7 @@ pub struct Pose {
     pub scale: NonZeroU32,
     /// The background color of the generated image (default: transparent black)
     #[serde(default = "default_background")]
-    pub background: Rgba<f32>,
+    pub background: Rgba,
     /// The outline to use when drawing the generated image. (default: no outline)
     #[serde(default)]
     pub outline: Outline,
@@ -154,7 +154,7 @@ pub struct Outline {
     /// (default: 0.0)
     pub thickness: f32,
     /// The color of the outline to draw (default: black)
-    pub color: Rgba<f32>,
+    pub color: Rgba,
 }
 
 impl Default for Outline {
@@ -192,13 +192,13 @@ pub enum Perspective {
 #[serde(default)]
 pub struct Camera {
     /// The position of the camera in world coordinates
-    pub eye: Vec3<f32>,
+    pub eye: Vec3,
     /// The target position that the camera should be looking at
-    pub target: Vec3<f32>,
+    pub target: Vec3,
     /// The aspect ratio of the viewport
     pub aspect_ratio: f32,
     /// Field of view angle in the y-direction - the "opening angle" of the camera in degrees
-    pub fov_y: f32,
+    pub fov_y: Degrees,
     /// Coordinate of the near clipping plane on the camera's local z-axis
     pub near_z: f32,
     /// Coordinate of the far clipping plane on the camera's local z-axis
@@ -213,7 +213,7 @@ impl Default for Camera {
             eye: Vec3 {x: 8.0, y: 8.0, z: 8.0},
             target: Vec3::zero(),
             aspect_ratio: 1.0,
-            fov_y: 40.0,
+            fov_y: Degrees::from_degrees(40.0),
             near_z: 0.1,
             far_z: Some(100.0),
         }
@@ -238,7 +238,7 @@ impl From<Perspective> for Camera {
 }
 
 fn default_scale_factor() -> NonZeroU32 { NonZeroU32::new(1).unwrap() }
-fn default_background() -> Rgba<f32> { Rgba {r: 0.0, g: 0.0, b: 0.0, a: 0.0} }
+fn default_background() -> Rgba { Rgba {r: 0.0, g: 0.0, b: 0.0, a: 0.0} }
 
 #[cfg(test)]
 mod tests {

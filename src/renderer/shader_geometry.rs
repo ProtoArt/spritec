@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::sync::Arc;
 
-use vek::{Vec3, Mat4};
+use crate::math::{Vec3, Mat4};
 use glium::{
     VertexBuffer,
     IndexBuffer,
@@ -25,18 +25,18 @@ pub enum ShaderGeometryError {
 #[derive(Debug)]
 pub struct ShaderGeometry {
     pub indices: IndexBuffer<u32>,
-    pub positions: VertexBuffer<Vec3<f32>>,
-    pub normals: VertexBuffer<Vec3<f32>>,
+    pub positions: VertexBuffer<Vec3>,
+    pub normals: VertexBuffer<Vec3>,
     pub material: Arc<Material>,
     /// The world transform of this geometry
-    pub model_transform: Mat4<f32>,
+    pub model_transform: Mat4,
 }
 
 impl ShaderGeometry {
     pub fn new(
         display: &Display,
         geo: &Geometry,
-        model_transform: Mat4<f32>,
+        model_transform: Mat4,
     ) -> Result<Self, ShaderGeometryError> {
         const POSITION_ATTR_TYPE: AttributeType = AttributeType::F32F32F32;
         let position_bindings: VertexFormat = Cow::Borrowed(&[
@@ -58,7 +58,7 @@ impl ShaderGeometry {
             indices: IndexBuffer::immutable(display, PrimitiveType::TrianglesList, indices)?,
             // These calls to new_raw are safe assuming that the specified attribute types
             // correspond to the types of the items stored in the `positions` and `normals` fields
-            // of Mesh. This should be the case because `Vec3<f32>` is #[repr(C)] and therefore it
+            // of Mesh. This should be the case because `Vec3` is #[repr(C)] and therefore it
             // should have the same layout as a C struct with three 32-bit floating point values.
             //TODO: Use BufferMode::Immutable here too. glium doesn't currently have a
             // new_raw_immutable method.

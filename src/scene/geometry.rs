@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use vek::Vec3;
+use crate::math::Vec3;
 
 use super::Material;
 
@@ -12,9 +12,9 @@ pub struct Geometry {
     /// The indexes that represent the triangles of this geometry
     pub indices: Vec<u32>,
     /// The position of each vertex of the geometry
-    pub positions: Vec<Vec3<f32>>,
+    pub positions: Vec<Vec3>,
     /// The normal of each vertex of the geometry
-    pub normals: Vec<Vec3<f32>>,
+    pub normals: Vec<Vec3>,
     /// The material associated with this geometry
     pub material: Arc<Material>,
 }

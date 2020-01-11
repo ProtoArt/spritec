@@ -28,3 +28,4 @@ pub mod tasks;
 pub mod renderer;
 pub mod query3d;
 pub mod scene;
+pub mod math;
