@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 use std::sync::{Arc, Mutex};
 
-use vek::Rgba;
+use crate::math::Rgba;
 
 use crate::query3d::{GeometryQuery, LightQuery, CameraQuery, File, QueryError, QueryBackend};
 
@@ -13,7 +13,7 @@ pub struct RenderedImage {
     /// The size at which to render the generated image
     pub size: Size,
     /// The background color of the generated image
-    pub background: Rgba<f32>,
+    pub background: Rgba,
     /// The camera perspective from which to render each frame
     pub camera: RenderCamera,
     /// The lights to use to light the rendered scene
@@ -59,7 +59,7 @@ pub struct Outline {
     /// The value must not be negative.
     pub thickness: f32,
     /// The color of the outline to draw
-    pub color: Rgba<f32>,
+    pub color: Rgba,
 }
 
 #[derive(Debug)]

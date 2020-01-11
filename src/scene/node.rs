@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::collections::VecDeque;
 
-use vek::{Mat4, Vec3, Quaternion};
+use crate::math::{Mat4, Vec3, Quaternion};
 
 use super::{Mesh, CameraType};
 
@@ -18,7 +18,7 @@ pub struct Node {
     /// The data contained in the node, or None if no data is present
     pub data: Option<NodeData>,
     /// The **local** transform of this node, independent of its parents
-    pub transform: Mat4<f32>,
+    pub transform: Mat4,
     /// The children of this node
     ///
     /// Each child's global transform is dependent on this node's transform
@@ -26,7 +26,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn camera(eye: Vec3<f32>, target: Vec3<f32>, camera: Arc<CameraType>) -> Self {
+    pub fn camera(eye: Vec3, target: Vec3, camera: Arc<CameraType>) -> Self {
         Self {
             data: Some(NodeData::Camera(camera)),
             transform: Mat4::model_look_at_rh(eye, target, Vec3::up()),
@@ -65,10 +65,10 @@ impl Node {
         let transform = match node.transform() {
             Matrix {matrix} => Mat4::from_col_arrays(matrix),
             Decomposed {translation, rotation: [rx, ry, rz, rw], scale} => {
-                let scale_mat: Mat4<f32> = Mat4::scaling_3d(scale);
+                let scale_mat = Mat4::scaling_3d(scale);
                 // This code assumes that glTF provides us with **normalized** quaternions
                 let rot_mat = Mat4::from(Quaternion::from_xyzw(rx, ry, rz, rw));
-                let trans_mat: Mat4<f32> = Mat4::translation_3d(translation);
+                let trans_mat = Mat4::translation_3d(translation);
 
                 // glTF allows us to construct a matrix by performing T * R * S
                 // See: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#transformations
@@ -121,11 +121,11 @@ impl Traverse for Arc<Node> {
 
 pub struct TraverseNodes {
     /// A queue of each node to be traversed, and its parent transform
-    queue: VecDeque<(Mat4<f32>, Arc<Node>)>,
+    queue: VecDeque<(Mat4, Arc<Node>)>,
 }
 
 impl Iterator for TraverseNodes {
-    type Item = (Mat4<f32>, Arc<Node>);
+    type Item = (Mat4, Arc<Node>);
 
     fn next(&mut self) -> Option<Self::Item> {
         // This code assumes that the node hierarchy is not cyclic
