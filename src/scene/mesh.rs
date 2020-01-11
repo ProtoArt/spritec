@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use rayon::prelude::*;
+
 use super::{Material, Geometry};
 
 #[derive(Debug, Clone)]
@@ -19,7 +21,7 @@ impl Mesh {
             // it isn't possible to distinguish between objects and their groups.
             // See: https://github.com/Twinklebear/tobj/issues/15
             name: None,
-            geometry: models.into_iter()
+            geometry: models.into_par_iter()
                 .map(|model| Geometry::from_obj(model, materials))
                 .collect(),
         }
