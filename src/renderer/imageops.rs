@@ -1,10 +1,12 @@
+//! Additional image utilities that extend the ones provided by the image crate
+
 use image::RgbaImage;
 
 /// Scales the given source image to fit into the target image.
 ///
 /// The target image dimensions must be a multiple of the source image dimensions. No interpolation
 /// is performed during the scaling operation.
-pub fn scale(source: &RgbaImage, target: &mut RgbaImage) {
+pub fn scale_to_fit(source: &RgbaImage, target: &mut RgbaImage) {
     let source_width = source.width();
     let source_height = source.height();
 

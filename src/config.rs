@@ -1,8 +1,7 @@
 use std::num::NonZeroU32;
 
-use vek::{Rgba};
+use vek::{Vec3, Rgba};
 use serde::{Serialize, Deserialize};
-use crate::camera::Camera;
 
 /// A newtype around PathBuf to force the path to be resolved relative to a base directory before
 /// it can be used. Good to prevent something that is pretty easy to do accidentally.
@@ -75,15 +74,31 @@ pub enum AnimationFrames {
         gltf: UnresolvedPath,
         /// The name of the animation to select. Can be omitted if there is only a single animation
         animation: Option<String>,
-        /// The frame to start the animation from (default: 0)
+        /// The "global" animation time in ms at which to start the animation (default: 0.0)
         #[serde(default)]
-        start_frame: usize,
-        /// The frame to end the animation at (default: last frame of the animation)
-        end_frame: Option<usize>,
+        start_time: f32,
+        /// The "global" animation time in ms at which to end the animation (default: time of the
+        /// last keyframe in the animation)
+        end_time: Option<f32>,
+        /// The number of steps to take between the start and end time.
+        ///
+        /// This is the number of frames that will be drawn in the spritesheet.
+        steps: NonZeroU32,
     },
     /// An array of filenames. OBJ files will be used as is. For glTF files, the scene will be used
     /// as loaded regardless of the animations present in the file.
-    Scenes(Vec<UnresolvedPath>),
+    Models(Vec<UnresolvedPath>),
+}
+
+impl AnimationFrames {
+    /// Returns the number of frame images to be created
+    pub fn len(&self) -> u32 {
+        use AnimationFrames::*;
+        match self {
+            GltfFrames {steps, ..} => steps.get(),
+            Models(models) => models.len() as u32,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -121,9 +136,10 @@ pub enum PoseModel {
         /// The name of the animation to select. Can be omitted if there is only a single animation
         /// or if there is no animation.
         animation: Option<String>,
-        /// The specific animation frame to render. The default is to render the first frame (or
-        /// the loaded pose of the model if there is no animation)
-        frame: Option<usize>,
+        /// The specific time in ms in the animation to render. The default is to render the start
+        /// of the animation, or the default pose of the model if there is no animation.
+        #[serde(default)]
+        time: f32,
     },
     /// A single filename. An OBJ file will be used as is. For a glTF file, the model will be
     /// rendered as loaded regardless of the animations present in the file.
@@ -169,6 +185,56 @@ pub enum Perspective {
     PerspectiveRight,
     PerspectiveTop,
     PerspectiveBottom,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[serde(default)]
+pub struct Camera {
+    /// The position of the camera in world coordinates
+    pub eye: Vec3<f32>,
+    /// The target position that the camera should be looking at
+    pub target: Vec3<f32>,
+    /// The aspect ratio of the viewport
+    pub aspect_ratio: f32,
+    /// Field of view angle in the y-direction - the "opening angle" of the camera in degrees
+    pub fov_y: f32,
+    /// Coordinate of the near clipping plane on the camera's local z-axis
+    pub near_z: f32,
+    /// Coordinate of the far clipping plane on the camera's local z-axis
+    ///
+    /// If None, a special "infinite projection matrix" will be used.
+    pub far_z: Option<f32>,
+}
+
+impl Default for Camera {
+    fn default() -> Self {
+        Self {
+            eye: Vec3 {x: 8.0, y: 8.0, z: 8.0},
+            target: Vec3::zero(),
+            aspect_ratio: 1.0,
+            fov_y: 40.0,
+            near_z: 0.1,
+            far_z: Some(100.0),
+        }
+    }
+}
+
+impl From<Perspective> for Camera {
+    fn from(persp: Perspective) -> Self {
+
+        // NOTE: PerspectiveLeft means point the camera to the left side of the model
+        use Perspective::*;
+        let eye = match persp {
+            PerspectiveFront => Vec3 {x: 0.0, y: 0.0, z: 8.5},
+            PerspectiveBack => Vec3 {x: 0.0, y: 0.0, z: -8.5},
+            PerspectiveLeft => Vec3 {x: -8.5, y: 0.0, z: 0.0},
+            PerspectiveRight => Vec3 {x: 8.5, y: 0.0, z: 0.0},
+            PerspectiveTop => Vec3 {x: 0.0, y: 8.5, z: -1.0},
+            PerspectiveBottom => Vec3 {x: 0.0, y: -8.5, z: -1.0},
+        };
+        Camera {eye, ..Default::default()}
+    }
 }
 
 fn default_scale_factor() -> NonZeroU32 { NonZeroU32::new(1).unwrap() }

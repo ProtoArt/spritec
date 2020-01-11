@@ -28,6 +28,8 @@
 // This is why we try to keep a single context per thread. That context is made current and we
 // leave it that way.
 
+use std::num::NonZeroU32;
+
 use glium::{
     Program,
     framebuffer::SimpleFrameBuffer,
@@ -45,10 +47,20 @@ use glium::glutin::{
     dpi::PhysicalSize,
     event_loop::EventLoop,
 };
-use image::{RgbaImage, imageops};
+use image::{RgbaImage, imageops::flip_vertical};
 use thiserror::Error;
 
-use super::Renderer;
+use crate::query3d::{QueryBackend, QueryError};
+
+use super::{
+    Renderer,
+    RenderedImage,
+    Size,
+    FileQuery,
+    Camera,
+    layout::LayoutNode,
+    imageops::{scale_to_fit, copy},
+};
 
 #[derive(Debug, Error)]
 #[error(transparent)]
@@ -63,6 +75,15 @@ pub enum ContextCreationError {
 pub enum BeginRenderError {
     TextureCreationError(#[from] glium::texture::TextureCreationError),
     FrameBufferValidationError(#[from] glium::framebuffer::ValidationError),
+}
+
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub enum DrawLayoutError {
+    BeginRenderError(#[from] BeginRenderError),
+    DrawError(#[from] glium::DrawError),
+    ReadError(#[from] glium::ReadError),
+    QueryError(#[from] QueryError),
 }
 
 pub(in super) struct Shaders {
@@ -149,7 +170,11 @@ impl ThreadRenderContext {
     }
 
     /// Returns a new renderer that can be used for drawing
-    pub fn begin_render(&mut self, (width, height): (u32, u32)) -> Result<(RenderId, Renderer), BeginRenderError> {
+    pub fn begin_render(&mut self, size: Size) -> Result<(RenderId, Renderer), BeginRenderError> {
+        let Size {width, height} = size;
+        let width = width.get();
+        let height = height.get();
+
         let color_texture = Texture2d::empty_with_format(&self.display,
             UncompressedFloatFormat::F32F32F32F32, MipmapsOption::NoMipmap, width, height)?;
         let depth_texture = DepthTexture2d::empty_with_format(&self.display, DepthFormat::F32,
@@ -182,8 +207,66 @@ impl ThreadRenderContext {
         let image: RawImage2d<u8> = data.color_texture.read();
         let image = RgbaImage::from_raw(image.width, image.height, image.data.into_owned())
             .expect("bug: image data buffer did not match expected size for width and height");
-        let image = imageops::flip_vertical(&image);
+        let image = flip_vertical(&image);
 
+        Ok(image)
+    }
+
+    /// Scales the given image up, with no anti-aliasing or other interpolation of any kind.
+    pub fn scale(&mut self, image: &RgbaImage, scale: NonZeroU32) -> Result<RgbaImage, DrawLayoutError> {
+        //TODO: Do this scaling using the GPU. Should the error type still be DrawLayoutError?
+
+        //TODO: Could optimize the case of scale == 1
+        let scale = scale.get();
+        let (width, height) = image.dimensions();
+        let mut scaled_image = RgbaImage::new(width * scale, height * scale);
+        scale_to_fit(&image, &mut scaled_image);
+
+        Ok(scaled_image)
+    }
+
+    /// Draws the given layout, returning the image that was rendered
+    pub fn draw(&mut self, layout: LayoutNode) -> Result<RgbaImage, DrawLayoutError> {
+        let Size {width, height} = layout.size();
+
+        let mut final_image = RgbaImage::new(width.get(), height.get());
+        for (offset, node) in layout.iter_targets() {
+            use LayoutNode::*;
+            match node {
+                RenderedImage(image) => {
+                    let image = self.draw_render(image)?;
+                    copy(&image, &mut final_image, (offset.x, offset.y));
+                },
+
+                Grid(_) => {
+                    let image = self.draw(node)?;
+                    copy(&image, &mut final_image, (offset.x, offset.y));
+                },
+
+                Empty {..} => {
+                    // Draw nothing
+                },
+            }
+        }
+
+        Ok(final_image)
+    }
+
+    fn draw_render(&mut self, image: RenderedImage) -> Result<RgbaImage, DrawLayoutError> {
+        let RenderedImage {size, background, camera, lights, geometry, outline} = image;
+        let FileQuery {query, file} = geometry;
+        let Camera {view, projection} = *camera.fetch_camera()?;
+
+        let (render_id, mut renderer) = self.begin_render(size)?;
+        renderer.clear(background);
+
+        let mut file = file.lock().expect("bug: file lock was poisoned");
+        let geos = file.query_geometry(&query, renderer.display())?;
+        for geo in &*geos {
+            renderer.render(&*geo, view, projection, &outline)?;
+        }
+
+        let image = self.finish_render(render_id)?;
         Ok(image)
     }
 }

@@ -7,10 +7,10 @@ path = "../../spritesheet0.png"
 scale = 2
 
 [[spritesheets.animations]]
-frames = { gltf = "gltf/bigboi.gltf", start_frame = 0, end_frame = 3 }
+frames = { gltf = "gltf/bigboi.gltf", start_time = 0, end_time = 1000, steps = 4 }
 frame_width = 64
 frame_height = 64
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
+camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
 outline = { thickness = 0.15 }
 
 
@@ -27,7 +27,7 @@ frames = [
 ]
 frame_width = 64
 frame_height = 64
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
+camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
 outline = { thickness = 0.15 }
 
 
@@ -44,7 +44,7 @@ frames = [
 ]
 frame_width = 64
 frame_height = 64
-camera = "PerspectiveRight"
+camera = { eye = {x = 8.0, y = 2.6, z = 0}, fov_y = 54 }
 
 
 [[spritesheets]]
@@ -59,7 +59,7 @@ frames = [
 ]
 frame_width = 64
 frame_height = 64
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
+camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
 
 [[spritesheets.animations]]
 frames = [
@@ -70,17 +70,24 @@ frames = [
 ]
 frame_width = 64
 frame_height = 64
-camera = "PerspectiveRight"
+camera = { eye = {x = 8.0, y = 2.6, z = 0}, fov_y = 54 }
 
 
 [[poses]]
-# Or { gltf = "gltf/bigboi.gltf", frame = 0 }
+model = { gltf = "gltf/bigboi.gltf", time = 0 }
+path = "../../pose000000.png"
+width = 64
+height = 64
+scale = 2
+camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
+
+[[poses]]
 model = "obj/bigboi_000001.obj"
 path = "../../pose000001.png"
 width = 64
 height = 64
 scale = 2
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
+camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
 
 [[poses]]
 model = "obj/bigboi_000010.obj"
@@ -88,7 +95,7 @@ path = "../../pose000002.png"
 width = 64
 height = 64
 scale = 2
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
+camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
 
 [[poses]]
 model = "obj/bigboi_000020.obj"
@@ -96,7 +103,7 @@ path = "../../pose000003.png"
 width = 64
 height = 64
 scale = 2
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
+camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
 
 [[poses]]
 model = "obj/bigboi_000030.obj"
@@ -104,4 +111,4 @@ path = "../../pose000004.png"
 width = 64
 height = 64
 scale = 2
-camera = {eye = {x = 0, y = 2.6, z = 8.0, w = 1.0}}
+camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
