@@ -21,7 +21,8 @@ impl UnresolvedPath {
         // https://github.com/rust-lang/cargo/blob/9ef364a5507ef87843c5f37b11d3ccfbd8cbe478/src/cargo/util/paths.rs#L65-L90
         // Resolution removes . and .. from the path, where . is removed without affecting the rest
         // of the path and .. will remove its parent from the path.
-        // This is needed because Windows does not support . and .. in its paths
+        // This is needed because Windows extended-length paths disallows string parsing, so ".." and "." aren't resolved in path names
+        // Reference: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
 
         // Constraint: The base directory path (base_dir) should always be an absolute path.
         assert!(base_dir.is_absolute(), "Base directory path was not absolute.");
@@ -33,14 +34,17 @@ impl UnresolvedPath {
             base_dir.join(path)
         };
 
-        // Windows paths are separated by backslashes, which are not separated into components with
-        // the path's component function. Replace backslashes with forward slashes to ensure proper
-        // componentization.
-        // eg. Without replacement, C:\User\yourname\file is "C:\User\yourname\file"
-        // instead of "C:", "User", "yourname", "file"
-        let path_str = path.to_str()
+        // All slashes are converted to backslahes (for Windows) or to forward slashes (for every other OS)
+        // so that PathBuf's components function can properly extract out the components of the path
+        let path_str = if cfg!(windows) {
+            path.to_str()
             .expect("Path was not valid Unicode")
-            .replace("\\", "/");
+            .replace("/", "\\")
+        } else {
+            path.to_str()
+            .expect("Path was not valid Unicode")
+            .replace("\\", "/")
+        };
 
         let path = std::path::PathBuf::from(path_str);
 
@@ -336,9 +340,9 @@ mod tests {
     #[cfg(target_os = "windows")]
     #[test]
     fn resolve_relative_path() {
-        let base_path = "C:\\user\\yourname\\spritec";
+        let base_path = "\\\\?\\C:\\user\\yourname\\spritec";
         let input_path = "..\\..\\..\\spritec\\..\\src\\.\\bin";
-        let output_path = "C:\\src\\bin";
+        let output_path = "\\\\?\\C:\\src\\bin";
         resolve_check!(base_path, input_path, output_path);
     }
 
