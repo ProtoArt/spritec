@@ -34,30 +34,30 @@ your game.
 
 Suppose you had the following 3D model:
 
-![bigboi render](samples/bigboi/render/bigboi.png)
+![bigboi render](https://raw.githubusercontent.com/ProtoArt/spritec/5a345767306c246ca88170594249200101029f34/samples/bigboi/render/bigboi.png)
 
 You could rig up the model with an armature/skeleton to pose it however you
 want:
 
-![bigboi posed](samples/bigboi/render/bigboi_rigged.png)
+![bigboi posed](https://raw.githubusercontent.com/ProtoArt/spritec/5a345767306c246ca88170594249200101029f34/samples/bigboi/render/bigboi_rigged.png)
 
 Then you can animate it so that it looks like it's walking:
 
-![bigboi walk](samples/bigboi/render/bigboi_rigged_walk.gif)
+![bigboi walk](https://raw.githubusercontent.com/ProtoArt/spritec/5a345767306c246ca88170594249200101029f34/samples/bigboi/render/bigboi_rigged_walk.gif)
 
 Running this through `spritec` would give you a preview window that shows this
 same walking animation turned into pixel art:
 
-![bigboi pixel art walking](samples/bigboi/render/bigboi-walking.gif)
+![bigboi pixel art walking](https://raw.githubusercontent.com/ProtoArt/spritec/5a345767306c246ca88170594249200101029f34/samples/bigboi/render/bigboi-walking.gif)
 
 You can then export that from the software as either individual pixel art
 frames, or as a finished spritesheet:
 
-![bigboi pixel art walking sprites](samples/bigboi/render/bigboi_spritesheet.png)
+![bigboi pixel art walking sprites](https://raw.githubusercontent.com/ProtoArt/spritec/5a345767306c246ca88170594249200101029f34/samples/bigboi/render/bigboi_spritesheet.png)
 
 Getting a side view is as simple as changing the angle we render from:
 
-![bigboi pixel art walking sprites side](samples/bigboi/render/bigboi_spritesheet_side.png)
+![bigboi pixel art walking sprites side](https://raw.githubusercontent.com/ProtoArt/spritec/5a345767306c246ca88170594249200101029f34/samples/bigboi/render/bigboi_spritesheet_side.png)
 
 **That's all it takes!** From one model you can potentially derive tens, if not
 hundreds, of different sprites for every frame of every animation you want.
