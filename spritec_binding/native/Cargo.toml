@@ -1,0 +1,23 @@
+[package]
+name = "spritec_binding"
+version = "0.1.0"
+authors = [
+  "Sunjay Varma <varma.sunjay@gmail.com>",
+  "James Shi <jsjamesshi@gmail.com>",
+  "Bill Chen <bchen.tcu@gmail.com>",
+  "Mara Gagiu <mara.gagiu@gmail.com>",
+]
+build = "build.rs"
+exclude = ["artifacts.json", "index.node"]
+edition = "2018"
+
+[lib]
+name = "spritec_binding"
+crate-type = ["cdylib"]
+
+[build-dependencies]
+neon-build = "0.3.3"
+
+[dependencies]
+neon = "0.3.3"
+spritec = { path = "../.." }
