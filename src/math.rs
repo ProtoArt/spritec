@@ -4,6 +4,12 @@
 //! to use it with floats. This module exports type aliases that allow us to not have to specify
 //! that we are using "f32" all the time.
 
+mod decompose;
+
+pub mod transforms;
+
+pub use decompose::Decompose;
+
 use serde::{Serialize, Deserialize};
 
 pub type Vec2 = vek::Vec2<f32>;
@@ -20,6 +26,8 @@ pub type Rgb = vek::Rgb<f32>;
 pub type Rgba = vek::Rgba<f32>;
 
 pub type FrustumPlanes = vek::FrustumPlanes<f32>;
+
+pub type Transforms = transforms::Transforms<f32>;
 
 /// A "newtype" to represent a value with the unit "radians"
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
