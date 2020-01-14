@@ -1,5 +1,6 @@
-/target
+**/target
 **/*.rs.bk
 /*.png
 /*.gif
 .vscode
+**/node_modules/**

@@ -29,3 +29,11 @@ pub mod renderer;
 pub mod query3d;
 pub mod scene;
 pub mod math;
+
+/// TODO: This is a temporary API that should be removed ASAP
+pub mod meta {
+    /// Returns the version found in Cargo.toml
+    pub fn version() -> String {
+        String::from(env!("CARGO_PKG_VERSION"))
+    }
+}

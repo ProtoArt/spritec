@@ -1,0 +1,20 @@
+{
+  "name": "spritec_binding",
+  "version": "0.1.0",
+  "description": "Spritec Node.js bindings",
+  "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/protoart/spritec"
+  },
+  "contributors": [
+    "Sunjay Varma <varma.sunjay@gmail.com>",
+    "James Shi <jsjamesshi@gmail.com>",
+    "Bill Chen <bchen.tcu@gmail.com>",
+    "Mara Gagiu <mara.gagiu@gmail.com>"
+  ],
+  "license": "MPL-2.0",
+  "dependencies": {
+    "neon-cli": "^0.3.3"
+  }
+}
