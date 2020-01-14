@@ -10,15 +10,7 @@ authors = [
 edition = "2018"
 
 [dependencies]
-glium = "0.26.0-alpha3"
-# Note: Normally we wouldn't want to specify an exact (=) version like this.
-# We need to here because glutin made some changes that stop it from compiling
-# on Linux. These changes were made between alpha3 and alpha5. We can remove
-# this once the crate compiles again without this line.
-#
-# Instead of using `glutin` directly, please use `glium::glutin` so this line
-# can be removed easily later.
-do_not_use = { package = "glutin", version = "=0.22.0-alpha3" }
+glium = "0.26.0-alpha6"
 tobj = "0.1"
 vek = { version = "0.9", features = ["serde"] }
 image = "0.22"
