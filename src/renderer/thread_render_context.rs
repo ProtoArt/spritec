@@ -47,7 +47,7 @@ use glium::glutin::{
     dpi::PhysicalSize,
     event_loop::EventLoop,
 };
-use image::{RgbaImage, imageops::flip_vertical};
+use image::{RgbaImage, imageops::flip_vertical_in_place};
 use thiserror::Error;
 
 use crate::query3d::{QueryBackend, QueryError};
@@ -205,9 +205,9 @@ impl ThreadRenderContext {
         // This stops and performs the read synchronously. For max parallelism, we'd probably want
         // read_to_pixel_buffer().
         let image: RawImage2d<u8> = data.color_texture.read();
-        let image = RgbaImage::from_raw(image.width, image.height, image.data.into_owned())
+        let mut image = RgbaImage::from_raw(image.width, image.height, image.data.into_owned())
             .expect("bug: image data buffer did not match expected size for width and height");
-        let image = flip_vertical(&image);
+        flip_vertical_in_place(&mut image);
 
         Ok(image)
     }
