@@ -1076,7 +1076,7 @@ dependencies = [
 name = "spritec"
 version = "0.1.0"
 dependencies = [
- "approx 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "approx 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "glium 0.26.0-alpha6 (registry+https://github.com/rust-lang/crates.io-index)",
  "gltf 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.22.3 (registry+https://github.com/rust-lang/crates.io-index)",
