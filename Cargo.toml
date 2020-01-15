@@ -14,7 +14,7 @@ glium = "0.26.0-alpha6"
 tobj = "0.1"
 vek = { version = "0.9", features = ["serde"] }
 # Keep this version synced with the version from vek
-num-traits = "0.1"
+num-traits = "0.2"
 # Keep this version synced with the version from vek
 approx = "0.1.1"
 image = "0.22"
