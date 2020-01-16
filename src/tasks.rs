@@ -2,13 +2,15 @@ mod file_cache;
 
 pub use file_cache::*;
 
+use std::io;
 use std::sync::Arc;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::num::NonZeroU32;
 
-use crate::math::{Mat4, Vec3};
 use interpolation::lerp;
+use thiserror::Error;
 
+use crate::math::{Mat4, Vec3};
 use crate::config;
 use crate::scene::CameraType;
 use crate::query3d::{
@@ -19,6 +21,8 @@ use crate::query3d::{
     AnimationPosition,
 };
 use crate::renderer::{
+    ThreadRenderContext,
+    DrawLayoutError,
     RenderJob,
     RenderNode,
     RenderLayout,
@@ -31,15 +35,40 @@ use crate::renderer::{
     FileQuery,
 };
 
-pub fn generate_pose_job(
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub enum TaskError {
+    DrawLayoutError(#[from] DrawLayoutError),
+    IOError(#[from] io::Error),
+}
+
+#[derive(Debug)]
+pub struct Task {
+    /// The absolute path to output the generated file
+    pub output_path: PathBuf,
+    /// The job to execute that generates the final image
+    pub job: RenderJob,
+}
+
+impl Task {
+    pub fn execute(self, ctx: &mut ThreadRenderContext) -> Result<(), TaskError> {
+        let Self {output_path, job} = self;
+
+        let image = job.execute(ctx)?;
+        image.save(&output_path)?;
+
+        Ok(())
+    }
+}
+
+pub fn generate_pose_task(
     pose: config::Pose,
     base_dir: &Path,
     file_cache: &mut WeakFileCache,
-) -> Result<RenderJob, FileError> {
+) -> Result<Task, FileError> {
     let config::Pose {model, path, width, height, camera, scale, background, outline} = pose;
 
-    Ok(RenderJob {
-        output_path: path.resolve(base_dir),
+    let job = RenderJob {
         scale,
         root: RenderNode::RenderedImage(RenderedImage {
             size: Size {width, height},
@@ -68,14 +97,19 @@ pub fn generate_pose_job(
             },
             outline: config_to_outline(outline),
         }),
+    };
+
+    Ok(Task {
+        output_path: path.resolve(base_dir),
+        job,
     })
 }
 
-pub fn generate_spritesheet_job(
+pub fn generate_spritesheet_task(
     sheet: config::Spritesheet,
     base_dir: &Path,
     file_cache: &mut WeakFileCache,
-) -> Result<RenderJob, FileError> {
+) -> Result<Task, FileError> {
     let config::Spritesheet {path, animations, scale, background} = sheet;
 
     let cols = animations.iter().map(|anim| anim.frames.len()).max()
@@ -164,8 +198,7 @@ pub fn generate_spritesheet_job(
         }
     }
 
-    Ok(RenderJob {
-        output_path: path.resolve(base_dir),
+    let job = RenderJob {
         scale,
         root: RenderNode::Layout(RenderLayout {
             nodes,
@@ -173,6 +206,11 @@ pub fn generate_spritesheet_job(
                 cols: NonZeroU32::new(cols).expect("zero-length animations are not supported"),
             },
         }),
+    };
+
+    Ok(Task {
+        output_path: path.resolve(base_dir),
+        job,
     })
 }
 

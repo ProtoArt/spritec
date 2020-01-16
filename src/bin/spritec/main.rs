@@ -19,10 +19,10 @@ use std::path::Path;
 
 use structopt::StructOpt;
 use spritec::{
-    tasks::{self, WeakFileCache},
+    tasks::{self, Task, WeakFileCache},
     query3d::FileError,
     config::{TaskConfig, Spritesheet, Pose},
-    renderer::{ThreadRenderContext, RenderJob},
+    renderer::ThreadRenderContext,
 };
 
 use crate::args::AppArgs;
@@ -32,33 +32,33 @@ fn main() -> Result<(), Box<dyn Error>> {
     let TaskConfig {spritesheets, poses} = args.load_config()?;
     let base_dir = args.base_directory()?;
 
-    let jobs = create_jobs(spritesheets, poses, &base_dir)?;
+    let tasks = create_tasks(spritesheets, poses, &base_dir)?;
 
     let mut ctx = ThreadRenderContext::new()?;
     // This loop should not be parallelised. Rendering is done in parallel on the
     // GPU and is orchestrated by the renderer. Trying to do that here with threads
     // will only create contention.
-    for job in jobs {
-        job.execute(&mut ctx)?;
+    for task in tasks {
+        task.execute(&mut ctx)?;
     }
 
     Ok(())
 }
 
-fn create_jobs(
+fn create_tasks(
     spritesheets: Vec<Spritesheet>,
     poses: Vec<Pose>,
     base_dir: &Path,
-) -> Result<Vec<RenderJob>, FileError> {
+) -> Result<Vec<Task>, FileError> {
     let mut file_cache = WeakFileCache::default();
 
-    let mut jobs = Vec::new();
+    let mut tasks = Vec::new();
     for sheet in spritesheets {
-        jobs.push(tasks::generate_spritesheet_job(sheet, base_dir, &mut file_cache)?);
+        tasks.push(tasks::generate_spritesheet_task(sheet, base_dir, &mut file_cache)?);
     }
     for pose in poses {
-        jobs.push(tasks::generate_pose_job(pose, base_dir, &mut file_cache)?);
+        tasks.push(tasks::generate_pose_task(pose, base_dir, &mut file_cache)?);
     }
 
-    Ok(jobs)
+    Ok(tasks)
 }
