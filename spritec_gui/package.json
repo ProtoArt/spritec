@@ -7,7 +7,15 @@
     "build": "electron-build-env neon build -p ../spritec_binding --release",
     "prestart": "npm run build",
     "start": "electron .",
+    "predist": "npm run build",
+    "dist": "electron-builder --publish never",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "build": {
+    "appId": "com.protoart.spritec",
+    "linux": {
+      "target": "AppImage"
+    }
   },
   "repository": {
     "type": "git",
@@ -31,6 +39,7 @@
   "devDependencies": {
     "electron": "^7.1.9",
     "electron-build-env": "^0.2.0",
+    "electron-builder": "^22.2.0",
     "neon-cli": "^0.3.3"
   }
 }
