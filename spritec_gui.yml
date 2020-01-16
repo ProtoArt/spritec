@@ -1,0 +1,54 @@
+# https://aka.ms/yaml
+trigger:
+- master
+- qa/*
+
+strategy:
+  matrix:
+    windows:
+      imageName: 'windows-latest'
+    mac:
+      imageName: 'macos-latest'
+    linux:
+      imageName: 'ubuntu-latest'
+
+pool:
+  vmImage: $(imageName)
+
+steps:
+- template: pipelines/install-rust.yml
+- task: NodeTool@0
+  displayName: 'Install Node.js'
+  inputs:
+    versionSpec: '12.x'
+- task: UsePythonVersion@0
+  displayName: 'Switch to Python 2.7'
+  inputs:
+    # Neon does not run on python3 and requires 2.7
+    versionSpec: '2.7'
+    addToPath: true
+# For some reason on windows the script will terminate after `npm install`
+# so we split the next commands into a separate script
+- script: |
+    cd spritec_gui
+    npm install
+  displayName: 'Install dependencies'
+- script: |
+    cd spritec_gui
+    npm run dist
+  displayName: 'Build app'
+- task: CopyFiles@2
+  displayName: 'Copy files to staging directory'
+  inputs:
+    contents: |
+      spritec_gui/dist/*.dmg
+      spritec_gui/dist/*.AppImage
+      spritec_gui/dist/*.exe
+    targetFolder: '$(Build.ArtifactStagingDirectory)'
+    flattenFolders: true
+- task: PublishBuildArtifacts@1
+  displayName: 'Upload artifacts'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'Spritec'
+    publishLocation: 'Container'
