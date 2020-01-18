@@ -35,6 +35,7 @@ your game.
 Suppose you had the following 3D model:
 
 ![bigboi render](https://raw.githubusercontent.com/ProtoArt/spritec/5a345767306c246ca88170594249200101029f34/samples/bigboi/render/bigboi.png)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FProtoArt%2Fspritec.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FProtoArt%2Fspritec?ref=badge_shield)
 
 You could rig up the model with an armature/skeleton to pose it however you
 want:
@@ -93,3 +94,7 @@ their games get to their vision faster.
 **This is just the beginning!** Sign-up on our website to be notified of our
 progress: [protoart.me](https://protoart.me/). We are so excited to help make
 creating game art easier for developers!
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FProtoArt%2Fspritec.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FProtoArt%2Fspritec?ref=badge_large)
