@@ -1,7 +1,8 @@
 use std::num::NonZeroU32;
 
-use crate::math::{Vec3, Rgba, Degrees};
 use serde::{Serialize, Deserialize};
+
+use crate::math::{Vec3, Rgba, Degrees};
 
 // PathBuf is not imported to avoid its use in this module. Every path in this module should
 // be an UnresolvedPath.

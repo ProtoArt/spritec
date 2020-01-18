@@ -1,6 +1,6 @@
-use crate::math::Mat4;
 use glium::uniforms::{Uniforms, UniformValue};
 
+use crate::math::Mat4;
 use crate::scene::Material;
 use crate::renderer::Light;
 

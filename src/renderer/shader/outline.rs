@@ -1,5 +1,6 @@
-use crate::math::{Mat4, Rgba};
 use glium::uniforms::{Uniforms, UniformValue};
+
+use crate::math::{Mat4, Rgba};
 
 pub struct OutlineUniforms {
     pub mvp: Mat4,

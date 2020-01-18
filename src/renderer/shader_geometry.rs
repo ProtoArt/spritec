@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 use std::sync::Arc;
 
-use crate::math::{Vec3, Mat4};
 use glium::{
     VertexBuffer,
     IndexBuffer,
@@ -11,6 +10,7 @@ use glium::{
 };
 use thiserror::Error;
 
+use crate::math::{Vec3, Mat4};
 use crate::scene::{Geometry, Material};
 use crate::renderer::Display;
 
