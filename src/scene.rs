@@ -3,12 +3,14 @@ mod geometry;
 mod material;
 mod node;
 mod camera_type;
+mod light_type;
 
 pub use mesh::*;
 pub use geometry::*;
 pub use material::*;
 pub use node::*;
 pub use camera_type::*;
+pub use light_type::*;
 
 use std::sync::Arc;
 

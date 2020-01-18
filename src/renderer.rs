@@ -21,6 +21,7 @@ pub use camera::*;
 use glium::{Surface, framebuffer::SimpleFrameBuffer};
 
 use crate::math::{Rgba, Rgb, Mat4, Radians};
+use crate::scene::LightType;
 
 use shader::cel::CelUniforms;
 use shader::outline::OutlineUniforms;
@@ -77,12 +78,28 @@ impl<'a> Renderer<'a> {
         };
 
         //TODO: Once we have support for lights, light info will come from elsewhere
-        let light = Light::Directional {
-            color: Rgb::white(),
-            intensity: 1.0,
-        };
-        let light_world_transform = view * Mat4::rotation_x((-90f32).to_radians());
-        let ambient_intensity = 0.5;
+        let lights = &[
+            Light {
+                data: LightType::Spot {
+                    color: Rgb::green(),
+                    intensity: 1.0,
+                    range: None,
+                    inner_cone_angle: Radians::from_degrees(3.0),
+                    outer_cone_angle: Radians::from_degrees(6.0),
+                },
+                world_transform: Mat4::model_look_at_rh((-5.0, 20.0, 10.0), (0.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
+            },
+
+            Light {
+               data: LightType::Point {
+                   color: Rgb::white(),
+                   intensity: 0.5,
+                   range: None,
+               },
+               world_transform: Mat4::translation_3d((10.0, 5.0, 20.0)),
+            },
+        ];
+        let ambient_light = Rgb::white() * 0.3;
 
         let ShaderGeometry {indices, positions, normals, material, model_transform} = geometry;
         let model_transform = *model_transform;
@@ -93,9 +110,8 @@ impl<'a> Renderer<'a> {
             mvp,
             model_transform,
             model_inverse_transpose,
-            light: &light,
-            light_world_transform,
-            ambient_intensity,
+            lights,
+            ambient_light,
             material: &*material,
         });
 
