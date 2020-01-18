@@ -1,9 +1,9 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::math::Mat4;
 use rayon::iter::{ParallelIterator, IntoParallelIterator};
 
+use crate::math::Mat4;
 use crate::scene::{Mesh, Material};
 use crate::renderer::{Display, ShaderGeometry, Camera, Light};
 use crate::query3d::{GeometryQuery, GeometryFilter, AnimationQuery, CameraQuery, LightQuery};

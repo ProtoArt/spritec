@@ -18,8 +18,9 @@ pub use job::*;
 pub use light::*;
 pub use camera::*;
 
-use crate::math::{Rgba, Rgb, Mat4};
 use glium::{Surface, framebuffer::SimpleFrameBuffer};
+
+use crate::math::{Rgba, Rgb, Mat4, Radians};
 
 use shader::cel::CelUniforms;
 use shader::outline::OutlineUniforms;
