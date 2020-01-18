@@ -253,9 +253,10 @@ impl ThreadRenderContext {
     }
 
     fn draw_render(&mut self, image: RenderedImage) -> Result<RgbaImage, DrawLayoutError> {
-        let RenderedImage {size, background, camera, lights, geometry, outline} = image;
+        let RenderedImage {size, background, camera, lights, ambient_light, geometry, outline} = image;
         let FileQuery {query, file} = geometry;
         let Camera {view, projection} = *camera.fetch_camera()?;
+        let lights = lights.fetch_lights()?;
 
         let (render_id, mut renderer) = self.begin_render(size)?;
         renderer.clear(background);
@@ -263,7 +264,7 @@ impl ThreadRenderContext {
         let mut file = file.lock().expect("bug: file lock was poisoned");
         let geos = file.query_geometry(&query, renderer.display())?;
         for geo in &*geos {
-            renderer.render(&*geo, view, projection, &outline)?;
+            renderer.render(&*geo, &lights, ambient_light, view, projection, &outline)?;
         }
 
         let image = self.finish_render(render_id)?;

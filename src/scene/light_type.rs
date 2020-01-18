@@ -63,7 +63,10 @@ pub enum LightType {
 impl<'a> From<gltf::khr_lights_punctual::Light<'a>> for LightType {
     fn from(light: gltf::khr_lights_punctual::Light<'a>) -> Self {
         let color = Rgb::from(light.color());
-        let intensity = light.intensity();
+        // HACK: The glTF exporter for Blender has a bug where it exports the light intensity in
+        //   the wrong units. This works around that issue.
+        // See: https://github.com/KhronosGroup/glTF-Blender-IO/issues/564
+        let intensity = light.intensity() / 1000.0;
         let range = light.range();
 
         use gltf::khr_lights_punctual::Kind::*;

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use glium::uniforms::{Uniforms, UniformValue};
 
 use crate::math::{Mat4, Rgb};
@@ -17,7 +19,7 @@ pub struct CelUniforms<'a> {
     pub mvp: Mat4,
     pub model_transform: Mat4,
     pub model_inverse_transpose: Mat4,
-    pub lights: &'a [Light],
+    pub lights: &'a [Arc<Light>],
     pub ambient_light: Rgb,
     pub material: &'a Material,
 }
@@ -75,7 +77,8 @@ impl<'a> From<CelUniforms<'a>> for Cel {
             model_transform: UniformValue::Mat4(model_transform.into_col_arrays()),
             model_inverse_transpose: UniformValue::Mat4(model_inverse_transpose.into_col_arrays()),
             num_lights: UniformValue::SignedInt(lights.len() as i32),
-            lights: lights.iter().map(|Light {data, world_transform}| {
+            lights: lights.iter().map(|light| {
+                let Light {data, world_transform} = &**light;
                 LightUniform::new(data, *world_transform)
             }).collect(),
             ambient_light: UniformValue::Vec3(ambient_light.into_array()),

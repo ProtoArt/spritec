@@ -61,3 +61,9 @@ pub enum LightQuery {
         name: Option<String>,
     },
 }
+
+impl LightQuery {
+    pub fn all_in_default_scene() -> Self {
+        LightQuery::Scene {name: None}
+    }
+}

@@ -10,13 +10,14 @@ use std::num::NonZeroU32;
 use interpolation::lerp;
 use thiserror::Error;
 
-use crate::math::{Mat4, Vec3};
+use crate::math::{Mat4, Vec3, Rgb};
 use crate::config;
 use crate::scene::CameraType;
 use crate::query3d::{
     FileError,
     GeometryQuery,
     GeometryFilter,
+    LightQuery,
     AnimationQuery,
     AnimationPosition,
 };
@@ -30,6 +31,7 @@ use crate::renderer::{
     RenderedImage,
     Size,
     Outline,
+    RenderLights,
     Camera,
     RenderCamera,
     FileQuery,
@@ -68,33 +70,51 @@ pub fn generate_pose_task(
 ) -> Result<Task, FileError> {
     let config::Pose {model, path, width, height, camera, scale, background, outline} = pose;
 
+    let (file, geometry) = match model {
+        config::PoseModel::GltfFrame {gltf, animation, time} => {
+            let file = file_cache.open_gltf(&gltf.resolve(base_dir))?;
+
+            let geometry = FileQuery {
+                query: GeometryQuery {
+                    models: GeometryFilter::all_in_default_scene(),
+                    animation: Some(AnimationQuery {
+                        name: animation,
+                        position: AnimationPosition::Time(time),
+                    }),
+                },
+                file: file.clone(),
+            };
+
+            (file, geometry)
+        },
+
+        config::PoseModel::Model(path) => {
+            let file = file_cache.open(&path.resolve(base_dir))?;
+
+            let geometry = FileQuery {
+                query: GeometryQuery {
+                    models: GeometryFilter::all_in_default_scene(),
+                    animation: None,
+                },
+                file: file.clone(),
+            };
+
+            (file, geometry)
+        },
+    };
+
     let job = RenderJob {
         scale,
         root: RenderNode::RenderedImage(RenderedImage {
             size: Size {width, height},
             background,
             camera: RenderCamera::Camera(Arc::new(config_to_camera(camera))),
-            lights: Vec::new(), // TODO
-            geometry: match model {
-                config::PoseModel::GltfFrame {gltf, animation, time} => FileQuery {
-                    query: GeometryQuery {
-                        models: GeometryFilter::all_in_default_scene(),
-                        animation: Some(AnimationQuery {
-                            name: animation,
-                            position: AnimationPosition::Time(time),
-                        }),
-                    },
-                    file: file_cache.open_gltf(&gltf.resolve(base_dir))?,
-                },
-
-                config::PoseModel::Model(path) => FileQuery {
-                    query: GeometryQuery {
-                        models: GeometryFilter::all_in_default_scene(),
-                        animation: None,
-                    },
-                    file: file_cache.open(&path.resolve(base_dir))?,
-                },
-            },
+            lights: RenderLights::Query(FileQuery {
+                query: LightQuery::all_in_default_scene(),
+                file,
+            }),
+            ambient_light: Rgb::white() * 0.5,
+            geometry,
             outline: config_to_outline(outline),
         }),
     };
@@ -140,7 +160,11 @@ pub fn generate_spritesheet_task(
                         size: frame_size,
                         background,
                         camera: RenderCamera::Camera(Arc::new(camera.clone())),
-                        lights: Vec::new(), // TODO
+                        lights: RenderLights::Query(FileQuery {
+                            query: LightQuery::all_in_default_scene(),
+                            file: file.clone(),
+                        }),
+                        ambient_light: Rgb::white() * 0.5,
                         geometry: FileQuery {
                             query: GeometryQuery {
                                 models: GeometryFilter::all_in_default_scene(),
@@ -176,7 +200,11 @@ pub fn generate_spritesheet_task(
                         size: frame_size,
                         background,
                         camera: RenderCamera::Camera(Arc::new(camera.clone())),
-                        lights: Vec::new(), //TODO
+                        lights: RenderLights::Query(FileQuery {
+                            query: LightQuery::all_in_default_scene(),
+                            file: file.clone(),
+                        }),
+                        ambient_light: Rgb::white() * 0.5,
                         geometry: FileQuery {
                             query: GeometryQuery {
                                 models: GeometryFilter::all_in_default_scene(),
