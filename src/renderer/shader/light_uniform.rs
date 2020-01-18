@@ -60,6 +60,10 @@ impl LightUniform {
             },
 
             Spot {color, intensity, range, inner_cone_angle, outer_cone_angle} => {
+                // cos() expects a value in radians
+                let inner_cone_angle = inner_cone_angle.get_radians();
+                let outer_cone_angle = outer_cone_angle.get_radians();
+
                 let light_angle_scale = 1.0 / 0.001f32.max(inner_cone_angle.cos() - outer_cone_angle.cos());
                 let light_angle_offset = -outer_cone_angle.cos() * light_angle_scale;
 
