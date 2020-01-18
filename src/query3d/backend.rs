@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 
-use crate::renderer::{Display, ShaderGeometry, ShaderGeometryError, Camera, DirectionalLight};
+use crate::renderer::{Display, ShaderGeometry, ShaderGeometryError, Camera, Light};
 
 use super::query::{GeometryQuery, CameraQuery, LightQuery};
 
@@ -32,7 +32,7 @@ pub enum QueryError {
 pub trait QueryBackend {
     fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Arc<Vec<Arc<ShaderGeometry>>>, QueryError>;
     fn query_camera(&mut self, query: &CameraQuery) -> Result<Arc<Camera>, QueryError>;
-    fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<DirectionalLight>>>, QueryError>;
+    fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<Light>>>, QueryError>;
 }
 
 #[derive(Debug, Error)]
@@ -83,7 +83,7 @@ impl QueryBackend for File {
         }
     }
 
-    fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<DirectionalLight>>>, QueryError> {
+    fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<Light>>>, QueryError> {
         use File::*;
         match self {
             Obj(objs) => objs.query_lights(query),

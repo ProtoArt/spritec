@@ -5,7 +5,7 @@ use crate::math::Mat4;
 use rayon::iter::{ParallelIterator, IntoParallelIterator};
 
 use crate::scene::{Mesh, Material};
-use crate::renderer::{Display, ShaderGeometry, Camera, DirectionalLight};
+use crate::renderer::{Display, ShaderGeometry, Camera, Light};
 use crate::query3d::{GeometryQuery, GeometryFilter, AnimationQuery, CameraQuery, LightQuery};
 
 use super::{QueryBackend, QueryError};
@@ -78,7 +78,7 @@ impl QueryBackend for ObjFile {
         }
     }
 
-    fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<DirectionalLight>>>, QueryError> {
+    fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<Light>>>, QueryError> {
         // OBJ files do not support lights
         // This code still does the work to produce useful errors
         match query {

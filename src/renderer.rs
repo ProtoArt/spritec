@@ -18,7 +18,7 @@ pub use job::*;
 pub use light::*;
 pub use camera::*;
 
-use crate::math::{Rgba, Mat4, Vec3, Vec4};
+use crate::math::{Rgba, Rgb, Mat4};
 use glium::{Surface, framebuffer::SimpleFrameBuffer};
 
 use shader::cel::CelUniforms;
@@ -76,22 +76,24 @@ impl<'a> Renderer<'a> {
         };
 
         //TODO: Once we have support for lights, light info will come from elsewhere
-        let light = DirectionalLight {
-            direction: Vec3::from(view * Vec4::up()),
-            color: Rgba::white(),
+        let light = Light::Directional {
+            color: Rgb::white(),
             intensity: 1.0,
         };
+        let light_world_transform = view * Mat4::rotation_x((-90f32).to_radians());
         let ambient_intensity = 0.5;
 
         let ShaderGeometry {indices, positions, normals, material, model_transform} = geometry;
-        let model_view = view * (*model_transform);
-        let mvp = projection * model_view;
-        let model_view_inverse_transpose = model_view.inverted().transposed();
+        let model_transform = *model_transform;
+        let mvp = projection * view * model_transform;
+        let model_inverse_transpose = model_transform.inverted().transposed();
 
         let cel_uniforms = shader::cel::Cel::from(CelUniforms {
             mvp,
-            model_view_inverse_transpose,
+            model_transform,
+            model_inverse_transpose,
             light: &light,
+            light_world_transform,
             ambient_intensity,
             material: &*material,
         });

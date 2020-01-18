@@ -5,7 +5,7 @@ use crate::math::Rgba;
 
 use crate::query3d::{GeometryQuery, LightQuery, CameraQuery, File, QueryError, QueryBackend};
 
-use super::{Camera, DirectionalLight};
+use super::{Camera, Light};
 
 /// An image that will be rendered using the given information
 #[derive(Debug)]
@@ -83,12 +83,12 @@ impl RenderCamera {
 
 #[derive(Debug)]
 pub enum RenderLight {
-    Light(Arc<DirectionalLight>),
+    Light(Arc<Light>),
     Query(FileQuery<LightQuery>),
 }
 
 impl RenderLight {
-    pub fn fetch_lights(&self) -> Result<Arc<Vec<Arc<DirectionalLight>>>, QueryError> {
+    pub fn fetch_lights(&self) -> Result<Arc<Vec<Arc<Light>>>, QueryError> {
         use RenderLight::*;
         match self {
             Light(light) => Ok(Arc::new(vec![light.clone()])),
