@@ -39,7 +39,6 @@ impl Node {
         cameras: &[Arc<CameraType>],
         lights: &[Arc<LightType>],
     ) -> Self {
-        //TODO: Add lighting support by calling node.light() in a third field of this tuple
         let data = match (node.mesh(), node.camera(), node.light()) {
             (None, None, None) => {
                 None

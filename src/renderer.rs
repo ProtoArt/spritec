@@ -18,10 +18,11 @@ pub use job::*;
 pub use light::*;
 pub use camera::*;
 
+use std::sync::Arc;
+
 use glium::{Surface, framebuffer::SimpleFrameBuffer};
 
-use crate::math::{Rgba, Rgb, Mat4, Radians};
-use crate::scene::LightType;
+use crate::math::{Rgba, Rgb, Mat4};
 
 use shader::cel::CelUniforms;
 use shader::outline::OutlineUniforms;
@@ -49,6 +50,8 @@ impl<'a> Renderer<'a> {
     pub fn render(
         &mut self,
         geometry: &ShaderGeometry,
+        lights: &[Arc<Light>],
+        ambient_light: Rgb,
         view: Mat4,
         projection: Mat4,
         outline: &Outline,
@@ -76,30 +79,6 @@ impl<'a> Renderer<'a> {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullCounterClockwise,
             ..Default::default()
         };
-
-        //TODO: Once we have support for lights, light info will come from elsewhere
-        let lights = &[
-            Light {
-                data: LightType::Spot {
-                    color: Rgb::green(),
-                    intensity: 1.0,
-                    range: None,
-                    inner_cone_angle: Radians::from_degrees(3.0),
-                    outer_cone_angle: Radians::from_degrees(6.0),
-                }.into(),
-                world_transform: Mat4::model_look_at_rh((-5.0, 20.0, 10.0), (0.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
-            },
-
-            Light {
-               data: LightType::Point {
-                   color: Rgb::white(),
-                   intensity: 0.5,
-                   range: None,
-               }.into(),
-               world_transform: Mat4::translation_3d((10.0, 5.0, 20.0)),
-            },
-        ];
-        let ambient_light = Rgb::white() * 0.3;
 
         let ShaderGeometry {indices, positions, normals, material, model_transform} = geometry;
         let model_transform = *model_transform;
