@@ -1,7 +1,7 @@
 use glium::uniforms::{Uniforms, UniformValue};
 
 use crate::math::{Mat4, Vec3, Decompose, Transforms};
-use crate::renderer::Light;
+use crate::scene::LightType;
 
 /// This struct must match the `Light` struct in our shaders
 pub struct LightUniform {
@@ -34,12 +34,12 @@ impl Uniforms for LightUniform {
 }
 
 impl LightUniform {
-    pub fn new(light: &Light, world_transform: Mat4) -> Self {
+    pub fn new(light: &LightType, world_transform: Mat4) -> Self {
         // scale is ignored by all the different light types
         let Transforms {scale: _, rotation, translation: pos} = world_transform.decompose();
         let direction = rotation * Vec3 {x: 0.0, y: 0.0, z: -1.0};
 
-        use Light::*;
+        use LightType::*;
         match light {
             Point {color, intensity, range} => Self {
                 position: UniformValue::Vec4([pos.x, pos.y, pos.z, 1.0]),

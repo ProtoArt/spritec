@@ -59,8 +59,10 @@ struct Material {
 };
 
 // Light parameters
-uniform Light light;
-uniform float ambient_intensity;
+#define MAX_LIGHTS 10
+uniform int num_lights;
+uniform Light lights[MAX_LIGHTS];
+uniform vec3 ambient_light;
 
 // Material data
 uniform Material material;
@@ -84,7 +86,7 @@ float range_attenuation(float distance, float range) {
 // Uses the lighting model to compute the color of a point on a surface.
 //
 // Both position and normal should be in the world coordinate system.
-vec4 apply_light(Light light, vec3 position, vec3 normal) {
+vec3 apply_light(Light light, vec3 position, vec3 normal) {
     // The lighting model implemented here is designed around supporting the
     // glTF punctual lights extension. The calculations performed conform to
     // that spec. Some features found in other lighting implementations may be
@@ -129,16 +131,15 @@ vec4 apply_light(Light light, vec3 position, vec3 normal) {
 
     // Calculate what would normally be the final color, including texturing and
     // diffuse lighting
-    float light_intensity = ambient_intensity + diffuse_intensity;
+    float light_intensity = diffuse_intensity;
     light_intensity *= attenuation;
-    vec4 color = material.diffuse_color * vec4(light.color, 1.0);
+    // Discards the material alpha component
+    vec3 color = vec3(material.diffuse_color) * light.color;
 
     // A Cel/Toon shader implementation
     // Discretises the color to produce a "toon" effect
     // Initial version based on this article: http://rbwhitaker.wikidot.com/toon-shader
 
-    // Save alpha for later so we can restore it after changing the color a bunch
-    float alpha = color.a;
     if (light_intensity > 0.95) {
        // Leave the color as-is
        // e.g. color *= 1.0;
@@ -153,18 +154,21 @@ vec4 apply_light(Light light, vec3 position, vec3 normal) {
        color *= 0.1;
     }
 
-    // Gamma correction
-    // Technique from: https://learnopengl.com/Advanced-Lighting/Gamma-Correction
-    float gamma = 2.2;
-    color = pow(color, vec4(1.0/gamma));
-
-    // Reassign the final alpha because we don't actually want the calculations above to
-    // influence this value
-    color.a = alpha;
-
     return color;
 }
 
 void main() {
-    frag_color = apply_light(light, v_position, v_normal);
+    // Discards the material alpha component
+    vec3 final_color = vec3(material.diffuse_color) * ambient_light;
+    for (int i = 0; i < num_lights; i++) {
+        Light light = lights[i];
+        final_color += apply_light(light, v_position, v_normal);
+    }
+
+    // Gamma correction -- apply at the very end
+    // Technique from: https://learnopengl.com/Advanced-Lighting/Gamma-Correction
+    float gamma = 2.2;
+    final_color = pow(final_color, vec3(1.0/gamma));
+
+    frag_color = vec4(final_color, 1.0);
 }
