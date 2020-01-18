@@ -1,4 +1,4 @@
-use crate::math::Rgb;
+use crate::math::{Rgb, Radians};
 
 #[derive(Debug, Clone)]
 pub enum Light {
@@ -50,12 +50,12 @@ pub enum Light {
 
         /// Angle, in radians, from centre of spotlight where falloff begins. Must be greater than
         /// or equal to 0 and less than outer_cone_angle.
-        inner_cone_angle: f32,
+        inner_cone_angle: Radians,
 
         /// Angle, in radians, from centre of spotlight where falloff ends. Must be greater than
         /// inner_cone_angle and less than or equal to PI / 2.0.
         ///
         /// To disable angular attenuation, set this value to PI radians
-        outer_cone_angle: f32,
+        outer_cone_angle: Radians,
     },
 }
