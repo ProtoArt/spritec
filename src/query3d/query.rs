@@ -53,6 +53,12 @@ pub enum CameraQuery {
     },
 }
 
+impl CameraQuery {
+    pub fn first_in_default_scene() -> Self {
+        CameraQuery::FirstInScene {name: None}
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum LightQuery {
     /// Returns all the lights in the given scene

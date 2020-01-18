@@ -36,7 +36,7 @@ impl<'a> From<gltf::Camera<'a>> for CameraType {
         use gltf::camera::Projection::*;
         match cam.projection() {
             Perspective(persp) => CameraType::Perspective {
-                aspect_ratio: persp.aspect_ratio().unwrap_or(0.0),
+                aspect_ratio: persp.aspect_ratio().unwrap_or(1.0),
                 field_of_view_y: Radians::from_radians(persp.yfov()),
                 near_z: persp.znear(),
                 far_z: persp.zfar(),

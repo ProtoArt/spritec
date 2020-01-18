@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::collections::VecDeque;
 
-use crate::math::{Mat4, Vec3, Quaternion};
+use crate::math::{Mat4, Quaternion};
 
 use super::{Mesh, CameraType, LightType};
 
@@ -25,14 +25,6 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn camera(eye: Vec3, target: Vec3, camera: Arc<CameraType>) -> Self {
-        Self {
-            data: Some(NodeData::Camera(camera)),
-            transform: Mat4::model_look_at_rh(eye, target, Vec3::up()),
-            children: Vec::new(),
-        }
-    }
-
     pub fn from_gltf(
         node: gltf::Node,
         meshes: &[Arc<Mesh>],
@@ -95,6 +87,13 @@ impl Node {
     pub fn mesh(&self) -> Option<&Arc<Mesh>> {
         match &self.data {
             Some(NodeData::Mesh(mesh)) => Some(mesh),
+            _ => None,
+        }
+    }
+
+    pub fn camera(&self) -> Option<&Arc<CameraType>> {
+        match &self.data {
+            Some(NodeData::Camera(cam)) => Some(cam),
             _ => None,
         }
     }
