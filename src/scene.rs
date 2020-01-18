@@ -28,11 +28,12 @@ impl Scene {
         scene: gltf::Scene,
         meshes: &[Arc<Mesh>],
         cameras: &[Arc<CameraType>],
+        lights: &[Arc<LightType>],
     ) -> Self {
         Self {
             name: Some(scene.name().unwrap_or("").to_string()),
             roots: scene.nodes()
-                .map(|node| Arc::new(Node::from_gltf(node, meshes, cameras)))
+                .map(|node| Arc::new(Node::from_gltf(node, meshes, cameras, lights)))
                 .collect(),
         }
     }

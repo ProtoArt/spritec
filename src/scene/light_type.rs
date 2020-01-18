@@ -59,3 +59,33 @@ pub enum LightType {
         outer_cone_angle: Radians,
     },
 }
+
+impl<'a> From<gltf::khr_lights_punctual::Light<'a>> for LightType {
+    fn from(light: gltf::khr_lights_punctual::Light<'a>) -> Self {
+        let color = Rgb::from(light.color());
+        let intensity = light.intensity();
+        let range = light.range();
+
+        use gltf::khr_lights_punctual::Kind::*;
+        match light.kind() {
+            Point => LightType::Point {
+                color,
+                intensity,
+                range,
+            },
+
+            Directional => LightType::Directional {
+                color,
+                intensity,
+            },
+
+            Spot {inner_cone_angle, outer_cone_angle} => LightType::Spot {
+                color,
+                intensity,
+                range,
+                inner_cone_angle: Radians::from_radians(inner_cone_angle),
+                outer_cone_angle: Radians::from_radians(outer_cone_angle),
+            },
+        }
+    }
+}

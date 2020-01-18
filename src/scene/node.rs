@@ -3,14 +3,13 @@ use std::collections::VecDeque;
 
 use crate::math::{Mat4, Vec3, Quaternion};
 
-use super::{Mesh, CameraType};
+use super::{Mesh, CameraType, LightType};
 
 #[derive(Debug, Clone)]
 pub enum NodeData {
     Mesh(Arc<Mesh>),
     Camera(Arc<CameraType>),
-    //TODO: Lighting support
-    //Light(Arc<LightType>),
+    Light(Arc<LightType>),
 }
 
 #[derive(Debug, Clone)]
@@ -38,25 +37,25 @@ impl Node {
         node: gltf::Node,
         meshes: &[Arc<Mesh>],
         cameras: &[Arc<CameraType>],
+        lights: &[Arc<LightType>],
     ) -> Self {
         //TODO: Add lighting support by calling node.light() in a third field of this tuple
-        let data = match (node.mesh(), node.camera()/*, node.light()*/) {
-            (None, None/*, None*/) => {
+        let data = match (node.mesh(), node.camera(), node.light()) {
+            (None, None, None) => {
                 None
             },
 
-            (Some(mesh), None/*, None*/) => {
+            (Some(mesh), None, None) => {
                 Some(NodeData::Mesh(meshes[mesh.index()].clone()))
             },
 
-            (None, Some(cam)/*, None*/) => {
+            (None, Some(cam), None) => {
                 Some(NodeData::Camera(cameras[cam.index()].clone()))
             },
 
-            //(None, None, Some(light)) => {
-            //    //TODO: Lighting support
-            //    unimplemented!()
-            //},
+            (None, None, Some(light)) => {
+                Some(NodeData::Light(lights[light.index()].clone()))
+            },
 
             _ => unreachable!("Did not expect a node that had more than one of a mesh, camera, or light"),
         };
@@ -88,7 +87,7 @@ impl Node {
         // This code only works because the node hierarchy is a tree. Otherwise, it would recurse
         // forever and we'd have to rewrite it to use two passes and cycle detection.
         let children = node.children()
-            .map(|child| Arc::new(Node::from_gltf(child, meshes, cameras)))
+            .map(|child| Arc::new(Node::from_gltf(child, meshes, cameras, lights)))
             .collect();
 
         Self {data, transform, children}
@@ -97,6 +96,13 @@ impl Node {
     pub fn mesh(&self) -> Option<&Arc<Mesh>> {
         match &self.data {
             Some(NodeData::Mesh(mesh)) => Some(mesh),
+            _ => None,
+        }
+    }
+
+    pub fn light(&self) -> Option<&Arc<LightType>> {
+        match &self.data {
+            Some(NodeData::Light(light)) => Some(light),
             _ => None,
         }
     }
