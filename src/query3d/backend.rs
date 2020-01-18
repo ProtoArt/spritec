@@ -22,16 +22,24 @@ pub enum QueryError {
         .name.as_deref().unwrap_or("<unnamed>"))]
     UnknownAnimation {name: Option<String>},
 
-    #[error("Could not find any cameras in model file")]
+    #[error("Could not find any matching geometry in model file")]
+    NoGeometryFound,
+
+    #[error("Could not find any matching cameras in model file")]
     NoCameraFound,
 
-    #[error("Could not find any lights in model file")]
+    #[error("Could not find any matching lights in model file")]
     NoLightsFound,
 }
 
 pub trait QueryBackend {
+    /// Attempts to find geometry matching the given query in this file. Only returns success
+    /// if at least one geometry was found.
     fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Arc<Vec<Arc<ShaderGeometry>>>, QueryError>;
+    /// Attempts to find a camera matching the given query in this file.
     fn query_camera(&mut self, query: &CameraQuery) -> Result<Arc<Camera>, QueryError>;
+    /// Attempts to find lights matching the given query in this file. Only returns success
+    /// if at least one light was found.
     fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<Light>>>, QueryError>;
 }
 
