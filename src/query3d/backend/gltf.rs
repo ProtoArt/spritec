@@ -17,6 +17,8 @@ pub struct GltfFile {
     scene_shader_geometry: HashMap<usize, Arc<Vec<Arc<ShaderGeometry>>>>,
     /// Cache all of the lights in an entire scene, referenced by scene index
     scene_lights: HashMap<usize, Arc<Vec<Arc<Light>>>>,
+    /// Cache the first camera in the scene
+    scene_first_camera: Option<Arc<Camera>>,
 }
 
 impl GltfFile {
@@ -52,6 +54,7 @@ impl GltfFile {
             scenes,
             scene_shader_geometry: HashMap::new(),
             scene_lights: HashMap::new(),
+            scene_first_camera: None,
         })
     }
 }
@@ -102,7 +105,44 @@ impl QueryBackend for GltfFile {
     }
 
     fn query_camera(&mut self, query: &CameraQuery) -> Result<Arc<Camera>, QueryError> {
-        unimplemented!()
+        use CameraQuery::*;
+        let scene_index = match query {
+            FirstInScene {name: None} => self.default_scene,
+            FirstInScene {name: Some(name)} => self.scenes.iter()
+                .position(|scene| scene.name.as_ref() == Some(name))
+                .ok_or_else(|| QueryError::UnknownScene {name: name.clone()})?,
+        };
+
+        match &self.scene_first_camera {
+            Some(cam) => Ok(cam.clone()),
+
+            None => {
+                let scene = &self.scenes[scene_index];
+
+                let mut nodes = scene.roots.iter().flat_map(|root| root.traverse());
+                let scene_first_camera = nodes.find_map(|(parent_trans, node)| {
+                    let world_transform = parent_trans * node.transform;
+
+                    match node.camera() {
+                        Some(cam) => Some(Arc::new(Camera {
+                            view: world_transform.inverted(),
+                            projection: cam.to_projection(),
+                        })),
+
+                        None => None,
+                    }
+                });
+
+                match scene_first_camera {
+                    Some(cam) => {
+                        self.scene_first_camera = Some(cam.clone());
+                        Ok(cam)
+                    },
+
+                    None => Err(QueryError::NoCameraFound),
+                }
+            },
+        }
     }
 
     fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<Light>>>, QueryError> {
