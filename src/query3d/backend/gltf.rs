@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::path::Path;
 use std::collections::HashMap;
 
-use crate::scene::{Scene, Traverse, Mesh, Material, CameraType};
+use crate::scene::{Scene, Traverse, Mesh, Material, CameraType, LightType};
 use crate::renderer::{Display, ShaderGeometry, Camera, Light};
 use crate::query3d::{GeometryQuery, GeometryFilter, CameraQuery, LightQuery};
 
@@ -15,6 +15,8 @@ pub struct GltfFile {
     scenes: Vec<Arc<Scene>>,
     /// Cache the geometry of the entire scene, referenced by scene index
     scene_shader_geometry: HashMap<usize, Arc<Vec<Arc<ShaderGeometry>>>>,
+    /// Cache all of the lights in an entire scene, referenced by scene index
+    scene_lights: HashMap<usize, Arc<Vec<Arc<Light>>>>,
 }
 
 impl GltfFile {
@@ -33,10 +35,12 @@ impl GltfFile {
             .map(|cam| Arc::new(CameraType::from(cam)))
             .collect();
 
-        //TODO: Lights
+        let lights: Vec<_> = document.lights().map(|lights| {
+            lights.map(|light| Arc::new(LightType::from(light))).collect()
+        }).unwrap_or_default();
 
         let scenes: Vec<_> = document.scenes()
-            .map(|scene| Arc::new(Scene::from_gltf(scene, &meshes, &cameras)))
+            .map(|scene| Arc::new(Scene::from_gltf(scene, &meshes, &cameras, &lights)))
             .collect();
         assert!(!scenes.is_empty(), "glTF file must have at least one scene");
 
@@ -47,6 +51,7 @@ impl GltfFile {
             default_scene,
             scenes,
             scene_shader_geometry: HashMap::new(),
+            scene_lights: HashMap::new(),
         })
     }
 }
@@ -69,6 +74,7 @@ impl QueryBackend for GltfFile {
 
         match self.scene_shader_geometry.get(&scene_index) {
             Some(scene_geo) => Ok(scene_geo.clone()),
+
             None => {
                 let scene = &self.scenes[scene_index];
 
@@ -82,7 +88,6 @@ impl QueryBackend for GltfFile {
                             scene_geo.push(Arc::new(geo));
                         }
                     }
-
                 }
 
                 let scene_geo = Arc::new(scene_geo);
@@ -97,6 +102,34 @@ impl QueryBackend for GltfFile {
     }
 
     fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<Light>>>, QueryError> {
-        unimplemented!()
+        use LightQuery::*;
+        let scene_index = match query {
+            Scene {name: None} => self.default_scene,
+            Scene {name: Some(name)} => self.scenes.iter()
+                .position(|scene| scene.name.as_ref() == Some(name))
+                .ok_or_else(|| QueryError::UnknownScene {name: name.clone()})?,
+        };
+
+        match self.scene_lights.get(&scene_index) {
+            Some(scene_lights) => Ok(scene_lights.clone()),
+
+            None => {
+                let scene = &self.scenes[scene_index];
+
+                let mut scene_lights = Vec::new();
+                for (parent_trans, node) in scene.roots.iter().flat_map(|root| root.traverse()) {
+                    let world_transform = parent_trans * node.transform;
+
+                    if let Some(light) = node.light() {
+                        let light = Light {data: light.clone(), world_transform};
+                        scene_lights.push(Arc::new(light));
+                    }
+                }
+
+                let scene_lights = Arc::new(scene_lights);
+                self.scene_lights.insert(scene_index, scene_lights.clone());
+                Ok(scene_lights)
+            },
+        }
     }
 }

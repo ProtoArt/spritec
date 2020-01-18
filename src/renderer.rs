@@ -86,7 +86,7 @@ impl<'a> Renderer<'a> {
                     range: None,
                     inner_cone_angle: Radians::from_degrees(3.0),
                     outer_cone_angle: Radians::from_degrees(6.0),
-                },
+                }.into(),
                 world_transform: Mat4::model_look_at_rh((-5.0, 20.0, 10.0), (0.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
             },
 
@@ -95,7 +95,7 @@ impl<'a> Renderer<'a> {
                    color: Rgb::white(),
                    intensity: 0.5,
                    range: None,
-               },
+               }.into(),
                world_transform: Mat4::translation_3d((10.0, 5.0, 20.0)),
             },
         ];
