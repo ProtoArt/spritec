@@ -90,6 +90,10 @@ impl QueryBackend for GltfFile {
                     }
                 }
 
+                if scene_geo.is_empty() {
+                    return Err(QueryError::NoGeometryFound);
+                }
+
                 let scene_geo = Arc::new(scene_geo);
                 self.scene_shader_geometry.insert(scene_index, scene_geo.clone());
                 Ok(scene_geo)
@@ -124,6 +128,10 @@ impl QueryBackend for GltfFile {
                         let light = Light {data: light.clone(), world_transform};
                         scene_lights.push(Arc::new(light));
                     }
+                }
+
+                if scene_lights.is_empty() {
+                    return Err(QueryError::NoLightsFound);
                 }
 
                 let scene_lights = Arc::new(scene_lights);

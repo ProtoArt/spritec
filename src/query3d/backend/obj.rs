@@ -56,6 +56,11 @@ impl QueryBackend for ObjFile {
                             ShaderGeometry::new(display, geo, Mat4::identity()).map(Arc::new)
                         })
                         .collect::<Result<Vec<_>, _>>()?);
+
+                    if scene_geometry.is_empty() {
+                        return Err(QueryError::NoGeometryFound);
+                    }
+
                     self.scene_geometry = Some(scene_geometry.clone());
 
                     Ok(scene_geometry)
