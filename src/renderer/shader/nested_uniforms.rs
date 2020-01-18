@@ -24,11 +24,9 @@ impl<T: Uniforms> NestedUniforms for T {
         &'a self,
         prefix: &str,
         index: usize,
-        mut visit: F,
+        visit: F,
     ) {
-        self.visit_values(|name, value| {
-            let name = format!("{}[{}].{}", prefix, index, name);
-            visit(&name, value);
-        });
+        let prefix_index = format!("{}[{}]", prefix, index);
+        self.visit_nested(&prefix_index, visit);
     }
 }
