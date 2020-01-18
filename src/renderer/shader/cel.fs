@@ -114,7 +114,7 @@ vec4 apply_light(Light light, vec3 position, vec3 normal) {
         if (light.light_angle_scale != 0.0) {
             // From the reference code provided by glTF:
             // https://github.com/KhronosGroup/glTF/tree/92f59a0dbefe2d54cff38dba103cd70462cc778b/extensions/2.0/Khronos/KHR_lights_punctual#inner-and-outer-cone-angles
-            float cd = dot(light.cone_direction, surface_to_light);
+            float cd = dot(light.cone_direction, -surface_to_light);
             float angular_attenuation = clamp(cd * light.light_angle_scale + light.light_angle_offset, 0.0, 1.0);
             angular_attenuation *= angular_attenuation;
 
@@ -140,17 +140,17 @@ vec4 apply_light(Light light, vec3 position, vec3 normal) {
     // Save alpha for later so we can restore it after changing the color a bunch
     float alpha = color.a;
     if (light_intensity > 0.95) {
-        // Leave the color as-is
-        // e.g. color *= 1.0;
+       // Leave the color as-is
+       // e.g. color *= 1.0;
 
     } else if (light_intensity > 0.5) {
-        color *= 0.7;
+       color *= 0.7;
 
     } else if (light_intensity > 0.05) {
-        color *= 0.35;
+       color *= 0.35;
 
     } else {
-        color *= 0.1;
+       color *= 0.1;
     }
 
     // Gamma correction
