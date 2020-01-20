@@ -26,5 +26,5 @@ thiserror = "1.0"
 interpolation = "0.2"
 
 [dependencies.gltf]
-version = "0.14"
+version = "0.15"
 features = ["KHR_lights_punctual"]
