@@ -1205,7 +1205,7 @@ dependencies = [
  "gltf",
  "image 0.22.4",
  "interpolation",
- "num-traits 0.1.43",
+ "num-traits 0.2.11",
  "rayon",
  "serde",
  "structopt",
