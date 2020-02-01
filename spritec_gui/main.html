@@ -5,9 +5,75 @@
     <title>Spritec</title>
     <!-- https://electronjs.org/docs/tutorial/security#csp-meta-tag -->
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+
+    <!-- uikit -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="uikit/uikit.min.css" />
+    <script src="uikit/uikit.min.js"></script>
+    <script src="uikit/uikit-icons.min.js"></script>
+
+    <link rel="stylesheet" href="./css/main.css">
   </head>
   <body>
-    <small id="spritec-version" />
+    <div uk-grid>
+      <div id="spritec-container" class="uk-width-expand">
+        <canvas id="spritec-canvas" width="512" height="512"></canvas>
+      </div>
+      <div class="uk-width-auto uk-padding-remove" id="import-panel">
+        <form id="spritec-import">
+          <fieldset class="uk-fieldset">
+            <h4 class="uk-padding-small uk-margin-remove uk-text-center">Import model</h4>
+            <hr class="uk-divider-icon uk-margin-remove">
+            <div class="uk-padding-small">
+              <label class="uk-form-label">Select model</label>
+              <div id="spritec-model-list" class="uk-form-controls">
+                <div class="uk-flex-inline">
+                  <select disabled id="spritec-model-select" class="uk-select">
+                    <option>Click + to add model</option>
+                  </select>
+                  <button
+                    id="spritec-model-add"
+                    class="uk-padding-small uk-padding-remove-vertical"
+                    uk-icon="icon: plus"
+                  ></button>
+                </div>
+              </div>
+            </div>
+            <hr class="uk-margin-remove">
+            <div class="uk-padding-small">
+              <label class="uk-form-label">Animation</label>
+              <div class="uk-form-controls">
+                <select class="uk-select">
+                  <option>TODO</option>
+                </select>
+              </div>
+            </div>
+            <hr class="uk-margin-remove">
+            <div class="uk-padding-small">
+              <label class="uk-form-label">Camera</label>
+              <div class="uk-form-controls">
+                <select class="uk-select">
+                  <option>TODO</option>
+                </select>
+              </div>
+            </div>
+            <hr class="uk-margin-remove">
+            <div class="uk-flex uk-padding-small">
+              <label class="horizontal-label uk-form-label">Width</label>
+              <input id="input-width" class="horizontal-input uk-input" type="number" min="1" value="64"></input>
+            </div>
+            <div class="uk-flex uk-padding-small uk-padding-remove-top">
+              <label class="horizontal-label uk-form-label">Height</label>
+              <input id="input-height" class="horizontal-input uk-input" type="number" min="1" value="64"></input>
+            </div>
+          </fieldset>
+        </form>
+        <hr class="uk-margin-remove">
+        <div class="uk-padding-small">
+          <button class="uk-button uk-button-primary uk-width-1-1">Attach to sprite sheet</button>
+        </div>
+      </div>
+    </div>
   </body>
   <script>
     require('./main.js')

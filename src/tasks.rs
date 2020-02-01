@@ -240,7 +240,7 @@ pub fn generate_spritesheet_task(
     })
 }
 
-fn config_to_camera(cam: config::PresetCamera) -> Camera {
+pub fn config_to_camera(cam: config::PresetCamera) -> Camera {
     use config::PresetCamera::*;
     let cam = match cam {
         Perspective(persp) => persp.into(),
