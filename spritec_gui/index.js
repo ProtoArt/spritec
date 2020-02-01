@@ -1,24 +1,33 @@
 const { app, BrowserWindow } = require('electron')
+const { default: installExtension, REDUX_DEVTOOLS } = require('electron-devtools-installer');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
 
 function createWindow () {
+  // Install redux devtools extension
+  if (process.env.NODE_ENV !== 'production') {
+    installExtension(REDUX_DEVTOOLS)
+      .then((name) => console.log(`Added Extension:  ${name}`))
+      .catch((err) => console.log('An error occurred: ', err));
+  }
+
   // Create the browser window.
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1024,
+    height: 720,
     webPreferences: {
       nodeIntegration: true
     }
   })
+  win.setMinimumSize(800, 600);
 
   // and load the index.html of the app.
   win.loadFile('main.html')
 
   // Open the DevTools.
-  win.webContents.openDevTools()
+  // win.webContents.openDevTools()
 
   // Emitted when the window is closed.
   win.on('closed', () => {
@@ -53,3 +62,6 @@ app.on('activate', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+// Some plugins read NODE_ENV variable.
+process.env.NODE_ENV = app.isPackaged ? 'production' : 'development';
