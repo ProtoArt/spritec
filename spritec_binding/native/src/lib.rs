@@ -12,10 +12,6 @@ use std::num::NonZeroU32;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-fn version(mut cx: FunctionContext) -> JsResult<JsString> {
-    Ok(cx.string(spritec::meta::version()))
-}
-
 /// Returns the rendered sprite given parameters from JavaScript
 fn render_sprite(mut cx: FunctionContext) -> JsResult<JsArrayBuffer> {
     // Arguments from JavaScript
@@ -88,7 +84,6 @@ fn render_sprite(mut cx: FunctionContext) -> JsResult<JsArrayBuffer> {
 }
 
 register_module!(mut cx, {
-    cx.export_function("version", version)?;
     cx.export_function("render_sprite", render_sprite)?;
     Ok(())
 });
