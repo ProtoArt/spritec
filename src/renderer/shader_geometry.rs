@@ -49,7 +49,7 @@ impl ShaderGeometry {
             (Cow::Borrowed("normal"), 0, NORMAL_ATTR_TYPE, false),
         ]);
 
-        let Geometry {name: _, indices, positions, normals, material} = geo;
+        let Geometry {name: _, indices, positions, normals, joint_influences, weights, material} = geo;
 
         // NOTE: By using `immutable`, we are guranteeing that the data in these buffers will
         //   *never* change.
