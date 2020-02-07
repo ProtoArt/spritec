@@ -566,9 +566,9 @@ dependencies = [
 
 [[package]]
 name = "image"
-version = "0.22.4"
+version = "0.22.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53cb19c4e35102e5c6fb9ade5e0e236c5588424dc171a849af3141bf0b47768a"
+checksum = "08ed2ada878397b045454ac7cfb011d73132c59f31a955d230bd1f1c2e68eb4a"
 dependencies = [
  "byteorder",
  "gif",
@@ -1203,7 +1203,7 @@ dependencies = [
  "approx 0.1.1",
  "glium",
  "gltf",
- "image 0.22.4",
+ "image 0.22.5",
  "interpolation",
  "num-traits 0.1.43",
  "rayon",
