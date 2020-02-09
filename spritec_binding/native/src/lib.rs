@@ -1,13 +1,19 @@
 use neon::prelude::*;
-use spritec::config::{Camera, PresetCamera};
-use spritec::math::{Rgba, Rgb, Vec3, Mat4};
+use spritec::math::{Rgba, Rgb, Vec3, Mat4, Radians};
 use spritec::query3d::{File, GeometryFilter, GeometryQuery};
 use spritec::renderer::{
-    FileQuery, Light, Outline, RenderCamera, RenderJob, RenderLights, RenderNode, RenderedImage,
-    Size, ThreadRenderContext,
+    FileQuery,
+    Light,
+    Outline,
+    RenderCamera,
+    RenderJob,
+    RenderLights,
+    RenderNode,
+    RenderedImage,
+    Size,
+    ThreadRenderContext,
 };
 use spritec::scene::LightType;
-use spritec::tasks::config_to_camera;
 use std::num::NonZeroU32;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -22,14 +28,7 @@ fn render_sprite(mut cx: FunctionContext) -> JsResult<JsArrayBuffer> {
     // TODO: Change to return a class so we can reuse resources
     let mut ctx = ThreadRenderContext::new().expect("Unable to create ThreadRenderContext");
 
-    let camera = PresetCamera::Custom(Camera {
-        eye: Vec3 {
-            x: 8.0,
-            y: 8.0,
-            z: 8.0,
-        },
-        ..Default::default()
-    });
+    let camera = default_camera();
 
     let file = File::open(Path::new(&path)).expect("Unable to open file");
 
@@ -82,6 +81,24 @@ fn render_sprite(mut cx: FunctionContext) -> JsResult<JsArrayBuffer> {
     });
     Ok(array_buffer)
 }
+
+fn default_camera() -> Camera {
+    let eye = Vec3 {x: 8.0, y: 8.0, z: 8.0};
+    let target = Vec3::zero();
+
+    let cam_type = CameraType::Perspective {
+        aspect_ratio: 1.0,
+        field_of_view_y: Radians::from_degrees(40.0),
+        near_z: 0.1,
+        far_z: 0.1,
+    };
+
+    Camera {
+        view: Mat4::look_at_rh(eye, target, Vec3::up()),
+        projection: cam_type.to_projection(),
+    }
+}
+
 
 register_module!(mut cx, {
     cx.export_function("render_sprite", render_sprite)?;
