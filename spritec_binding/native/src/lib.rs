@@ -4,6 +4,7 @@ use spritec::query3d::{File, GeometryFilter, GeometryQuery};
 use spritec::renderer::{
     FileQuery,
     Light,
+    Camera,
     Outline,
     RenderCamera,
     RenderJob,
@@ -13,7 +14,7 @@ use spritec::renderer::{
     Size,
     ThreadRenderContext,
 };
-use spritec::scene::LightType;
+use spritec::scene::{LightType, CameraType};
 use std::num::NonZeroU32;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -45,7 +46,7 @@ fn render_sprite(mut cx: FunctionContext) -> JsResult<JsArrayBuffer> {
                 b: 0.0,
                 a: 0.0,
             },
-            camera: RenderCamera::Camera(Arc::new(config_to_camera(camera))),
+            camera: RenderCamera::Camera(Arc::new(camera)),
             lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
                 data: Arc::new(LightType::Directional {
                     color: Rgb::white(),
@@ -87,10 +88,11 @@ fn default_camera() -> Camera {
     let target = Vec3::zero();
 
     let cam_type = CameraType::Perspective {
+        name: None,
         aspect_ratio: 1.0,
         field_of_view_y: Radians::from_degrees(40.0),
         near_z: 0.1,
-        far_z: 0.1,
+        far_z: Some(0.1),
     };
 
     Camera {
