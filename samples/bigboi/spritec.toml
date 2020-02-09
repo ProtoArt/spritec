@@ -11,14 +11,12 @@ frames = { gltf = "gltf/bigboi.gltf", start_time = 0, end_time = 1000, steps = 4
 frame_width = 64
 frame_height = 64
 camera = { name = "front" }
-outline = { thickness = 0.15 }
 
 [[spritesheets.animations]]
 frames = { gltf = "gltf/bigboi.gltf", start_time = 0, end_time = 1000, steps = 4 }
 frame_width = 64
 frame_height = 64
 camera = { name = "right" }
-outline = { thickness = 0.15 }
 
 
 [[spritesheets]]
