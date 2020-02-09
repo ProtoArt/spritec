@@ -3,7 +3,7 @@ mod file_cache;
 pub use file_cache::*;
 
 use std::io;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::path::{Path, PathBuf};
 use std::num::NonZeroU32;
 
@@ -14,7 +14,9 @@ use crate::math::{Mat4, Vec3, Rgb};
 use crate::config;
 use crate::scene::{CameraType, LightType};
 use crate::query3d::{
+    File,
     FileError,
+    CameraQuery,
     GeometryQuery,
     GeometryFilter,
     AnimationQuery,
@@ -70,12 +72,45 @@ pub fn generate_pose_task(
 ) -> Result<Task, FileError> {
     let config::Pose {model, path, width, height, camera, scale, background, outline} = pose;
 
+    let (file, geometry) = match model {
+        config::PoseModel::GltfFrame {gltf, animation, time} => {
+            let file = file_cache.open_gltf(&gltf.resolve(base_dir))?;
+
+            let geometry = FileQuery {
+                query: GeometryQuery {
+                    models: GeometryFilter::all_in_default_scene(),
+                    animation: Some(AnimationQuery {
+                        name: animation,
+                        position: AnimationPosition::Time(time),
+                    }),
+                },
+                file: file.clone(),
+            };
+
+            (file, geometry)
+        },
+
+        config::PoseModel::Model(path) => {
+            let file = file_cache.open(&path.resolve(base_dir))?;
+
+            let geometry = FileQuery {
+                query: GeometryQuery {
+                    models: GeometryFilter::all_in_default_scene(),
+                    animation: None,
+                },
+                file: file.clone(),
+            };
+
+            (file, geometry)
+        },
+    };
+
     let job = RenderJob {
         scale,
         root: RenderNode::RenderedImage(RenderedImage {
             size: Size {width, height},
             background,
-            camera: RenderCamera::Camera(Arc::new(config_to_camera(camera))),
+            camera: preset_to_camera(&camera, &file),
             //TODO: Figure out how we want to allow lights to be configured
             lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
                 data: Arc::new(LightType::Directional {
@@ -85,26 +120,7 @@ pub fn generate_pose_task(
                 world_transform: Mat4::rotation_x((-60.0f32).to_radians()),
             })])),
             ambient_light: Rgb::white() * 0.5,
-            geometry: match model {
-                config::PoseModel::GltfFrame {gltf, animation, time} => FileQuery {
-                    query: GeometryQuery {
-                        models: GeometryFilter::all_in_default_scene(),
-                        animation: Some(AnimationQuery {
-                            name: animation,
-                            position: AnimationPosition::Time(time),
-                        }),
-                    },
-                    file: file_cache.open_gltf(&gltf.resolve(base_dir))?,
-                },
-
-                config::PoseModel::Model(path) => FileQuery {
-                    query: GeometryQuery {
-                        models: GeometryFilter::all_in_default_scene(),
-                        animation: None,
-                    },
-                    file: file_cache.open(&path.resolve(base_dir))?,
-                },
-            },
+            geometry,
             outline: config_to_outline(outline),
         }),
     };
@@ -132,7 +148,6 @@ pub fn generate_spritesheet_task(
         let extra = cols - anim.frames.len();
 
         let config::Animation {frames, frame_width, frame_height, camera, outline} = anim;
-        let camera = config_to_camera(camera);
         let outline = config_to_outline(outline);
 
         let frame_size = Size {width: frame_width, height: frame_height};
@@ -141,6 +156,7 @@ pub fn generate_spritesheet_task(
         match frames {
             GltfFrames {gltf, animation: name, start_time, end_time, steps} => {
                 let file = file_cache.open_gltf(&gltf.resolve(base_dir))?;
+                let camera = preset_to_camera(&camera, &file);
 
                 let steps = steps.get();
                 for step in 0..steps {
@@ -149,7 +165,7 @@ pub fn generate_spritesheet_task(
                     nodes.push(RenderNode::RenderedImage(RenderedImage {
                         size: frame_size,
                         background,
-                        camera: RenderCamera::Camera(Arc::new(camera.clone())),
+                        camera: camera.clone(),
                         //TODO: Figure out how we want to allow lights to be configured
                         lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
                             data: Arc::new(LightType::Directional {
@@ -189,11 +205,12 @@ pub fn generate_spritesheet_task(
                 // Use each model as a frame in the animation
                 for model_path in models {
                     let file = file_cache.open(&model_path.resolve(base_dir))?;
+                    let camera = preset_to_camera(&camera, &file);
 
                     nodes.push(RenderNode::RenderedImage(RenderedImage {
                         size: frame_size,
                         background,
-                        camera: RenderCamera::Camera(Arc::new(camera.clone())),
+                        camera,
                         //TODO: Figure out how we want to allow lights to be configured
                         lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
                             data: Arc::new(LightType::Directional {
@@ -240,25 +257,43 @@ pub fn generate_spritesheet_task(
     })
 }
 
-pub fn config_to_camera(cam: config::PresetCamera) -> Camera {
+fn preset_to_camera(cam: &config::PresetCamera, file: &Arc<Mutex<File>>) -> RenderCamera {
     use config::PresetCamera::*;
-    let cam = match cam {
-        Perspective(persp) => persp.into(),
-        Custom(cam) => cam,
-    };
+    match cam {
+        &Perspective(persp) => config_to_camera(&persp.into()),
+        Named(named) => named_to_camera(named, file),
+        Custom(cam) => config_to_camera(cam),
+    }
+}
 
-    let config::Camera {eye, target, aspect_ratio, fov_y, near_z, far_z} = cam;
+fn config_to_camera(cam: &config::Camera) -> RenderCamera {
+    let &config::Camera {eye, target, aspect_ratio, fov_y, near_z, far_z} = cam;
+    let field_of_view_y = fov_y.into();
     let cam_type = CameraType::Perspective {
+        name: None,
         aspect_ratio,
-        field_of_view_y: fov_y.into(),
+        field_of_view_y,
         near_z,
         far_z,
     };
 
-    Camera {
+    RenderCamera::Camera(Arc::new(Camera {
         view: Mat4::look_at_rh(eye, target, Vec3::up()),
         projection: cam_type.to_projection(),
-    }
+    }))
+}
+
+fn named_to_camera(named: &config::NamedCamera, file: &Arc<Mutex<File>>) -> RenderCamera {
+    let config::NamedCamera {name, scene} = named;
+
+    RenderCamera::Query(FileQuery {
+        query: CameraQuery::Named {
+            name: name.clone(),
+            scene: scene.clone(),
+        },
+
+        file: file.clone(),
+    })
 }
 
 fn config_to_outline(outline: config::Outline) -> Outline {

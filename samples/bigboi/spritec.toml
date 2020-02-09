@@ -10,7 +10,14 @@ scale = 2
 frames = { gltf = "gltf/bigboi.gltf", start_time = 0, end_time = 1000, steps = 4 }
 frame_width = 64
 frame_height = 64
-camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
+camera = { name = "front" }
+outline = { thickness = 0.15 }
+
+[[spritesheets.animations]]
+frames = { gltf = "gltf/bigboi.gltf", start_time = 0, end_time = 1000, steps = 4 }
+frame_width = 64
+frame_height = 64
+camera = { name = "right" }
 outline = { thickness = 0.15 }
 
 
@@ -79,7 +86,15 @@ path = "../../pose000000.png"
 width = 64
 height = 64
 scale = 2
-camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
+camera = { name = "front" }
+
+[[poses]]
+model = { gltf = "gltf/bigboi.gltf", time = 0 }
+path = "../../pose000000b.png"
+width = 64
+height = 64
+scale = 2
+camera = { name = "right" }
 
 [[poses]]
 model = "obj/bigboi_000001.obj"
