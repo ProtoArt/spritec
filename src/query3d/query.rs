@@ -51,6 +51,13 @@ pub enum CameraQuery {
         /// The name of the scene to look in or None if the default scene should be used
         name: Option<String>,
     },
+    /// Returns the camera with the given name
+    Named {
+        /// The name of the camera to look for
+        name: String,
+        /// The name of the scene to look in or None if the default scene should be used
+        scene: Option<String>,
+    },
 }
 
 impl CameraQuery {

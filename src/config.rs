@@ -220,6 +220,7 @@ impl Default for Outline {
 #[serde(untagged)]
 pub enum PresetCamera {
     Perspective(Perspective),
+    Named(NamedCamera),
     Custom(Camera),
 }
 
@@ -233,6 +234,15 @@ pub enum Perspective {
     PerspectiveRight,
     PerspectiveTop,
     PerspectiveBottom,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NamedCamera {
+    /// The name of the camera in the 3D model file
+    pub name: String,
+    /// The name of the scene to look for the camera in or None if the default scene should be used
+    pub scene: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

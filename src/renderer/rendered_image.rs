@@ -8,7 +8,7 @@ use crate::query3d::{GeometryQuery, LightQuery, CameraQuery, File, QueryError, Q
 use super::{Camera, Light};
 
 /// An image that will be rendered using the given information
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RenderedImage {
     /// The size at which to render the generated image
     pub size: Size,
@@ -64,7 +64,7 @@ pub struct Outline {
     pub color: Rgba,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum RenderCamera {
     Camera(Arc<Camera>),
     Query(FileQuery<CameraQuery>),
@@ -83,7 +83,7 @@ impl RenderCamera {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum RenderLights {
     Lights(Arc<Vec<Arc<Light>>>),
     Query(FileQuery<LightQuery>),
@@ -102,7 +102,7 @@ impl RenderLights {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FileQuery<Q> {
     pub query: Q,
     pub file: Arc<Mutex<File>>,

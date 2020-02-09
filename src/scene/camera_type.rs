@@ -3,6 +3,8 @@ use crate::math::{Mat4, FrustumPlanes, Radians};
 #[derive(Debug, Clone)]
 pub enum CameraType {
     Perspective {
+        /// The name of the camera (if any)
+        name: Option<String>,
         /// The aspect ratio of the viewport
         aspect_ratio: f32,
         /// Field of view in the y-direction - the "opening angle" of the camera in radians
@@ -16,6 +18,8 @@ pub enum CameraType {
     },
 
     Orthographic {
+        /// The name of the camera (if any)
+        name: Option<String>,
         /// The magnification of the camera in the x-direction
         ///
         /// Basically the width of the viewing volume
@@ -33,9 +37,12 @@ pub enum CameraType {
 
 impl<'a> From<gltf::Camera<'a>> for CameraType {
     fn from(cam: gltf::Camera<'a>) -> Self {
+        let name = cam.name().map(|s| s.to_string());
+
         use gltf::camera::Projection::*;
         match cam.projection() {
             Perspective(persp) => CameraType::Perspective {
+                name,
                 aspect_ratio: persp.aspect_ratio().unwrap_or(1.0),
                 field_of_view_y: Radians::from_radians(persp.yfov()),
                 near_z: persp.znear(),
@@ -43,6 +50,7 @@ impl<'a> From<gltf::Camera<'a>> for CameraType {
             },
 
             Orthographic(ortho) => CameraType::Orthographic {
+                name,
                 mag_x: ortho.xmag(),
                 mag_y: ortho.ymag(),
                 near_z: ortho.znear(),
@@ -53,6 +61,15 @@ impl<'a> From<gltf::Camera<'a>> for CameraType {
 }
 
 impl CameraType {
+    /// Returns the name of this camera
+    pub fn name(&self) -> Option<&str> {
+        use CameraType::*;
+        match self {
+            Perspective {name, ..} |
+            Orthographic {name, ..} => name.as_deref(),
+        }
+    }
+
     /// The perspective/orthographic projection matrix of the camera.
     ///
     /// Camera coordinates -> Homogenous coordinates
@@ -60,7 +77,7 @@ impl CameraType {
         // OpenGL clip planes are -1 to 1, thus we use the _no method
         use CameraType::*;
         match *self {
-            Perspective {aspect_ratio, field_of_view_y, near_z, far_z} => match far_z {
+            Perspective {name: _, aspect_ratio, field_of_view_y, near_z, far_z} => match far_z {
                 Some(far_z) => {
                     Mat4::perspective_rh_no(field_of_view_y.get_radians(), aspect_ratio, near_z, far_z)
                 },
@@ -78,7 +95,7 @@ impl CameraType {
                 },
             },
 
-            Orthographic {mag_x, mag_y, near_z, far_z} => {
+            Orthographic {name: _, mag_x, mag_y, near_z, far_z} => {
                 Mat4::orthographic_rh_no(FrustumPlanes {
                     left: -mag_x/2.0,
                     right: mag_x/2.0,

@@ -19,6 +19,8 @@ pub struct GltfFile {
     scene_lights: HashMap<usize, Arc<Vec<Arc<Light>>>>,
     /// Cache the first camera in the scene
     scene_first_camera: Option<Arc<Camera>>,
+    /// Cache each camera by scene index and name
+    scene_cameras: HashMap<(usize, String), Arc<Camera>>,
 }
 
 impl GltfFile {
@@ -55,7 +57,21 @@ impl GltfFile {
             scene_shader_geometry: HashMap::new(),
             scene_lights: HashMap::new(),
             scene_first_camera: None,
+            scene_cameras: HashMap::new(),
         })
+    }
+
+    /// Attempts to find the index of a scene with the given name. If name is None, the default
+    /// scene is returned.
+    fn find_scene(&self, name: Option<&str>) -> Result<usize, QueryError> {
+        match name {
+            None => Ok(self.default_scene),
+            // This assumes that scene names are unique. If they are not unique, we might need to
+            // search for all matching scenes and produce an error if there is more than one result
+            Some(name) => self.scenes.iter()
+                .position(|scene| scene.name.as_deref() == Some(name))
+                .ok_or_else(|| QueryError::UnknownScene {name: name.to_string()}),
+        }
     }
 }
 
@@ -67,12 +83,7 @@ impl QueryBackend for GltfFile {
 
         use GeometryFilter::*;
         let scene_index = match models {
-            Scene {name: None} => self.default_scene,
-            // This assumes that scene names are unique. If they are not unique, we might need to
-            // search for all matching scenes and produce an error if there is more than one result
-            Scene {name: Some(name)} => self.scenes.iter()
-                .position(|scene| scene.name.as_ref() == Some(name))
-                .ok_or_else(|| QueryError::UnknownScene {name: name.clone()})?,
+            Scene {name} => self.find_scene(name.as_deref())?,
         };
 
         match self.scene_shader_geometry.get(&scene_index) {
@@ -106,40 +117,77 @@ impl QueryBackend for GltfFile {
 
     fn query_camera(&mut self, query: &CameraQuery) -> Result<Arc<Camera>, QueryError> {
         use CameraQuery::*;
-        let scene_index = match query {
-            FirstInScene {name: None} => self.default_scene,
-            FirstInScene {name: Some(name)} => self.scenes.iter()
-                .position(|scene| scene.name.as_ref() == Some(name))
-                .ok_or_else(|| QueryError::UnknownScene {name: name.clone()})?,
-        };
+        match query {
+            FirstInScene {name} => {
+                let scene_index = self.find_scene(name.as_deref())?;
 
-        match &self.scene_first_camera {
-            Some(cam) => Ok(cam.clone()),
+                match &self.scene_first_camera {
+                    Some(cam) => Ok(cam.clone()),
 
-            None => {
-                let scene = &self.scenes[scene_index];
+                    None => {
+                        let scene = &self.scenes[scene_index];
 
-                let mut nodes = scene.roots.iter().flat_map(|root| root.traverse());
-                let scene_first_camera = nodes.find_map(|(parent_trans, node)| {
-                    let world_transform = parent_trans * node.transform;
+                        let mut nodes = scene.roots.iter().flat_map(|root| root.traverse());
+                        let scene_first_camera = nodes.find_map(|(parent_trans, node)| {
+                            let world_transform = parent_trans * node.transform;
 
-                    match node.camera() {
-                        Some(cam) => Some(Arc::new(Camera {
-                            view: world_transform.inverted(),
-                            projection: cam.to_projection(),
-                        })),
+                            match node.camera() {
+                                Some(cam) => Some(Arc::new(Camera {
+                                    view: world_transform.inverted(),
+                                    projection: cam.to_projection(),
+                                })),
 
-                        None => None,
-                    }
-                });
+                                None => None,
+                            }
+                        });
 
-                match scene_first_camera {
-                    Some(cam) => {
-                        self.scene_first_camera = Some(cam.clone());
-                        Ok(cam)
+                        match scene_first_camera {
+                            Some(cam) => {
+                                self.scene_first_camera = Some(cam.clone());
+                                Ok(cam)
+                            },
+
+                            None => Err(QueryError::NoCameraFound),
+                        }
                     },
+                }
+            },
 
-                    None => Err(QueryError::NoCameraFound),
+            Named {name, scene} => {
+                let scene_index = self.find_scene(scene.as_deref())?;
+
+                let cam_key = (scene_index, name.clone());
+                match self.scene_cameras.get(&cam_key) {
+                    Some(cam) => Ok(cam.clone()),
+
+                    None => {
+                        let scene = &self.scenes[scene_index];
+
+                        let mut nodes = scene.roots.iter().flat_map(|root| root.traverse());
+                        // This code assumes that camera names are unique
+                        let found_camera = nodes.find_map(|(parent_trans, node)| {
+                            let world_transform = parent_trans * node.transform;
+
+                            match node.camera() {
+                                Some(cam) if cam.name() == Some(name) => Some(Arc::new(Camera {
+                                    view: world_transform.inverted(),
+                                    projection: cam.to_projection(),
+                                })),
+
+                                Some(_) |
+                                None => None,
+                            }
+                        });
+
+                        match found_camera {
+                            Some(cam) => {
+                                self.scene_cameras.insert(cam_key, cam.clone());
+                                Ok(cam)
+                            },
+
+                            None => Err(QueryError::NoCameraFound),
+                        }
+                    },
                 }
             },
         }
@@ -148,10 +196,7 @@ impl QueryBackend for GltfFile {
     fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<Light>>>, QueryError> {
         use LightQuery::*;
         let scene_index = match query {
-            Scene {name: None} => self.default_scene,
-            Scene {name: Some(name)} => self.scenes.iter()
-                .position(|scene| scene.name.as_ref() == Some(name))
-                .ok_or_else(|| QueryError::UnknownScene {name: name.clone()})?,
+            Scene {name} => self.find_scene(name.as_deref())?,
         };
 
         match self.scene_lights.get(&scene_index) {

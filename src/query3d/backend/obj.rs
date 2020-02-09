@@ -75,9 +75,12 @@ impl QueryBackend for ObjFile {
         // OBJ files do not support cameras
         // This code still does the work to produce useful errors
         match query {
-            CameraQuery::FirstInScene {name: None} => Err(QueryError::NoCameraFound),
+            CameraQuery::FirstInScene {name: None} |
+            CameraQuery::Named {name: _, scene: None} => Err(QueryError::NoCameraFound),
+
             // OBJ files do not contain any named scenes
-            CameraQuery::FirstInScene {name: Some(name)} => Err(QueryError::UnknownScene {
+            CameraQuery::FirstInScene {name: Some(name)} |
+            CameraQuery::Named {name: _, scene: Some(name)} => Err(QueryError::UnknownScene {
                 name: name.clone(),
             }),
         }
