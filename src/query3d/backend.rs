@@ -27,6 +27,9 @@ pub enum QueryError {
     #[error("Could not find any matching geometry in model file")]
     NoGeometryFound,
 
+    #[error("Could not find camera named `{name}` in model file")]
+    UnknownCamera {name: String},
+
     #[error("Could not find any matching cameras in model file")]
     NoCameraFound,
 

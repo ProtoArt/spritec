@@ -187,7 +187,7 @@ impl QueryBackend for GltfFile {
                                 Ok(cam)
                             },
 
-                            None => Err(QueryError::NoCameraFound),
+                            None => Err(QueryError::UnknownCamera {name: name.to_string()}),
                         }
                     },
                 }
