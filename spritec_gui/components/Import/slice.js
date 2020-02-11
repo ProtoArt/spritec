@@ -5,8 +5,8 @@ const importReducer = createSlice({
   initialState: {
     files: [],
     selectedFile: null,
-    width: 256,
-    height: 256,
+    width: 64,
+    height: 64,
   },
   reducers: {
     setWidth(state, action) { state.width = action.payload },

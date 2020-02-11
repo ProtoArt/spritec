@@ -20,6 +20,7 @@
 
 #spritec-canvas {
   background-image: url('../assets/transparent-bg.svg');
+  image-rendering: pixelated;
 }
 
 #import-panel {
