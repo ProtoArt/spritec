@@ -10,7 +10,7 @@ authors = [
 edition = "2018"
 
 [dependencies]
-glium = "0.26.0"
+glium = "0.26"
 tobj = "0.1"
 vek = { version = "0.9", features = ["serde"] }
 # Keep this version synced with the version from vek
