@@ -18,9 +18,11 @@ pub enum QueryError {
     #[error("Could not find scene named `{name}` in model file")]
     UnknownScene {name: String},
 
-    #[error("Could not find animation named `{}` in model file",
-        .name.as_deref().unwrap_or("<unnamed>"))]
-    UnknownAnimation {name: Option<String>},
+    #[error("Could not find animation named `{name}` in model file")]
+    UnknownAnimation {name: String},
+
+    #[error("Could not find any matching animation in model file")]
+    NoAnimationFound,
 
     #[error("Could not find any matching geometry in model file")]
     NoGeometryFound,

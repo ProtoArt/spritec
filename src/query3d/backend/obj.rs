@@ -42,8 +42,14 @@ impl QueryBackend for ObjFile {
         let GeometryQuery {models, animation} = query;
 
         // OBJ files do not support animations
-        if let Some(AnimationQuery {name, ..}) = animation {
-            return Err(QueryError::UnknownAnimation {name: name.clone()});
+        match animation {
+            Some(AnimationQuery {name: Some(name), ..}) => {
+                return Err(QueryError::UnknownAnimation {name: name.clone()});
+            },
+            Some(AnimationQuery {name: None, ..}) => {
+                return Err(QueryError::NoAnimationFound);
+            },
+            _ => {},
         }
 
         use GeometryFilter::*;
