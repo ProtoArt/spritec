@@ -169,10 +169,12 @@ impl QueryBackend for GltfFile {
                             let world_transform = parent_trans * node.transform;
 
                             match node.camera() {
-                                Some(cam) if cam.name() == Some(name) => Some(Arc::new(Camera {
-                                    view: world_transform.inverted(),
-                                    projection: cam.to_projection(),
-                                })),
+                                Some(cam) if node.name.as_ref() == Some(name) || cam.name() == Some(name) => {
+                                    Some(Arc::new(Camera {
+                                        view: world_transform.inverted(),
+                                        projection: cam.to_projection(),
+                                    }))
+                                },
 
                                 Some(_) |
                                 None => None,

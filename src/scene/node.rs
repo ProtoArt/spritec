@@ -14,6 +14,9 @@ pub enum NodeData {
 
 #[derive(Debug, Clone)]
 pub struct Node {
+    /// The name of the node (possibly empty), or None if the 3D file this was loaded from does
+    /// not support node names
+    pub name: Option<String>,
     /// The data contained in the node, or None if no data is present
     pub data: Option<NodeData>,
     /// The **local** transform of this node, independent of its parents
@@ -31,6 +34,8 @@ impl Node {
         cameras: &[Arc<CameraType>],
         lights: &[Arc<LightType>],
     ) -> Self {
+        let name = Some(node.name().unwrap_or("").to_string());
+
         let data = match (node.mesh(), node.camera(), node.light()) {
             (None, None, None) => {
                 None
@@ -81,7 +86,7 @@ impl Node {
             .map(|child| Arc::new(Node::from_gltf(child, meshes, cameras, lights)))
             .collect();
 
-        Self {data, transform, children}
+        Self {name, data, transform, children}
     }
 
     pub fn mesh(&self) -> Option<&Arc<Mesh>> {
