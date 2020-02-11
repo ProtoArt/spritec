@@ -132,8 +132,8 @@ impl ThreadRenderContext {
     pub fn new() -> Result<Self, ContextCreationError> {
         // This size does not matter because we do not render to the screen
         let size = PhysicalSize {
-            width: 500.0,
-            height: 500.0,
+            width: 500,
+            height: 500,
         };
 
         let event_loop = EventLoop::new();
