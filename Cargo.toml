@@ -17,7 +17,7 @@ vek = { version = "0.9", features = ["serde"] }
 num-traits = "0.1"
 # Keep this version synced with the version from vek
 approx = "0.1.1"
-image = "0.22"
+image = "0.23"
 structopt = "0.2"
 toml = "0.5"
 serde = { version = "1.0", features = ["derive"] }
