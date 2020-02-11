@@ -21,21 +21,26 @@ tool. In the meantime, here are some useful tips for using the CLI:
     tool
 * The error messages produced by `spritec` may not be very useful right now
   (sorry!). If you run into something confusing, please get into contact with us
-  or [open an issue] and we will help you out!<br>
+  or [open an issue] and we will help you out!
 * Common issues:
-  * `Error: No such file or directory (os error 2)`<br>
+  * `Error: No such file or directory (os error 2)`
     * You forgot to provide a path to `spritec` and/or it couldn't find your config
     * You provided a configuration file, but the glTF file you specified for your
       3D models wasn't found
   * `Error: unexpected character found: / at line 10 column 23` (or something)
     * There is a syntax error in your config file
     * The line number and column number should map to your `spritec.toml` file
-  * `Error: Could not find any matching cameras in model file`
+  * `Error: Could not find camera named ... in model file` or<br>`Error: Could not find any matching cameras in model file`
     * You specified a camera by name, but no camera with that name was found in
       the 3D model file
-    * Check that you named the camera properly
+    * Check that you named the camera properly before exporting from Blender
+    * You may need to set the name in both **Object Properties** and
+      **Object Data Properties** (see below)
   * `Error: invalid glTF: ...`
     * There was an error in your generated glTF file, try exporting again
+  * `Error: Permission denied (os error 13)` or `Error: Is a directory (os error 21)`
+    * You may have accidentally specified an invalid output path
+    * Check the `path` configured for the `spritesheets` and `poses`
 
 ## The spritec Configuration
 
