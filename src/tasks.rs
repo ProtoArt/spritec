@@ -2,7 +2,6 @@ mod file_cache;
 
 pub use file_cache::*;
 
-use std::io;
 use std::sync::{Arc, Mutex};
 use std::path::{Path, PathBuf};
 use std::num::NonZeroU32;
@@ -43,7 +42,7 @@ use crate::renderer::{
 #[error(transparent)]
 pub enum TaskError {
     DrawLayoutError(#[from] DrawLayoutError),
-    IOError(#[from] io::Error),
+    ImageError(#[from] image::ImageError),
 }
 
 #[derive(Debug)]
