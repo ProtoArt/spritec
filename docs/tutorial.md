@@ -105,6 +105,11 @@ the same thing twice, once in the **Object Properties** panel and once in the
 **Object Data Properties** panel. This makes referring to them from the
 `spritec.toml` file very easy.
 
+**Note:** Even if you name all your nodes correctly, [Blender] will sometimes
+rename them for you when exporting to [glTF]. For example, you might see
+`Front_Orientation` instead of just `Front` in the [glTF] file for the object
+shown above. Be sure to check your `.gltf` file if you're running into issues.
+
 [Blender]: https://www.blender.org
 [Rust]: https://www.rust-lang.org/
 [rustup]: https://rustup.rs
