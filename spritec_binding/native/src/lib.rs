@@ -28,10 +28,8 @@ fn render_sprite(mut cx: FunctionContext) -> JsResult<JsArrayBuffer> {
 
     // TODO: Change to return a class so we can reuse resources
     let mut ctx = ThreadRenderContext::new().expect("Unable to create ThreadRenderContext");
-
-    let camera = default_camera();
-
-    let file = File::open(Path::new(&path)).expect("Unable to open file");
+    let file = Arc::new(Mutex::new(File::open(Path::new(&path)).expect("Unable to open file")));
+    let camera = RenderCamera::Camera(Arc::new(default_camera()));
 
     let job = RenderJob {
         scale: unsafe { NonZeroU32::new_unchecked(1) },
@@ -46,7 +44,7 @@ fn render_sprite(mut cx: FunctionContext) -> JsResult<JsArrayBuffer> {
                 b: 0.0,
                 a: 0.0,
             },
-            camera: RenderCamera::Camera(Arc::new(camera)),
+            camera,
             lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
                 data: Arc::new(LightType::Directional {
                     color: Rgb::white(),
@@ -60,7 +58,7 @@ fn render_sprite(mut cx: FunctionContext) -> JsResult<JsArrayBuffer> {
                     models: GeometryFilter::all_in_default_scene(),
                     animation: None,
                 },
-                file: Arc::new(Mutex::new(file)),
+                file,
             },
             outline: Outline {
                 thickness: 0.0,
@@ -92,7 +90,7 @@ fn default_camera() -> Camera {
         aspect_ratio: 1.0,
         field_of_view_y: Radians::from_degrees(40.0),
         near_z: 0.1,
-        far_z: Some(0.1),
+        far_z: Some(1000.0),
     };
 
     Camera {
