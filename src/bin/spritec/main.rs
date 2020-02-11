@@ -14,9 +14,9 @@
 
 mod args;
 
-use std::error::Error;
 use std::path::Path;
 
+use terminator::Terminator;
 use structopt::StructOpt;
 use spritec::{
     tasks::{self, Task, WeakFileCache},
@@ -27,7 +27,7 @@ use spritec::{
 
 use crate::args::AppArgs;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Terminator> {
     let args = AppArgs::from_args();
     let TaskConfig {spritesheets, poses} = args.load_config()?;
     let base_dir = args.base_directory()?;
