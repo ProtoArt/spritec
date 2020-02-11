@@ -21,8 +21,7 @@ use spritec::config::TaskConfig;
 /// configuration file in the TOML format.
 #[derive(Debug, StructOpt)]
 #[structopt(author = "The ProtoArt Team <https://protoart.me>")]
-#[structopt(raw(setting = "ColoredHelp", setting = "DontCollapseArgsInUsage",
-    setting = "ArgRequiredElseHelp"))]
+#[structopt(global_settings = &[ColoredHelp, DontCollapseArgsInUsage, ArgRequiredElseHelp])]
 pub struct AppArgs {
     /// Path to the configuration file to execute tasks from
     #[structopt(name = "config-file", default_value = "spritec.toml", parse(from_os_str))]
