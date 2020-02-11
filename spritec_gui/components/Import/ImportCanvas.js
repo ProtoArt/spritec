@@ -2,15 +2,23 @@ const spritec = require('spritec_binding');
 const Component = require('../../lib/Component');
 
 class ImportCanvas extends Component {
-  onCreate(canvas) {
+  onCreate(container) {
+    const canvas = container.querySelector('#spritec-canvas');
     this.state = {
       canvas,
       ctx: canvas.getContext('2d'),
     };
     this.state.ctx.imageSmoothingEnabled = false;
 
-    // TODO: Allow scaling with CSS with `image-rendering: pixelated`, see
-    // https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event
+    canvas.style.transform = `scale(8)`;
+
+    let scale = 8;
+    container.onwheel = (event) => {
+      event.preventDefault();
+      scale += event.deltaY * -0.01;
+      scale = Math.max(0.125, scale);
+      this.state.canvas.style.transform = `scale(${scale})`;
+    }
   }
 
   mapStateToProps() {
@@ -22,8 +30,8 @@ class ImportCanvas extends Component {
   }
 
   render() {
-    const { canvas, ctx } = this.state;
-    const { width, height, file } = this.props;
+    const {canvas, ctx} = this.state;
+    const {width, height, file} = this.props;
 
     canvas.width = width;
     canvas.height = height;
