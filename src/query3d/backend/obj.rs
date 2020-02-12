@@ -42,8 +42,14 @@ impl QueryBackend for ObjFile {
         let GeometryQuery {models, animation} = query;
 
         // OBJ files do not support animations
-        if let Some(AnimationQuery {name, ..}) = animation {
-            return Err(QueryError::UnknownAnimation {name: name.clone()});
+        match animation {
+            Some(AnimationQuery {name: Some(name), ..}) => {
+                return Err(QueryError::UnknownAnimation {name: name.clone()});
+            },
+            Some(AnimationQuery {name: None, ..}) => {
+                return Err(QueryError::NoAnimationFound);
+            },
+            _ => {},
         }
 
         use GeometryFilter::*;
@@ -75,8 +81,8 @@ impl QueryBackend for ObjFile {
         // OBJ files do not support cameras
         // This code still does the work to produce useful errors
         match query {
-            CameraQuery::FirstInScene {name: None} |
-            CameraQuery::Named {name: _, scene: None} => Err(QueryError::NoCameraFound),
+            CameraQuery::FirstInScene {name: None} => Err(QueryError::NoCameraFound),
+            CameraQuery::Named {name, scene: None} => Err(QueryError::UnknownCamera {name: name.clone()}),
 
             // OBJ files do not contain any named scenes
             CameraQuery::FirstInScene {name: Some(name)} |
