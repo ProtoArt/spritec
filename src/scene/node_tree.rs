@@ -73,12 +73,12 @@ impl NodeTree {
     }
 
     /// Get the node with the given ID
-    pub fn get(&self, node_id: NodeId) -> &Arc<Node> {
+    pub fn get(&self, node_id: NodeId) -> &Node {
         &self.entry(node_id).node
     }
 
     /// Iterate over the child nodes of the given node
-    pub fn children(&self, node_id: NodeId) -> impl Iterator<Item=&Arc<Node>> {
+    pub fn children(&self, node_id: NodeId) -> impl Iterator<Item=&Node> {
         self.entry(node_id).children.iter().map(move |&id| self.get(id))
     }
 
@@ -104,7 +104,7 @@ pub struct TraverseNodes<'a> {
 }
 
 impl<'a> Iterator for TraverseNodes<'a> {
-    type Item = (Mat4, &'a Arc<Node>);
+    type Item = (Mat4, &'a Node);
 
     fn next(&mut self) -> Option<Self::Item> {
         // This code assumes that the node hierarchy is not cyclic
