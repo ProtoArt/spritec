@@ -2,22 +2,22 @@ use std::sync::Arc;
 
 use crate::math::{Mat4, Quaternion};
 
-use super::{NodeId, Mesh, CameraType, LightType};
+use super::{NodeId, Mesh, Skin, CameraType, LightType};
 
 #[derive(Debug, Clone)]
 pub enum NodeData {
-    Mesh(Arc<Mesh>),
+    Mesh(Arc<Mesh>, Option<Arc<Skin>>),
     Camera(Arc<CameraType>),
     Light(Arc<LightType>),
 }
 
 #[derive(Debug, Clone)]
 pub struct Node {
+    /// The unique ID of this node. No other node has this ID.
+    pub id: NodeId,
     /// The name of the node (possibly empty), or None if the 3D file this was loaded from does
     /// not support node names
     pub name: Option<String>,
-    /// The unique ID of this node. No other node has this ID.
-    pub id: NodeId,
     /// The data contained in the node, or None if no data is present
     pub data: Option<NodeData>,
     /// The **local** transform of this node, independent of its parents
@@ -28,30 +28,32 @@ impl Node {
     pub fn from_gltf(
         node: gltf::Node,
         meshes: &[Arc<Mesh>],
+        skins: &[Arc<Skin>],
         cameras: &[Arc<CameraType>],
         lights: &[Arc<LightType>],
     ) -> Self {
+        let id = NodeId::from_gltf(&node);
         let name = Some(node.name().unwrap_or("").to_string());
 
-        let id = NodeId::from_gltf(&node);
-
-        let data = match (node.mesh(), node.camera(), node.light()) {
-            (None, None, None) => {
+        let data = match (node.mesh(), node.skin(), node.camera(), node.light()) {
+            (None, None, None, None) => {
                 None
             },
 
-            (Some(mesh), None, None) => {
-                Some(NodeData::Mesh(meshes[mesh.index()].clone()))
+            (Some(mesh), skin, None, None) => {
+                let skin = skin.map(|skin| skins[skin.index()].clone());
+                Some(NodeData::Mesh(meshes[mesh.index()].clone(), skin))
             },
 
-            (None, Some(cam), None) => {
+            (None, None, Some(cam), None) => {
                 Some(NodeData::Camera(cameras[cam.index()].clone()))
             },
 
-            (None, None, Some(light)) => {
+            (None, None, None, Some(light)) => {
                 Some(NodeData::Light(lights[light.index()].clone()))
             },
 
+            (_, Some(_), _, _) => unreachable!("Did not expect a node that had a skin but no mesh"),
             _ => unreachable!("Did not expect a node that had more than one of a mesh, camera, or light"),
         };
 
@@ -73,9 +75,9 @@ impl Node {
         Self {id, name, data, transform}
     }
 
-    pub fn mesh(&self) -> Option<&Arc<Mesh>> {
+    pub fn mesh(&self) -> Option<(&Arc<Mesh>, Option<&Arc<Skin>>)> {
         match &self.data {
-            Some(NodeData::Mesh(mesh)) => Some(mesh),
+            Some(NodeData::Mesh(mesh, skin)) => Some((mesh, skin.as_ref())),
             _ => None,
         }
     }

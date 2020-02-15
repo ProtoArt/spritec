@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::path::Path;
 use std::collections::HashMap;
 
-use crate::scene::{Scene, NodeTree, NodeId, Node, Mesh, Material, CameraType, LightType};
+use crate::scene::{Scene, NodeTree, NodeId, Node, Mesh, Skin, Material, CameraType, LightType};
 use crate::renderer::{Display, ShaderGeometry, Camera, Light};
 use crate::query3d::{GeometryQuery, GeometryFilter, CameraQuery, LightQuery};
 
@@ -32,8 +32,13 @@ impl GltfFile {
         let materials: Vec<_> = document.materials()
             .map(|mat| Arc::new(Material::from(mat)))
             .collect();
+
         let meshes: Vec<_> = document.meshes()
             .map(|mesh| Arc::new(Mesh::from_gltf(mesh, &materials, &buffers)))
+            .collect();
+
+        let skins: Vec<_> = document.skins()
+            .map(|skin| Arc::new(Skin::from_gltf(skin, &buffers)))
             .collect();
 
         let cameras: Vec<_> = document.cameras()
@@ -46,7 +51,7 @@ impl GltfFile {
 
         let nodes = document.nodes().map(|node| {
             let children = node.children().map(|node| NodeId::from_gltf(&node)).collect();
-            let node = Node::from_gltf(node, &meshes, &cameras, &lights);
+            let node = Node::from_gltf(node, &meshes, &skins, &cameras, &lights);
             (node, children)
         });
         let nodes = Arc::new(NodeTree::from_ordered_nodes(nodes));
@@ -105,7 +110,7 @@ impl QueryBackend for GltfFile {
                 for (parent_trans, node) in scene.roots.iter().flat_map(|&root| self.nodes.traverse(root)) {
                     let model_transform = parent_trans * node.transform;
 
-                    if let Some(mesh) = node.mesh() {
+                    if let Some((mesh, skin)) = node.mesh() {
                         for geo in &mesh.geometry {
                             let geo = ShaderGeometry::new(display, geo, model_transform)?;
                             scene_geo.push(Arc::new(geo));
