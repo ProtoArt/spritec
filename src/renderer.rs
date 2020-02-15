@@ -94,8 +94,8 @@ impl<'a> Renderer<'a> {
             material: &*material,
         });
 
-        self.target.draw((positions, normals), indices, &self.shaders.cel,
-            &cel_uniforms, &cel_params)?;
+        self.target.draw((positions, normals, joint_influences, joint_weights), indices,
+            &self.shaders.cel, &cel_uniforms, &cel_params)?;
 
         let outline_uniforms = shader::outline::Outline::from(OutlineUniforms {
             mvp,
