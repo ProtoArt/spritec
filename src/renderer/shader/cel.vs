@@ -10,6 +10,8 @@ uniform mat4 model_inverse_transpose;
 
 in vec3 position;
 in vec3 normal;
+in uvec4 joint_influences;
+in vec4 joint_weights;
 
 // The normal, in the world coordinate system
 out vec3 v_normal;
