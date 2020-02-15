@@ -1,7 +1,6 @@
 // JAMES ADDED - to be moved to separate file afterwards
 use gltf::animation::util::ReadOutputs::*;
-use gltf::animation::Property;
-use crate::math::Vec3;
+use crate::math::{Vec3, Quaternion};
 
 
 use std::sync::Arc;
@@ -38,7 +37,9 @@ pub struct GltfFile {
 #[derive(Debug, Default)]
 struct Animation {
     name: Option<String>,
-    translation_keyframes: Option<Keyframes>,
+    scale_keyframes: Option<Keyframes<Vec3>>,
+    rotation_keyframes: Option<Keyframes<Quaternion>>,
+    translation_keyframes: Option<Keyframes<Vec3>>,
 }
 
 impl Animation {
@@ -52,15 +53,22 @@ impl Animation {
 }
 
 #[derive(Debug)]
-struct Keyframes {
-    frames: Vec<Frame>,
-    interpolation: String,
+struct Keyframes<T> {
+    frames: Vec<Frame<T>>,
+    interpolation: Interpolation,
 }
 
 #[derive(Debug)]
-struct Frame {
+struct Frame<T> {
     time: f32,
-    value: Vec3,
+    value: T,
+}
+
+#[derive(Debug)]
+enum Interpolation {
+    Linear,
+    Step,
+    CubicSpline,
 }
 
 impl GltfFile {
@@ -103,56 +111,53 @@ impl GltfFile {
         // Get the default scene, or just use the first scene if no default is provided
         let default_scene = document.default_scene().map(|scene| scene.index()).unwrap_or(0);
 
-        // for anim in document.animations() {
-        //     for channel in anim.channels() {
-        //         let reader = channel.reader(|buffer| Some(&buffers[buffer.index()]));
-        //         println!("{:?}", reader.read_inputs().unwrap().collect::<Vec<_>>());
-        //         match reader.read_outputs().unwrap() {
-        //             Translations(x) => println!("Trans: {:?}", x.collect::<Vec<_>>()),
-        //             Rotations(x) => println!("Rot: {:?}", x.into_f32().collect::<Vec<_>>()),
-        //             Scales (x) => println!("Scale: {:?}", x.collect::<Vec<_>>()),
-        //             _ => println!("Morph"),
-        //         };
-        //     }
-        // }
-
-        let mut animations: HashMap<usize, Vec<Animation>> = HashMap::new();
+        let mut animations = HashMap::new();
 
         for anim_data in document.animations() {
             let anim_name = anim_data.name();
             for channel in anim_data.channels() {
                 let node_id = channel.target().node().index();
-                let transformation = channel.target().property();
                 let reader = channel.reader(|buffer| Some(&buffers[buffer.index()]));
                 let interpolation = match channel.sampler().interpolation() {
-                    Linear => String::from("Linear"),
-                    Step => String::from("Step"),
-                    CubicSpline => String::from("CubicSpline"),
+                    gltf::animation::Interpolation::Linear => Interpolation::Linear,
+                    gltf::animation::Interpolation::Step => Interpolation::Step,
+                    gltf::animation::Interpolation::CubicSpline => Interpolation::CubicSpline,
                 };
+                //TODO - add in own interpolation enum and use that instead of strings
 
                 // Create Animation
-                let mut anim_vec = animations.entry(node_id).or_insert_with(|| Vec::new());
-                let anim = anim_vec.iter_mut().find(|a| a.name == anim_name.map(String::from));
+                let anims = animations.entry(node_id).or_insert_with(|| Vec::new());
+                let anim = anims.iter_mut().find(|a: &&mut Animation| a.name.as_deref() == anim_name);
                 let mut anim = match anim {
                     Some(anim) => anim,
                     None => {
-                        anim_vec.push(Animation::with_name(anim_name.map(String::from)));
+                        anims.push(Animation::with_name(anim_name.map(String::from)));
                         // This unwrap is safe because we just pushed in an animation
-                        anim_vec.last_mut().unwrap()
+                        anims.last_mut().unwrap()
                     }
                 };
 
                 // Create Keyframes
                 let key_times = reader.read_inputs().expect("Animation detected with no sampler input values");
                 match reader.read_outputs().expect("Animation detected with no sampler output values") {
+                    Scales(scale) => {
+                        assert!(anim.scale_keyframes.is_none());
+                        let key_frames = Keyframes {frames: key_times.zip(scale)
+                            .map(|(time, output)| Frame {time, value: Vec3::from(output)}).collect::<Vec<Frame<Vec3>>>(), interpolation};
+                        anim.scale_keyframes = Some(key_frames);
+                    },
+                    Rotations(rot) => {
+                        assert!(anim.rotation_keyframes.is_none());
+                        let key_frames = Keyframes {frames: key_times.zip(rot.into_f32())
+                            .map(|(time, [x, y, z, w])| Frame {time, value: Quaternion::from_xyzw(x, y, z, w)}).collect::<Vec<Frame<Quaternion>>>(), interpolation};
+                        anim.rotation_keyframes = Some(key_frames);
+                    },
                     Translations(trans) => {
                         assert!(anim.translation_keyframes.is_none());
                         let key_frames = Keyframes {frames: key_times.zip(trans)
-                            .map(|(time, output)| Frame {time, value: Vec3::from(output)}).collect::<Vec<Frame>>(), interpolation};
+                            .map(|(time, output)| Frame {time, value: Vec3::from(output)}).collect::<Vec<Frame<Vec3>>>(), interpolation};
                         anim.translation_keyframes = Some(key_frames);
-                        }
-                    Rotations(rot) => todo!(),
-                    Scales(scale) => todo!(),
+                    },
                     _ => todo!(), //Morph stuff
                 };
             }
