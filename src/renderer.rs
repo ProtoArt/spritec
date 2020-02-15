@@ -80,7 +80,7 @@ impl<'a> Renderer<'a> {
             ..Default::default()
         };
 
-        let ShaderGeometry {indices, positions, normals, material, model_transform} = geometry;
+        let ShaderGeometry {indices, positions, normals, joint_influences, joint_weights, material, model_transform} = geometry;
         let model_transform = *model_transform;
         let mvp = projection * view * model_transform;
         let model_inverse_transpose = model_transform.inverted().transposed();
