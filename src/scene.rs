@@ -1,18 +1,20 @@
-mod mesh;
-mod geometry;
-mod material;
-mod node;
-mod node_tree;
 mod camera_type;
+mod geometry;
 mod light_type;
+mod material;
+mod mesh;
+mod node_tree;
+mod node;
+mod skin;
 
-pub use mesh::*;
-pub use geometry::*;
-pub use material::*;
-pub use node::*;
-pub use node_tree::*;
 pub use camera_type::*;
+pub use geometry::*;
 pub use light_type::*;
+pub use material::*;
+pub use mesh::*;
+pub use node_tree::*;
+pub use node::*;
+pub use skin::*;
 
 #[derive(Debug, Clone)]
 pub struct Scene {
