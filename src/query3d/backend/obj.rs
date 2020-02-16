@@ -19,6 +19,8 @@ pub struct ObjFile {
     mesh: Mesh,
     /// The version of this model lazily uploaded to the GPU
     scene_geometry: Option<Arc<Vec<Arc<ShaderGeometry>>>>,
+    /// Cache the default joint matrix texture so we don't upload it over and over again
+    default_joint_matrix_texture: Option<Arc<JointMatrixTexture>>,
 }
 
 impl ObjFile {
@@ -33,6 +35,7 @@ impl ObjFile {
         Ok(Self {
             mesh: Mesh::from_obj(models, &materials),
             scene_geometry: None,
+            default_joint_matrix_texture: None,
         })
     }
 }
@@ -59,8 +62,15 @@ impl QueryBackend for ObjFile {
                 None => {
                     // Default to a single identity matrix (makes it so that even if
                     // we accidentally index into the texture, we won't get UB)
-                    //TODO: Find a way to cache this texture so we don't have to upload it over and over again
-                    let joint_matrices_tex = Arc::new(JointMatrixTexture::identity(display)?);
+                    let joint_matrices_tex = match &self.default_joint_matrix_texture {
+                        Some(tex) => tex.clone(),
+                        None => {
+                            let tex = Arc::new(JointMatrixTexture::identity(display)?);
+                            self.default_joint_matrix_texture = Some(tex.clone());
+                            tex
+                        },
+                    };
+
                     let scene_geometry = Arc::new(self.mesh.geometry.iter()
                         .map(|geo| {
                             ShaderGeometry::new(display, geo, &joint_matrices_tex, Mat4::identity()).map(Arc::new)
