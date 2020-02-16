@@ -1,11 +1,13 @@
 // JAMES ADDED - to be moved to separate file afterwards
 use gltf::animation::util::ReadOutputs::*;
-use crate::math::{Vec3, Quaternion};
+use crate::math::{Vec3, Quaternion, Mat4, Decompose};
+use interpolation;
 
 
 use std::sync::Arc;
 use std::path::Path;
 use std::collections::HashMap;
+use std::cmp::min;
 
 use crate::scene::{Scene, NodeTree, NodeId, Node, Mesh, Skin, Material, CameraType, LightType};
 use crate::renderer::{Display, ShaderGeometry, JointMatrixTexture, Camera, Light};
@@ -31,7 +33,7 @@ pub struct GltfFile {
     scene_cameras: HashMap<(usize, String), Arc<Camera>>,
     /// Contains the transformation data of the animations
     // This is a mapping of Node ID to all the animations that act on that node
-    animations: HashMap<usize, Vec<Animation>>,
+    animations: HashMap<NodeId, Vec<Animation>>,
 }
 
 #[derive(Debug, Default)]
@@ -42,6 +44,22 @@ struct Animation {
     translation_keyframes: Option<Keyframes<Vec3>>,
 }
 
+#[derive(Debug)]
+enum Interpolation {
+    Linear,
+    Step,
+}
+
+fn interpolate(interp: &Interpolation, t: f32, prev_keyframe: Vec3, next_keyframe: Vec3) -> Vec3 {
+    match interp {
+        Linear => {
+            let [x, y, z] = interpolation::lerp(&prev_keyframe.into_array(), &next_keyframe.into_array(), &t);
+            Vec3::new(x, y, z)
+        },
+        Step => prev_keyframe,
+    }
+}
+
 impl Animation {
     // with_name takes Option instead of String to include with Animations without names
     fn with_name(name: Option<String>) -> Self {
@@ -50,6 +68,37 @@ impl Animation {
             ..Self::default()
         }
     }
+
+    // Application of animation data by decomposing the current node's transformation matrix and
+    // replacing the different types of transforms if the keyframes for that transform exist
+    fn apply_at(&self, transform_matrix: &Mat4, time: f32) -> Mat4 {
+        let mut matrix_transforms = transform_matrix.decompose();
+        if let Some(trans) = &self.translation_keyframes {
+            let new_trans = match trans.surrounding(time) {
+                KeyframeRange::Before(kf) => kf.value,
+                KeyframeRange::After(kf) => kf.value,
+                KeyframeRange::Between(kf1, kf2) => {
+                    let start = kf1.time;
+                    let end = kf2.time;
+                    // The time factor that gives weight to the start or end frame during interpolation
+                    let factor = (time - start) / (end - start);
+                    interpolate(&trans.interpolation, factor, kf1.value, kf2.value)
+                },
+            };
+            matrix_transforms.translation = new_trans;
+        }
+
+        Mat4::from(matrix_transforms)
+    }
+}
+
+enum KeyframeRange<'a> {
+    /// The keyframe before the specified time
+    Before(&'a Frame<Vec3>),
+    /// The keyframes that immediately surround the specified time
+    Between(&'a Frame<Vec3>, &'a Frame<Vec3>),
+    /// The keyframe after the specified time
+    After(&'a Frame<Vec3>),
 }
 
 #[derive(Debug)]
@@ -58,17 +107,32 @@ struct Keyframes<T> {
     interpolation: Interpolation,
 }
 
+impl Keyframes<Vec3> {
+    // Retrieves the keyframes immediately surrounding the given time
+    // A time smaller than that of all keyframes will get back the first keyframe twice
+    // A time larger than all keyframes gets the last keyframe twice
+    fn surrounding(&self, time: f32) -> KeyframeRange {
+        // This unwrap is safe for partial_cmp as long as NaN is not one of the comparison values
+        let index = match self.frames.binary_search_by(|frame| frame.time.partial_cmp(&time).unwrap()) {
+            Ok(i) | Err(i) => i,
+        };
+        let left_index = index.saturating_sub(1);
+        let right_index = min(index, self.frames.len() - 1);
+
+        if left_index == 0 {
+            KeyframeRange::Before(&self.frames[left_index])
+        } else if right_index == self.frames.len() - 1 {
+            KeyframeRange::After(&self.frames[right_index])
+        } else {
+            KeyframeRange::Between(&self.frames[left_index], &self.frames[right_index])
+        }
+    }
+}
+
 #[derive(Debug)]
 struct Frame<T> {
     time: f32,
     value: T,
-}
-
-#[derive(Debug)]
-enum Interpolation {
-    Linear,
-    Step,
-    CubicSpline,
 }
 
 impl GltfFile {
@@ -116,17 +180,17 @@ impl GltfFile {
         for anim_data in document.animations() {
             let anim_name = anim_data.name();
             for channel in anim_data.channels() {
-                let node_id = channel.target().node().index();
                 let reader = channel.reader(|buffer| Some(&buffers[buffer.index()]));
                 let interpolation = match channel.sampler().interpolation() {
                     gltf::animation::Interpolation::Linear => Interpolation::Linear,
                     gltf::animation::Interpolation::Step => Interpolation::Step,
-                    gltf::animation::Interpolation::CubicSpline => Interpolation::CubicSpline,
+                    //TODO - In order to support cubicspline interpolation, we need to change how we're storing the data
+                    // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#animation-samplerinterpolation
+                    gltf::animation::Interpolation::CubicSpline => unimplemented!("Cubicspline interpolation is not supported!"),
                 };
-                //TODO - add in own interpolation enum and use that instead of strings
 
                 // Create Animation
-                let anims = animations.entry(node_id).or_insert_with(|| Vec::new());
+                let anims = animations.entry(NodeId::from_gltf(&channel.target().node())).or_insert_with(|| Vec::new());
                 let anim = anims.iter_mut().find(|a: &&mut Animation| a.name.as_deref() == anim_name);
                 let mut anim = match anim {
                     Some(anim) => anim,
