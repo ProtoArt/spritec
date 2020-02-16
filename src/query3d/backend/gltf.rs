@@ -1,6 +1,6 @@
 // JAMES ADDED - to be moved to separate file afterwards
 use gltf::animation::util::ReadOutputs::*;
-use crate::math::{Vec3, Quaternion, Mat4, Decompose};
+use crate::math::{Vec3, Quaternion, Mat3, Mat4, Decompose};
 use interpolation;
 
 
@@ -50,15 +50,31 @@ enum Interpolation {
     Step,
 }
 
-fn interpolate(interp: &Interpolation, t: f32, prev_keyframe: Vec3, next_keyframe: Vec3) -> Vec3 {
-    match interp {
-        Linear => {
-            let [x, y, z] = interpolation::lerp(&prev_keyframe.into_array(), &next_keyframe.into_array(), &t);
-            Vec3::new(x, y, z)
-        },
-        Step => prev_keyframe,
+trait Interpolate {
+    fn interpolate(interp: &Interpolation, t: f32, prev_keyframe: Self, next_keyframe: Self) -> Self;
+}
+
+impl Interpolate for Vec3 {
+    fn interpolate(interp: &Interpolation, t: f32, prev_keyframe: Vec3, next_keyframe: Vec3) -> Vec3 {
+        match interp {
+            Linear => {
+                let [x, y, z] = interpolation::lerp(&prev_keyframe.into_array(), &next_keyframe.into_array(), &t);
+                Vec3::new(x, y, z)
+            },
+            Step => prev_keyframe,
+        }
     }
 }
+
+impl Interpolate for Quaternion {
+    fn interpolate(interp: &Interpolation, t: f32, prev_keyframe: Quaternion, next_keyframe: Quaternion) -> Quaternion {
+        match interp {
+            Linear => Quaternion::slerp(prev_keyframe, next_keyframe, t),
+            Step => prev_keyframe,
+        }
+    }
+}
+
 
 impl Animation {
     // with_name takes Option instead of String to include with Animations without names
@@ -73,6 +89,35 @@ impl Animation {
     // replacing the different types of transforms if the keyframes for that transform exist
     fn apply_at(&self, transform_matrix: &Mat4, time: f32) -> Mat4 {
         let mut matrix_transforms = transform_matrix.decompose();
+
+        if let Some(scale) = &self.scale_keyframes {
+            let new_scale = match scale.surrounding(time) {
+                KeyframeRange::Before(kf) => kf.value,
+                KeyframeRange::After(kf) => kf.value,
+                KeyframeRange::Between(kf1, kf2) => {
+                    let start = kf1.time;
+                    let end = kf2.time;
+                    // The time factor that gives weight to the start or end frame during interpolation
+                    let factor = (time - start) / (end - start);
+                    Vec3::interpolate(&scale.interpolation, factor, kf1.value, kf2.value)
+                },
+            };
+            matrix_transforms.scale = new_scale;
+        }
+        if let Some(rot) = &self.rotation_keyframes {
+            let new_rot = match rot.surrounding(time) {
+                KeyframeRange::Before(kf) => kf.value,
+                KeyframeRange::After(kf) => kf.value,
+                KeyframeRange::Between(kf1, kf2) => {
+                    let start = kf1.time;
+                    let end = kf2.time;
+                    // The time factor that gives weight to the start or end frame during interpolation
+                    let factor = (time - start) / (end - start);
+                    Quaternion::interpolate(&rot.interpolation, factor, kf1.value, kf2.value)
+                },
+            };
+            matrix_transforms.rotation = Mat3::from(new_rot);
+        }
         if let Some(trans) = &self.translation_keyframes {
             let new_trans = match trans.surrounding(time) {
                 KeyframeRange::Before(kf) => kf.value,
@@ -82,7 +127,7 @@ impl Animation {
                     let end = kf2.time;
                     // The time factor that gives weight to the start or end frame during interpolation
                     let factor = (time - start) / (end - start);
-                    interpolate(&trans.interpolation, factor, kf1.value, kf2.value)
+                    Vec3::interpolate(&trans.interpolation, factor, kf1.value, kf2.value)
                 },
             };
             matrix_transforms.translation = new_trans;
@@ -92,13 +137,13 @@ impl Animation {
     }
 }
 
-enum KeyframeRange<'a> {
+enum KeyframeRange<'a, T> {
     /// The keyframe before the specified time
-    Before(&'a Frame<Vec3>),
+    Before(&'a Frame<T>),
     /// The keyframes that immediately surround the specified time
-    Between(&'a Frame<Vec3>, &'a Frame<Vec3>),
+    Between(&'a Frame<T>, &'a Frame<T>),
     /// The keyframe after the specified time
-    After(&'a Frame<Vec3>),
+    After(&'a Frame<T>),
 }
 
 #[derive(Debug)]
@@ -107,11 +152,11 @@ struct Keyframes<T> {
     interpolation: Interpolation,
 }
 
-impl Keyframes<Vec3> {
+impl<T> Keyframes<T> {
     // Retrieves the keyframes immediately surrounding the given time
     // A time smaller than that of all keyframes will get back the first keyframe twice
     // A time larger than all keyframes gets the last keyframe twice
-    fn surrounding(&self, time: f32) -> KeyframeRange {
+    fn surrounding(&self, time: f32) -> KeyframeRange<T> {
         // This unwrap is safe for partial_cmp as long as NaN is not one of the comparison values
         let index = match self.frames.binary_search_by(|frame| frame.time.partial_cmp(&time).unwrap()) {
             Ok(i) | Err(i) => i,
