@@ -125,7 +125,7 @@ impl QueryBackend for GltfFile {
                                 Arc::new(JointMatrixTexture::new(display, joint_matrices)?)
                             },
 
-                            None => match &default_joint_matrix_texture {
+                            None => match default_joint_matrix_texture {
                                 Some(tex) => tex.clone(),
                                 None => {
                                     let tex = Arc::new(JointMatrixTexture::identity(display)?);
