@@ -72,10 +72,15 @@ impl ShaderGeometry {
             },
 
             (None, None) => {
-                // The default behaviour for these fields is 4 random joints (e.g. joint 0) at
-                // weight 0.0. This works because 0.0 == 0.
+                // This only works because we use JointMatrixTexture::identity as the default value
+                // for joint_matrices. That means that an index of 0 in joint_influences will
+                // always give you the identity matrix. By setting the weights to
+                // (1.0, 0.0, 0.0, 0.0), we ensure that a single identity matrix will be multipled
+                // in the shader.
                 let joint_influences = Cow::Owned(vec![[0; 4]; positions.len()]);
-                let joint_weights = Cow::Owned(vec![Vec4::zero(); positions.len()]);
+                let default_weights = Vec4 {x: 1.0, y: 0.0, z: 0.0, w: 0.0};
+                let joint_weights = Cow::Owned(vec![default_weights; positions.len()]);
+
                 (joint_influences, joint_weights)
             },
 
