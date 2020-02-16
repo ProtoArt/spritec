@@ -1,4 +1,6 @@
 # https://aka.ms/yaml
+trigger:
+- master
 
 strategy:
   matrix:
