@@ -44,7 +44,12 @@ impl Skin {
     /// Computes the joint matrices using the skin data
     ///
     /// See: https://github.com/KhronosGroup/glTF-Tutorials/blob/89bb8706ec3037a38e5ed1b77b5e6a4c3038db3d/gltfTutorial/gltfTutorial_020_Skins.md#the-joint-matrices
-    pub fn joint_matrices<'a>(&'a self, node_world_transforms: &'a NodeWorldTransforms) -> impl Iterator<Item=Mat4> + 'a {
+    pub fn joint_matrices<'a>(
+        &'a self,
+        model_transform: Mat4,
+        node_world_transforms: &'a NodeWorldTransforms,
+    ) -> impl Iterator<Item=Mat4> + 'a {
+        let inverse_model_transform = model_transform.inverted();
         self.joints.iter().map(move |joint| {
             let &Joint {node_id, inverse_bind_matrix} = joint;
             // the world transform of the joint
@@ -55,12 +60,7 @@ impl Skin {
             //   globalTransformOfNodeThatTheMeshIsAttachedTo^-1 *
             //   globalTransformOfJointNode(j) *
             //   inverseBindMatrixForJoint(j);
-            //
-            // We don't need to multiply by globalTransformOfNodeThatTheMeshIsAttachedTo^-1
-            // because our shaders do not multiply by the model matrix if skinning data is
-            // supplied. The reference includes that matrix only because they multiply by modelView
-            // in their shaders.
-            joint_transform * inverse_bind_matrix
+            inverse_model_transform * joint_transform * inverse_bind_matrix
         })
     }
 }

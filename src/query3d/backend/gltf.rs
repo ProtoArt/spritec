@@ -114,7 +114,7 @@ impl QueryBackend for GltfFile {
                     if let Some((mesh, skin)) = node.mesh() {
                         let joint_matrices_tex = Arc::new(match skin {
                             Some(skin) => {
-                                let joint_matrices = skin.joint_matrices(&node_world_transforms);
+                                let joint_matrices = skin.joint_matrices(model_transform, &node_world_transforms);
                                 //TODO: Find a way to cache this texture so we don't have to upload it over and over again
                                 JointMatrixTexture::new(display, joint_matrices)?
                             },
@@ -122,6 +122,7 @@ impl QueryBackend for GltfFile {
                             None => {
                                 // Default to a single identity matrix (makes it so that even if
                                 // we accidentally index into the texture, we won't get UB)
+                                //TODO: Find a way to cache this texture so we don't have to upload it over and over again
                                 JointMatrixTexture::identity(display)?
                             },
                         });
