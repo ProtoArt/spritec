@@ -5,6 +5,7 @@ use std::sync::Arc;
 use std::path::{Path, PathBuf};
 
 use thiserror::Error;
+use glium::texture::TextureCreationError;
 
 use crate::renderer::{Display, ShaderGeometry, ShaderGeometryError, Camera, Light};
 
@@ -14,6 +15,8 @@ use super::query::{GeometryQuery, CameraQuery, LightQuery};
 pub enum QueryError {
     #[error(transparent)]
     ShaderGeometryError(#[from] ShaderGeometryError),
+    #[error(transparent)]
+    TextureCreationError(#[from] TextureCreationError),
 
     #[error("Could not find scene named `{name}` in model file")]
     UnknownScene {name: String},

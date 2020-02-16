@@ -12,7 +12,7 @@ use thiserror::Error;
 
 use crate::math::{Vec3, Vec4, Mat4};
 use crate::scene::{Geometry, Material};
-use crate::renderer::Display;
+use crate::renderer::{Display, JointMatrixTexture};
 
 #[derive(Debug, Error)]
 #[error(transparent)]
@@ -29,6 +29,8 @@ pub struct ShaderGeometry {
     pub normals: VertexBuffer<Vec3>,
     pub joint_influences: VertexBuffer<[u32; 4]>,
     pub joint_weights: VertexBuffer<Vec4>,
+
+    pub joint_matrices: Arc<JointMatrixTexture>,
     pub material: Arc<Material>,
     /// The world transform of this geometry
     pub model_transform: Mat4,
@@ -38,6 +40,7 @@ impl ShaderGeometry {
     pub fn new(
         display: &Display,
         geo: &Geometry,
+        joint_matrices: &Arc<JointMatrixTexture>,
         model_transform: Mat4,
     ) -> Result<Self, ShaderGeometryError> {
         const POSITION_ATTR_TYPE: AttributeType = AttributeType::F32F32F32;
@@ -102,6 +105,7 @@ impl ShaderGeometry {
             joint_weights: unsafe { VertexBuffer::new_raw(display, joint_weights.as_ref(),
                 joint_weights_bindings, JOINT_WEIGHTS_ATTR_TYPE.get_size_bytes())? },
 
+            joint_matrices: joint_matrices.clone(),
             material: material.clone(),
             model_transform,
         })
