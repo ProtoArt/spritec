@@ -82,18 +82,31 @@ impl<'a> Renderer<'a> {
             ..Default::default()
         };
 
-        let ShaderGeometry {indices, positions, normals, joint_influences, joint_weights, material, model_transform} = geometry;
+        let ShaderGeometry {
+            indices,
+            positions,
+            normals,
+            joint_influences,
+            joint_weights,
+            joint_matrices,
+            material,
+            model_transform,
+        } = geometry;
+
         let model_transform = *model_transform;
         let mvp = projection * view * model_transform;
         let model_inverse_transpose = model_transform.inverted().transposed();
+
+        let material = &*material;
 
         let cel_uniforms = shader::cel::Cel::from(CelUniforms {
             mvp,
             model_transform,
             model_inverse_transpose,
+            joint_matrices,
             lights,
             ambient_light,
-            material: &*material,
+            material,
         });
 
         self.target.draw((positions, normals, joint_influences, joint_weights), indices,

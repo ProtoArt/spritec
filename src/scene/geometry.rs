@@ -16,7 +16,7 @@ pub struct Geometry {
     /// The normal of each vertex of the geometry
     pub normals: Vec<Vec3>,
     /// The joint indexes (up to 4) that affect each vertex of the geometry.
-    /// These indexes map into the `joints` array in `skin`.
+    /// These indexes map into the `joints` array in the `Skin` data applied to this geometry.
     ///
     /// If there are less than 4, this array will still contain valid indexes. The corresponding
     /// weights will be 0.0.

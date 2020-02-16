@@ -5,7 +5,7 @@ use rayon::iter::{ParallelIterator, IntoParallelIterator};
 
 use crate::math::Mat4;
 use crate::scene::{Mesh, Material};
-use crate::renderer::{Display, ShaderGeometry, Camera, Light};
+use crate::renderer::{Display, ShaderGeometry, JointMatrixTexture, Camera, Light};
 use crate::query3d::{GeometryQuery, GeometryFilter, AnimationQuery, CameraQuery, LightQuery};
 
 use super::{QueryBackend, QueryError};
@@ -57,9 +57,13 @@ impl QueryBackend for ObjFile {
             Scene {name: None} => match &self.scene_geometry {
                 Some(scene_geometry) => Ok(scene_geometry.clone()),
                 None => {
+                    // Default to a single identity matrix (makes it so that even if
+                    // we accidentally index into the texture, we won't get UB)
+                    //TODO: Find a way to cache this texture so we don't have to upload it over and over again
+                    let joint_matrices_tex = Arc::new(JointMatrixTexture::identity(display)?);
                     let scene_geometry = Arc::new(self.mesh.geometry.iter()
                         .map(|geo| {
-                            ShaderGeometry::new(display, geo, Mat4::identity()).map(Arc::new)
+                            ShaderGeometry::new(display, geo, &joint_matrices_tex, Mat4::identity()).map(Arc::new)
                         })
                         .collect::<Result<Vec<_>, _>>()?);
 

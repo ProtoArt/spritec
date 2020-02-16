@@ -3,7 +3,7 @@ use std::path::Path;
 use std::collections::HashMap;
 
 use crate::scene::{Scene, NodeTree, NodeId, Node, Mesh, Skin, Material, CameraType, LightType};
-use crate::renderer::{Display, ShaderGeometry, Camera, Light};
+use crate::renderer::{Display, ShaderGeometry, JointMatrixTexture, Camera, Light};
 use crate::query3d::{GeometryQuery, GeometryFilter, CameraQuery, LightQuery};
 
 use super::{QueryBackend, QueryError};
@@ -105,14 +105,35 @@ impl QueryBackend for GltfFile {
 
             None => {
                 let scene = &self.scenes[scene_index];
+                let node_world_transforms = self.nodes.world_transforms(&scene.roots);
 
                 let mut scene_geo = Vec::new();
                 for (parent_trans, node) in scene.roots.iter().flat_map(|&root| self.nodes.traverse(root)) {
                     let model_transform = parent_trans * node.transform;
 
                     if let Some((mesh, skin)) = node.mesh() {
+                        let joint_matrices_tex = Arc::new(match skin {
+                            Some(skin) => {
+                                let joint_matrices = skin.joint_matrices(&node_world_transforms);
+                                //TODO: Find a way to cache this texture so we don't have to upload it over and over again
+                                JointMatrixTexture::new(display, joint_matrices)?
+                            },
+
+                            None => {
+                                // Default to a single identity matrix (makes it so that even if
+                                // we accidentally index into the texture, we won't get UB)
+                                JointMatrixTexture::identity(display)?
+                            },
+                        });
+
                         for geo in &mesh.geometry {
-                            let geo = ShaderGeometry::new(display, geo, model_transform)?;
+                            let geo = ShaderGeometry::new(
+                                display,
+                                geo,
+                                &joint_matrices_tex,
+                                model_transform,
+                            )?;
+
                             scene_geo.push(Arc::new(geo));
                         }
                     }
