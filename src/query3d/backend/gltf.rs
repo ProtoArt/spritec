@@ -14,6 +14,8 @@ pub struct GltfFile {
     default_scene: usize,
     nodes: Arc<NodeTree>,
     scenes: Vec<Arc<Scene>>,
+    /// Cache the default joint matrix texture so we don't upload it over and over again
+    default_joint_matrix_texture: Option<Arc<JointMatrixTexture>>,
     /// Cache the geometry of the entire scene, referenced by scene index
     scene_shader_geometry: HashMap<usize, Arc<Vec<Arc<ShaderGeometry>>>>,
     /// Cache all of the lights in an entire scene, referenced by scene index
@@ -68,6 +70,7 @@ impl GltfFile {
             default_scene,
             nodes,
             scenes,
+            default_joint_matrix_texture: None,
             scene_shader_geometry: HashMap::new(),
             scene_lights: HashMap::new(),
             scene_first_camera: None,
@@ -104,28 +107,33 @@ impl QueryBackend for GltfFile {
             Some(scene_geo) => Ok(scene_geo.clone()),
 
             None => {
-                let scene = &self.scenes[scene_index];
-                let node_world_transforms = self.nodes.world_transforms(&scene.roots);
+                // Need to split the borrow of self so we don't accidentally get two mut refs
+                let Self {nodes, scenes, default_joint_matrix_texture, ..} = self;
+
+                let scene = &scenes[scene_index];
+                let node_world_transforms = nodes.world_transforms(&scene.roots);
 
                 let mut scene_geo = Vec::new();
-                for (parent_trans, node) in scene.roots.iter().flat_map(|&root| self.nodes.traverse(root)) {
+                for (parent_trans, node) in scene.roots.iter().flat_map(|&root| nodes.traverse(root)) {
                     let model_transform = parent_trans * node.transform;
 
                     if let Some((mesh, skin)) = node.mesh() {
-                        let joint_matrices_tex = Arc::new(match skin {
+                        let joint_matrices_tex = match skin {
                             Some(skin) => {
                                 let joint_matrices = skin.joint_matrices(model_transform, &node_world_transforms);
                                 //TODO: Find a way to cache this texture so we don't have to upload it over and over again
-                                JointMatrixTexture::new(display, joint_matrices)?
+                                Arc::new(JointMatrixTexture::new(display, joint_matrices)?)
                             },
 
-                            None => {
-                                // Default to a single identity matrix (makes it so that even if
-                                // we accidentally index into the texture, we won't get UB)
-                                //TODO: Find a way to cache this texture so we don't have to upload it over and over again
-                                JointMatrixTexture::identity(display)?
+                            None => match &default_joint_matrix_texture {
+                                Some(tex) => tex.clone(),
+                                None => {
+                                    let tex = Arc::new(JointMatrixTexture::identity(display)?);
+                                    *default_joint_matrix_texture = Some(tex.clone());
+                                    tex
+                                },
                             },
-                        });
+                        };
 
                         for geo in &mesh.geometry {
                             let geo = ShaderGeometry::new(
