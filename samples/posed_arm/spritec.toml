@@ -1,0 +1,11 @@
+# Configuration file for generating images with spritec
+#
+# Paths in this file are relative to the location of this configuration file
+
+[[poses]]
+model = "posed_arm.gltf"
+path = "../../posed_arm.png"
+width = 32
+height = 32
+scale = 8
+camera = { name = "front" }
