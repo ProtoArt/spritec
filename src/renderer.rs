@@ -1,5 +1,6 @@
 mod thread_render_context;
 mod shader_geometry;
+mod joint_matrices_texture;
 mod render_node;
 mod rendered_image;
 mod job;
@@ -12,6 +13,7 @@ mod imageops;
 
 pub use thread_render_context::*;
 pub use shader_geometry::*;
+pub use joint_matrices_texture::*;
 pub use render_node::*;
 pub use rendered_image::*;
 pub use job::*;

@@ -2,7 +2,7 @@ use std::iter;
 
 use crate::math::Mat4;
 
-use super::{NodeId};
+use super::{NodeId, NodeWorldTransforms};
 
 #[derive(Debug, Clone)]
 pub struct Joint {
@@ -39,5 +39,28 @@ impl Skin {
         };
 
         Self {joints}
+    }
+
+    /// Computes the joint matrices using the skin data
+    ///
+    /// See: https://github.com/KhronosGroup/glTF-Tutorials/blob/89bb8706ec3037a38e5ed1b77b5e6a4c3038db3d/gltfTutorial/gltfTutorial_020_Skins.md#the-joint-matrices
+    pub fn joint_matrices<'a>(&'a self, node_world_transforms: &'a NodeWorldTransforms) -> impl Iterator<Item=Mat4> + 'a {
+        self.joints.iter().map(move |joint| {
+            let &Joint {node_id, inverse_bind_matrix} = joint;
+            // the world transform of the joint
+            let joint_transform = node_world_transforms.get(node_id);
+
+            // From the reference above, the formula is:
+            // jointMatrix(j) =
+            //   globalTransformOfNodeThatTheMeshIsAttachedTo^-1 *
+            //   globalTransformOfJointNode(j) *
+            //   inverseBindMatrixForJoint(j);
+            //
+            // We don't need to multiply by globalTransformOfNodeThatTheMeshIsAttachedTo^-1
+            // because our shaders do not multiply by the model matrix if skinning data is
+            // supplied. The reference includes that matrix only because they multiply by modelView
+            // in their shaders.
+            joint_transform * inverse_bind_matrix
+        })
     }
 }

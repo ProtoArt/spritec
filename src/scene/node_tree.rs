@@ -14,6 +14,18 @@ impl NodeId {
     }
 }
 
+/// The computed world transforms of all nodes
+#[derive(Debug, Clone)]
+pub struct NodeWorldTransforms(Vec<Mat4>);
+
+impl NodeWorldTransforms {
+    pub fn get(&self, id: NodeId) -> Mat4 {
+        let NodeWorldTransforms(node_world_transforms) = self;
+        let NodeId(index) = id;
+        node_world_transforms[index]
+    }
+}
+
 #[derive(Debug, Clone)]
 struct NodeTreeEntry {
     /// The data for this node
@@ -80,6 +92,28 @@ impl NodeTree {
     /// Iterate over the child nodes of the given node
     pub fn children(&self, node_id: NodeId) -> impl Iterator<Item=&Node> {
         self.entry(node_id).children.iter().map(move |&id| self.get(id))
+    }
+
+    /// Returns the computed world transforms of every node
+    ///
+    /// This assumes that the children of each provided root are unique.
+    ///
+    /// A world transform will be returned for *all* nodes in the node tree. If a particular node
+    /// is not traversed through the provided roots, its transform will be assumed to be the
+    /// identity matrix.
+    pub fn world_transforms(&self, roots: &[NodeId]) -> NodeWorldTransforms {
+        let mut node_world_transforms = vec![Mat4::identity(); self.nodes.len()];
+
+        for &root in roots {
+            for (parent_trans, node) in self.traverse(root) {
+                let NodeId(index) = node.id;
+
+                let world_transform = parent_trans * node.transform;
+                node_world_transforms[index] = world_transform;
+            }
+        }
+
+        NodeWorldTransforms(node_world_transforms)
     }
 
     /// Traverse a node hierarchy, treating the given node as a root node, yielding each node and
