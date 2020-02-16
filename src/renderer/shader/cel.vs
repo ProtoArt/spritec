@@ -27,10 +27,10 @@ out vec3 v_position;
 
 mat4 joint_matrix(uint i) {
     return mat4(
-        texelFetch(joint_matrices, ivec2(0, i), 0),
-        texelFetch(joint_matrices, ivec2(1, i), 0),
-        texelFetch(joint_matrices, ivec2(2, i), 0),
-        texelFetch(joint_matrices, ivec2(3, i), 0)
+        texelFetch(joint_matrices, ivec2(i, 0), 0),
+        texelFetch(joint_matrices, ivec2(i, 1), 0),
+        texelFetch(joint_matrices, ivec2(i, 2), 0),
+        texelFetch(joint_matrices, ivec2(i, 3), 0)
     );
 }
 
