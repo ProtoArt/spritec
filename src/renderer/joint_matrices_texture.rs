@@ -1,7 +1,7 @@
 use std::iter::once;
 
 use glium::Texture2d;
-use glium::texture::{MipmapsOption, TextureCreationError};
+use glium::texture::{UncompressedFloatFormat, MipmapsOption, TextureCreationError};
 
 use crate::math::Mat4;
 use crate::renderer::Display;
@@ -41,7 +41,7 @@ impl JointMatrixTexture {
 
         // Create the data for the texture with 4 rows
         let tex_data = vec![col0, col1, col2, col3];
-        let tex = Texture2d::with_mipmaps(display, tex_data, MipmapsOption::NoMipmap)?;
+        let tex = Texture2d::with_format(display, tex_data, UncompressedFloatFormat::F32F32F32F32, MipmapsOption::NoMipmap)?;
 
         Ok(JointMatrixTexture(tex))
     }
