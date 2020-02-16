@@ -66,6 +66,7 @@ use super::{
 #[error(transparent)]
 pub enum ContextCreationError {
     CreationError(#[from] glium::glutin::CreationError),
+    DisplayCreationError(#[from] glium::backend::glutin::DisplayCreationError),
     IncompatibleOpenGl(#[from] glium::IncompatibleOpenGl),
     ProgramCreationError(#[from] glium::ProgramCreationError),
 }
@@ -108,7 +109,13 @@ pub struct RenderId(usize);
 
 // Having this alias allows us to change the Display struct later without changing the type name
 // all throughout our code
+//
+// On Windows headless causes issues when compiled with electron, so we use a
+// hidden display instead (see build_display).
+#[cfg(not(windows))]
 pub type Display = glium::backend::glutin::headless::Headless;
+#[cfg(windows)]
+pub type Display = glium::backend::glutin::Display;
 
 /// A render context that is only allowed to be used on a single thread. Only *one* instance of
 /// this struct should be created per thread.
@@ -130,19 +137,14 @@ impl ThreadRenderContext {
     ///
     /// No other OpenGL context should be made current on this thread while this value exists.
     pub fn new() -> Result<Self, ContextCreationError> {
-        // This size does not matter because we do not render to the screen
-        let size = PhysicalSize {
-            width: 500,
-            height: 500,
-        };
-
         let event_loop = EventLoop::new();
 
-        let ctx = ContextBuilder::new()
-            // A 24-bit depth buffer is pretty typical for most OpenGL applications
-            .with_depth_buffer(24)
-            .build_headless(&event_loop, size)?;
-        let display = Display::new(ctx)?;
+        let display = Self::build_display(
+            ContextBuilder::new().with_depth_buffer(24),
+            &event_loop,
+            // Size does not matter because we do not render to the screen
+            PhysicalSize {width: 2, height: 2},
+        )?;
 
         let cel_shader = Program::from_source(
             &display,
@@ -167,6 +169,33 @@ impl ThreadRenderContext {
             },
             render_data: Vec::new(),
         })
+    }
+
+    /// Builds a headless display on non-Windows platforms. This is the
+    /// preferred method when headless is supported.
+    #[cfg(not(windows))]
+    fn build_display(
+        ctx_builder: ContextBuilder<glium::glutin::NotCurrent>,
+        event_loop: &EventLoop<()>,
+        size: PhysicalSize<u32>,
+    ) -> Result<Display, ContextCreationError> {
+        let ctx = ctx_builder.build_headless(&event_loop, size)?;
+        Ok(Display::new(ctx)?)
+    }
+
+    /// On Windows we build a hidden window instead of a headless display due
+    /// to broken behaviour when headless is compiled by neon for electron.
+    #[cfg(windows)]
+    fn build_display(
+        ctx_builder: ContextBuilder<glium::glutin::NotCurrent>,
+        event_loop: &EventLoop<()>,
+        size: PhysicalSize<u32>,
+    ) -> Result<Display, ContextCreationError> {
+        let win_builder = glium::glutin::window::WindowBuilder::new()
+            .with_visible(false)
+            .with_inner_size(size);
+
+        Ok(Display::new(win_builder, ctx_builder, &event_loop)?)
     }
 
     /// Returns a new renderer that can be used for drawing
