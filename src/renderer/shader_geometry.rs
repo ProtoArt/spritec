@@ -87,6 +87,29 @@ impl ShaderGeometry {
             _ => unreachable!("Did not expect geometry to only have either joint influences or joint weights"),
         };
 
+        //let tex: Vec<Vec<(f32, f32, f32, f32)>> = unsafe { joint_matrices.as_texture().unchecked_read() };
+        //println!("after: {:?}", tex);
+        //let into_array = |(x, y, z, w)| [x, y, z, w];
+        //let joint_matrix = |i| Mat4::from_col_arrays([
+        //    into_array(tex[0][i]),
+        //    into_array(tex[1][i]),
+        //    into_array(tex[2][i]),
+        //    into_array(tex[3][i]),
+        //]);
+        //for (influences, weights) in joint_influences.iter().zip(joint_weights.iter()) {
+        //    println!("joint_influences = {:?}", influences);
+        //    println!("joint_weights = {:?}", weights);
+        //    println!("joint_matrix(joint_influences[0]) = \n{}", joint_matrix(influences[0] as usize));
+        //    println!("joint_matrix(joint_influences[1]) = \n{}", joint_matrix(influences[1] as usize));
+        //    let skin_mat =
+        //        joint_matrix(influences[0] as usize) * weights.x +
+        //        joint_matrix(influences[1] as usize) * weights.y +
+        //        joint_matrix(influences[2] as usize) * weights.z +
+        //        joint_matrix(influences[3] as usize) * weights.w;
+        //    println!("skin_mat =\n{}", skin_mat);
+        //    println!("\n");
+        //}
+
         // NOTE: By using `immutable`, we are guranteeing that the data in these buffers will
         //   *never* change.
         // See: https://docs.rs/glium/0.26.0/glium/buffer/enum.BufferMode.html
