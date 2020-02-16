@@ -44,6 +44,33 @@ void main() {
         joint_weights.z * joint_matrix(joint_influences.z) +
         joint_weights.w * joint_matrix(joint_influences.w);
 
+    // skin_mat = mat4(
+    // vec4(
+    //    0.70710665,
+    //    -0.70710677,
+    //    -0.00000009500605,
+    //    0.0
+    // ),
+    // vec4(
+    //    0.70710677,
+    //    0.70710665,
+    //    -0.000000039352802,
+    //    0.0
+    // ),
+    // vec4(
+    //    0.00000009500606,
+    //    -0.0000000393528,
+    //    1.0,
+    //    0.0
+    // ),
+    // vec4(
+    //    0.0,
+    //    0.0,
+    //    0.0,
+    //    1.0
+    // )
+    // );
+
     // We guarantee that if no skinning information is available, skin_mat
     // will be the identity matirx, thus ensuring that only model_transform gets
     // multiplied. If there is skinning information, the joint matrices have
