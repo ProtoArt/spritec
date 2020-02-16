@@ -114,12 +114,13 @@ impl<'a> Renderer<'a> {
 
         let outline_uniforms = shader::outline::Outline::from(OutlineUniforms {
             mvp,
+            joint_matrices,
             outline_thickness: outline.thickness,
             outline_color: outline.color,
         });
 
-        self.target.draw((positions, normals), indices, &self.shaders.outline,
-            &outline_uniforms, &outline_params)?;
+        self.target.draw((positions, normals, joint_influences, joint_weights), indices,
+            &self.shaders.outline, &outline_uniforms, &outline_params)?;
 
         Ok(())
     }
