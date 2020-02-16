@@ -9,6 +9,11 @@ authors = [
 ]
 edition = "2018"
 
+[workspace]
+members = [
+  "spritec_binding/native"
+]
+
 [dependencies]
 glium = "0.26"
 tobj = "0.1"

@@ -4,15 +4,20 @@ trigger:
 
 strategy:
   matrix:
+    # Windows require `--release` flag to build neon
+    # More info: https://github.com/neon-bindings/neon/issues/463
     windows-stable:
       imageName: 'windows-latest'
       rustup_toolchain: stable
+      build_args: --release
     windows-beta:
       imageName: 'windows-latest'
       rustup_toolchain: beta
+      build_args: --release
     windows-nightly:
       imageName: 'windows-latest'
       rustup_toolchain: nightly
+      build_args: --release
 
     mac-stable:
       imageName: 'macos-latest'
@@ -43,19 +48,19 @@ steps:
     rustup_toolchain: $(rustup_toolchain)
 - script: |
     rustc --version --verbose
-    cargo build --verbose --all
-    cargo test --verbose --all --no-run
+    cargo build --verbose --all $(build_args)
+    cargo test --verbose --all --no-run $(build_args)
   displayName: build
 
 - script: |
     rustc --version --verbose
-    cargo clippy --all-targets --all-features --all
+    cargo clippy --all-targets --all-features --all $(build_args)
   displayName: clippy
 
 - script: |
-    cargo test --verbose --all
+    cargo test --verbose --all $(build_args)
   displayName: test
 
 - script: |
-    cargo doc --no-deps --verbose --all
+    cargo doc --no-deps --verbose --all $(build_args)
   displayName: docs
