@@ -58,5 +58,5 @@ void main() {
     v_position = vec3(model_transform * skin_mat * vec4(position, 1.0));
 
     // Transforms the position to screen space
-    gl_Position = mvp * vec4(position, 1.0);
+    gl_Position = mvp * skin_mat * vec4(position, 1.0);
 }
