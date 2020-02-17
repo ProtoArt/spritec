@@ -384,10 +384,10 @@ impl QueryBackend for GltfFile {
 
             _ => {
                 // Need to split the borrow of self so we don't accidentally get two mut refs
-                let Self {nodes, scenes, default_joint_matrix_texture, ..} = self;
+                let Self {scenes, default_joint_matrix_texture, ..} = self;
 
                 let scene = &scenes[scene_index];
-                let node_world_transforms = nodes.world_transforms(&scene.roots);
+                let node_world_transforms = node_tree.world_transforms(&scene.roots);
 
                 let mut scene_geo = Vec::new();
                 for (parent_trans, node) in scene.roots.iter().flat_map(|&root| node_tree.traverse(root)) {
