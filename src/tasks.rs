@@ -5,6 +5,7 @@ pub use file_cache::*;
 use std::sync::{Arc, Mutex};
 use std::path::{Path, PathBuf};
 use std::num::NonZeroU32;
+use std::cmp::max;
 
 use interpolation::lerp;
 use thiserror::Error;
@@ -157,9 +158,14 @@ pub fn generate_spritesheet_task(
                 let file = file_cache.open_gltf(&gltf.resolve(base_dir))?;
                 let camera = preset_to_camera(&camera, &file);
 
+                //           | step       => weight
+                // steps = 1 | 0          => 0.0
+                // steps = 2 | 0, 1       => 0.0, 1.0
+                // steps = 3 | 0, 1, 2    => 0.0, 0.5, 1.0
+                // steps = 4 | 0, 1, 2, 3 => 0.0, 0.33, 0.66, 1.0
                 let steps = steps.get();
                 for step in 0..steps {
-                    let weight = step as f32 / (steps - 1) as f32;
+                    let weight = step as f32 / max(steps - 1, 1) as f32;
 
                     nodes.push(RenderNode::RenderedImage(RenderedImage {
                         size: frame_size,
