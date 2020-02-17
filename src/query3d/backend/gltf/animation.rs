@@ -46,7 +46,7 @@ pub struct Animation {
 }
 
 impl Animation {
-    // with_name takes Option instead of String to include with Animations without names
+    /// Creates a new animation with the given (optional) name
     pub fn with_name(name: Option<&str>) -> Self {
         Self {
             name: name.map(String::from),
@@ -54,7 +54,10 @@ impl Animation {
         }
     }
 
-    pub fn add_keyframes(
+    /// Sets the keyframes from the given glTF data.
+    ///
+    /// Panics if this operation would overwrite any of the existing keyframes.
+    pub fn set_keyframes(
         &mut self,
         channel: gltf::animation::Channel,
         buffers: &[gltf::buffer::Data],
@@ -94,25 +97,25 @@ impl Animation {
         };
     }
 
-    /// Application of animation data by decomposing the current node's transformation matrix and
-    /// replacing the different types of transforms if the keyframes for that transform exist
-    pub fn apply_at(&self, transform_matrix: &Mat4, pos: &AnimationPosition) -> Mat4 {
-        let mut matrix_transforms = transform_matrix.decompose();
+    /// Applies the animation to the given transform by finding the value of its components at the
+    /// given position.
+    pub fn apply_at(&self, transform: &Mat4, pos: &AnimationPosition) -> Mat4 {
+        let mut components = transform.decompose();
 
         if let Some(keyframes) = &self.scale {
             let new_value = keyframes.value_at(pos);
-            matrix_transforms.scale = new_value;
+            components.scale = new_value;
         }
         if let Some(keyframes) = &self.rotation {
             let new_value = keyframes.value_at(pos);
-            matrix_transforms.rotation = Mat3::from(new_value);
+            components.rotation = Mat3::from(new_value);
         }
         if let Some(keyframes) = &self.translation {
             let new_value = keyframes.value_at(pos);
-            matrix_transforms.translation = new_value;
+            components.translation = new_value;
         }
 
-        Mat4::from(matrix_transforms)
+        Mat4::from(components)
     }
 }
 
@@ -137,7 +140,7 @@ pub fn from_animations<'a>(
                 None => anim_set.insert(Animation::with_name(anim_name)),
             };
 
-            anim.add_keyframes(channel, buffers, interpolation);
+            anim.set_keyframes(channel, buffers, interpolation);
         }
     }
 
