@@ -1,8 +1,11 @@
 use std::cmp::min;
 
-use crate::math::Milliseconds;
+use interpolation::lerp;
 
-use super::interpolate::Interpolation;
+use crate::math::Milliseconds;
+use crate::query3d::AnimationPosition;
+
+use super::interpolate::{Interpolation, Interpolate};
 
 pub enum KeyframeRange<'a, T> {
     /// The keyframe before the specified time
@@ -43,6 +46,31 @@ impl<T> Keyframes<T> {
     pub fn end_time(&self) -> Milliseconds {
         let last_index = self.frames.len() - 1;
         self.frames[last_index].time
+    }
+
+    pub fn value_at(&self, pos: &AnimationPosition) -> T
+        where T: Interpolate + Copy,
+    {
+        let time = match pos {
+            &AnimationPosition::Time(t) => t,
+            &AnimationPosition::RelativeTime{start_time, weight} => {
+                Milliseconds::from_msec(lerp(&start_time.to_msec(), &self.end_time().to_msec(), &weight))
+            },
+        };
+
+        let new_value = match self.surrounding(time) {
+            KeyframeRange::Before(kf) => kf.value,
+            KeyframeRange::After(kf) => kf.value,
+            KeyframeRange::Between(kf1, kf2) => {
+                let start = kf1.time;
+                let end = kf2.time;
+                // The time factor that gives weight to the start or end frame during interpolation
+                let weight = (time.to_msec() - start.to_msec()) / (end.to_msec() - start.to_msec());
+                T::interpolate(self.interpolation, weight, &kf1.value, &kf2.value)
+            },
+        };
+
+        new_value
     }
 }
 

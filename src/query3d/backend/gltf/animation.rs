@@ -4,8 +4,8 @@ use crate::query3d::query::AnimationPosition;
 use crate::math::{Milliseconds, Vec3, Quaternion, Mat4, Mat3, Decompose};
 use crate::scene::NodeId;
 
-use super::keyframes::{Keyframes, KeyframeRange, Frame};
-use super::interpolate::{Interpolate, Interpolation};
+use super::keyframes::{Keyframes, Frame};
+use super::interpolate::Interpolation;
 
 #[derive(Debug, Default)]
 pub struct Animation {
@@ -26,68 +26,19 @@ impl Animation {
 
     /// Application of animation data by decomposing the current node's transformation matrix and
     /// replacing the different types of transforms if the keyframes for that transform exist
-    pub fn apply_at(&self, transform_matrix: &Mat4, anim_pos_time: &AnimationPosition) -> Mat4 {
-        use interpolation::lerp;
+    pub fn apply_at(&self, transform_matrix: &Mat4, pos: &AnimationPosition) -> Mat4 {
         let mut matrix_transforms = transform_matrix.decompose();
 
-        if let Some(value) = &self.scale_keyframes {
-            let time = match *anim_pos_time {
-                AnimationPosition::Time(t) => t,
-                AnimationPosition::RelativeTime{start_time, weight} => {
-                    Milliseconds::from_msec(lerp(&start_time.to_msec(), &value.end_time().to_msec(), &weight))
-                },
-            };
-            let new_value = match value.surrounding(time) {
-                KeyframeRange::Before(kf) => kf.value,
-                KeyframeRange::After(kf) => kf.value,
-                KeyframeRange::Between(kf1, kf2) => {
-                    let start = kf1.time;
-                    let end = kf2.time;
-                    // The time factor that gives weight to the start or end frame during interpolation
-                    let factor = (time.to_msec() - start.to_msec()) / (end.to_msec() - start.to_msec());
-                    Vec3::interpolate(&value.interpolation, factor, kf1.value, kf2.value)
-                },
-            };
+        if let Some(keyframes) = &self.scale_keyframes {
+            let new_value = keyframes.value_at(pos);
             matrix_transforms.scale = new_value;
         }
-        if let Some(value) = &self.rotation_keyframes {
-            let time = match *anim_pos_time {
-                AnimationPosition::Time(t) => t,
-                AnimationPosition::RelativeTime{start_time, weight} => {
-                    Milliseconds::from_msec(lerp(&start_time.to_msec(), &value.end_time().to_msec(), &weight))
-                },
-            };
-            let new_value = match value.surrounding(time) {
-                KeyframeRange::Before(kf) => kf.value,
-                KeyframeRange::After(kf) => kf.value,
-                KeyframeRange::Between(kf1, kf2) => {
-                    let start = kf1.time;
-                    let end = kf2.time;
-                    // The time factor that gives weight to the start or end frame during interpolation
-                    let factor = (time.to_msec() - start.to_msec()) / (end.to_msec() - start.to_msec());
-                    Quaternion::interpolate(&value.interpolation, factor, kf1.value, kf2.value)
-                },
-            };
+        if let Some(keyframes) = &self.rotation_keyframes {
+            let new_value = keyframes.value_at(pos);
             matrix_transforms.rotation = Mat3::from(new_value);
         }
-        if let Some(value) = &self.translation_keyframes {
-            let time = match *anim_pos_time {
-                AnimationPosition::Time(t) => t,
-                AnimationPosition::RelativeTime{start_time, weight} => {
-                    Milliseconds::from_msec(lerp(&start_time.to_msec(), &value.end_time().to_msec(), &weight))
-                },
-            };
-            let new_value = match value.surrounding(time) {
-                KeyframeRange::Before(kf) => kf.value,
-                KeyframeRange::After(kf) => kf.value,
-                KeyframeRange::Between(kf1, kf2) => {
-                    let start = kf1.time;
-                    let end = kf2.time;
-                    // The time factor that gives weight to the start or end frame during interpolation
-                    let factor = (time.to_msec() - start.to_msec()) / (end.to_msec() - start.to_msec());
-                    Vec3::interpolate(&value.interpolation, factor, kf1.value, kf2.value)
-                },
-            };
+        if let Some(keyframes) = &self.translation_keyframes {
+            let new_value = keyframes.value_at(pos);
             matrix_transforms.translation = new_value;
         }
 
