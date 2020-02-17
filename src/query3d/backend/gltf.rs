@@ -111,23 +111,28 @@ impl QueryBackend for GltfFile {
         let mut node_tree = self.nodes.clone();
 
         if let Some(anim_query) = animation {
+            // Set to true if at least one animation was found and applied on any node
+            // If none are applied, the animation name was probably mispelled or something
             let mut animation_found = false;
+
             node_tree = Arc::new(self.nodes.try_with_replacements(|node: &Node| -> Result<Option<Node>, QueryError> {
                 match self.animations.get(&node.id) {
                     // If the node has a list of animations, look for the animations that match the AnimationQuery name
-                    Some(anims) => {
+                    Some(anim_set) => {
                         // anim is the animation that will modify the transformation matrix of the current node
-                        let anim = anims.iter().find(|anim| match &anim_query.name {
-                            None => true,
-                            name@Some(_) if &anim.name == name => true,
-                            _ => false,
-                        });
+                        let mut anims = anim_set.filter(anim_query.name.as_deref());
 
                         // Return if no animation matches the name in the animation query
-                        let anim = match anim {
+                        let anim = match anims.next() {
                             Some(anim) => anim,
                             None => return Ok(None),
                         };
+
+                        // Return if multiple animations match the query
+                        if anims.next().is_some() {
+                            return Err(QueryError::AmbiguousAnimation);
+                        }
+
                         animation_found = true;
 
                         // Create and set the new transformation matrix of the current node

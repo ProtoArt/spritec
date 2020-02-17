@@ -18,6 +18,16 @@ impl AnimationSet {
         self.anims.iter_mut().find(|anim| anim.name.as_deref() == name)
     }
 
+    /// Iterates over the animation set, optionally only returning animations with the given name
+    ///
+    /// If `name` is None, all the animations will be returned
+    pub fn filter<'a>(&'a self, name: Option<&'a str>) -> impl Iterator<Item=&Animation> + 'a {
+        self.anims.iter().filter(move |anim| match name {
+            None => true,
+            Some(name) => anim.name.as_deref() == Some(name),
+        })
+    }
+
     /// Inserts an animation into the animation set. You guarantee that no previously inserted
     /// animation has the same name.
     pub fn insert(&mut self, anim: Animation) -> &mut Animation {
@@ -122,7 +132,7 @@ pub fn from_animations<'a>(
             let node_id = NodeId::from_gltf(&channel.target().node());
             let anim_set = animations.entry(node_id).or_default();
 
-            let mut anim = match anim_set.animation_mut(anim_name) {
+            let anim = match anim_set.animation_mut(anim_name) {
                 Some(anim) => anim,
                 None => anim_set.insert(Animation::with_name(anim_name)),
             };
