@@ -16,7 +16,7 @@ name = "spritec_binding"
 crate-type = ["cdylib"]
 
 [build-dependencies]
-neon-build = "0.3.3"
+neon-build = "0.4.0"
 
 [dependencies]
 neon = "0.3.3"

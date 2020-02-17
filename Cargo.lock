@@ -831,7 +831,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "53b85accbbd250627f899a6fc1f220bbb4c8c2ff6dc71830dc6b752b39c2eb97"
 dependencies = [
  "cslice",
- "neon-build",
+ "neon-build 0.3.3",
  "neon-runtime",
  "semver",
 ]
@@ -844,6 +844,15 @@ checksum = "ae406bf1065c4399e69d328a3bd8d4f088f2a205dc3881bf68c0ac775bfef337"
 dependencies = [
  "cfg-if",
  "neon-sys",
+]
+
+[[package]]
+name = "neon-build"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9ed332afd4711b84f4f83d334428a1fd9ce53620b62b87595934297c5ede2ed"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]
@@ -1339,7 +1348,7 @@ name = "spritec_binding"
 version = "0.1.0"
 dependencies = [
  "neon",
- "neon-build",
+ "neon-build 0.4.0",
  "spritec",
 ]
 
