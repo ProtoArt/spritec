@@ -27,6 +27,9 @@ pub enum QueryError {
     #[error("Could not find any matching animation in model file")]
     NoAnimationFound,
 
+    #[error("Multiple animations matched for a single node, please specify an animation name")]
+    AmbiguousAnimation,
+
     #[error("Could not find any matching geometry in model file")]
     NoGeometryFound,
 
