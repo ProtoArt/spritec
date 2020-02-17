@@ -16,13 +16,26 @@ pub enum KeyframeRange<'a, T> {
     After(&'a Frame<T>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Keyframes<T> {
     pub frames: Vec<Frame<T>>,
     pub interpolation: Interpolation,
 }
 
 impl<T> Keyframes<T> {
+    pub fn new(
+        times: impl Iterator<Item=Milliseconds>,
+        values: impl Iterator<Item=T>,
+        interpolation: Interpolation,
+    ) -> Self {
+        let frames = times.zip(values).map(|(time, value)| Frame {time, value}).collect();
+
+        Self {
+            frames,
+            interpolation,
+        }
+    }
+
     /// Retrieves the keyframes immediately surrounding the given time
     /// A time smaller than that of all keyframes will get back the first keyframe twice
     /// A time larger than all keyframes gets the last keyframe twice
@@ -74,7 +87,7 @@ impl<T> Keyframes<T> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Frame<T> {
     pub time: Milliseconds,
     pub value: T,

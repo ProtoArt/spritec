@@ -12,7 +12,7 @@ use crate::query3d::{GeometryQuery, GeometryFilter, CameraQuery, LightQuery};
 
 use super::{QueryBackend, QueryError};
 
-use animation::Animation;
+use animation::AnimationSet;
 
 /// Represents a single glTF file
 #[derive(Debug)]
@@ -32,7 +32,7 @@ pub struct GltfFile {
     scene_cameras: HashMap<(usize, String), Arc<Camera>>,
     /// Contains the transformation data of the animations
     // This is a mapping of Node ID to all the animations that act on that node
-    animations: HashMap<NodeId, Vec<Animation>>,
+    animations: HashMap<NodeId, AnimationSet>,
 }
 
 impl GltfFile {

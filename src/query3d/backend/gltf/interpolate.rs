@@ -6,6 +6,20 @@ pub enum Interpolation {
     Step,
 }
 
+impl From<gltf::animation::Interpolation> for Interpolation {
+    fn from(interp: gltf::animation::Interpolation) -> Self {
+        use gltf::animation::Interpolation::*;
+        match interp {
+            Linear => Interpolation::Linear,
+            Step => Interpolation::Step,
+            //TODO - In order to support cubicspline interpolation, we need to change how we're
+            // storing the data
+            // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#animation-samplerinterpolation
+            CubicSpline => unimplemented!("Cubicspline interpolation is not supported!"),
+        }
+    }
+}
+
 pub trait Interpolate {
     /// Interpolate between two values using the given method.
     ///
