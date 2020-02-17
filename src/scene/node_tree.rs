@@ -67,21 +67,21 @@ impl NodeTree {
     /// reference counted, but it still requires allocating memory to store the new copies of
     /// the nodes. Try to avoid calling this method if you know in advance that no replacements
     /// need to be made.
-    pub fn with_replacements<R>(&self, mut replace: R) -> Self
-        where R: FnMut(&Node) -> Option<Node>
+    pub fn try_with_replacements<R, E>(&self, mut replace: R) -> Result<Self, E>
+        where R: FnMut(&Node) -> Result<Option<Node>, E>
     {
         let Self {nodes} = self;
 
-        Self {
-            nodes: nodes.iter().map(|entry| match replace(&entry.node) {
+        Ok(Self {
+            nodes: nodes.iter().map(|entry| Ok(match replace(&entry.node)? {
                 Some(node) => NodeTreeEntry {
                     node: Arc::new(node),
                     children: entry.children.clone(),
                 },
                 // This clone should be cheap because we use Arc in NodeTreeEntry
                 None => entry.clone(),
-            }).collect(),
-        }
+            })).collect::<Result<Vec<_>, _>>()?,
+        })
     }
 
     /// Get the node with the given ID
