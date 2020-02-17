@@ -9,7 +9,7 @@ use std::num::NonZeroU32;
 use interpolation::lerp;
 use thiserror::Error;
 
-use crate::math::{Mat4, Vec3, Rgb};
+use crate::math::{Mat4, Vec3, Rgb, Milliseconds};
 use crate::config;
 use crate::scene::{CameraType, LightType};
 use crate::query3d::{
@@ -159,7 +159,7 @@ pub fn generate_spritesheet_task(
 
                 let steps = steps.get();
                 for step in 0..steps {
-                    let weight = step as f32 / steps as f32;
+                    let weight = step as f32 / (steps - 1) as f32;
 
                     nodes.push(RenderNode::RenderedImage(RenderedImage {
                         size: frame_size,
@@ -182,7 +182,7 @@ pub fn generate_spritesheet_task(
                                     name: name.clone(),
                                     position: match end_time {
                                         Some(end_time) => AnimationPosition::Time(
-                                            lerp(&start_time, &end_time, &weight)
+                                            Milliseconds::from_msec(lerp(&start_time.to_msec(), &end_time.to_msec(), &weight))
                                         ),
 
                                         None => AnimationPosition::RelativeTime {

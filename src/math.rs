@@ -86,3 +86,25 @@ impl Degrees {
         self.0
     }
 }
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Milliseconds(f32);
+
+impl Milliseconds {
+    pub fn from_msec(value: f32) -> Self {
+        Milliseconds(value)
+    }
+
+    pub fn from_sec(value: f32) -> Self {
+        Milliseconds(value * 1000.0)
+    }
+
+    pub fn to_sec(self) -> f32 {
+        self.0 / 1000.0
+    }
+
+    pub fn to_msec(self) -> f32 {
+        self.0
+    }
+}

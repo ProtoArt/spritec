@@ -1,14 +1,12 @@
 // JAMES ADDED - to be moved to separate file afterwards
-use gltf::animation::util::ReadOutputs::*;
-use crate::math::{Vec3, Quaternion, Mat3, Mat4, Decompose};
-use interpolation;
-
 
 use std::sync::Arc;
 use std::path::Path;
 use std::collections::HashMap;
 use std::cmp::min;
 
+use crate::query3d::query::AnimationPosition;
+use crate::math::{Vec3, Quaternion, Mat3, Mat4, Decompose, Milliseconds};
 use crate::scene::{Scene, NodeTree, NodeId, Node, Mesh, Skin, Material, CameraType, LightType};
 use crate::renderer::{Display, ShaderGeometry, JointMatrixTexture, Camera, Light};
 use crate::query3d::{GeometryQuery, GeometryFilter, CameraQuery, LightQuery};
@@ -36,14 +34,6 @@ pub struct GltfFile {
     animations: HashMap<NodeId, Vec<Animation>>,
 }
 
-#[derive(Debug, Default)]
-struct Animation {
-    name: Option<String>,
-    scale_keyframes: Option<Keyframes<Vec3>>,
-    rotation_keyframes: Option<Keyframes<Quaternion>>,
-    translation_keyframes: Option<Keyframes<Vec3>>,
-}
-
 #[derive(Debug)]
 enum Interpolation {
     Linear,
@@ -56,10 +46,11 @@ trait Interpolate {
 
 impl Interpolate for Vec3 {
     fn interpolate(interp: &Interpolation, t: f32, prev_keyframe: Vec3, next_keyframe: Vec3) -> Vec3 {
+        use Interpolation::*;
         match interp {
             Linear => {
                 let [x, y, z] = interpolation::lerp(&prev_keyframe.into_array(), &next_keyframe.into_array(), &t);
-                Vec3::new(x, y, z)
+                Vec3 {x, y, z}
             },
             Step => prev_keyframe,
         }
@@ -68,6 +59,7 @@ impl Interpolate for Vec3 {
 
 impl Interpolate for Quaternion {
     fn interpolate(interp: &Interpolation, t: f32, prev_keyframe: Quaternion, next_keyframe: Quaternion) -> Quaternion {
+        use Interpolation::*;
         match interp {
             Linear => Quaternion::slerp(prev_keyframe, next_keyframe, t),
             Step => prev_keyframe,
@@ -75,6 +67,13 @@ impl Interpolate for Quaternion {
     }
 }
 
+#[derive(Debug, Default)]
+struct Animation {
+    name: Option<String>,
+    scale_keyframes: Option<Keyframes<Vec3>>,
+    rotation_keyframes: Option<Keyframes<Quaternion>>,
+    translation_keyframes: Option<Keyframes<Vec3>>,
+}
 
 impl Animation {
     // with_name takes Option instead of String to include with Animations without names
@@ -85,52 +84,71 @@ impl Animation {
         }
     }
 
-    // Application of animation data by decomposing the current node's transformation matrix and
-    // replacing the different types of transforms if the keyframes for that transform exist
-    fn apply_at(&self, transform_matrix: &Mat4, time: f32) -> Mat4 {
+    /// Application of animation data by decomposing the current node's transformation matrix and
+    /// replacing the different types of transforms if the keyframes for that transform exist
+    fn apply_at(&self, transform_matrix: &Mat4, anim_pos_time: &AnimationPosition) -> Mat4 {
+        use interpolation::lerp;
         let mut matrix_transforms = transform_matrix.decompose();
 
-        if let Some(scale) = &self.scale_keyframes {
-            let new_scale = match scale.surrounding(time) {
+        if let Some(value) = &self.scale_keyframes {
+            let time = match *anim_pos_time {
+                AnimationPosition::Time(t) => t,
+                AnimationPosition::RelativeTime{start_time, weight} => {
+                    Milliseconds::from_msec(lerp(&start_time.to_msec(), &value.end_time().to_msec(), &weight))
+                },
+            };
+            let new_value = match value.surrounding(time) {
                 KeyframeRange::Before(kf) => kf.value,
                 KeyframeRange::After(kf) => kf.value,
                 KeyframeRange::Between(kf1, kf2) => {
                     let start = kf1.time;
                     let end = kf2.time;
                     // The time factor that gives weight to the start or end frame during interpolation
-                    let factor = (time - start) / (end - start);
-                    Vec3::interpolate(&scale.interpolation, factor, kf1.value, kf2.value)
+                    let factor = (time.to_msec() - start.to_msec()) / (end.to_msec() - start.to_msec());
+                    Vec3::interpolate(&value.interpolation, factor, kf1.value, kf2.value)
                 },
             };
-            matrix_transforms.scale = new_scale;
+            matrix_transforms.scale = new_value;
         }
-        if let Some(rot) = &self.rotation_keyframes {
-            let new_rot = match rot.surrounding(time) {
+        if let Some(value) = &self.rotation_keyframes {
+            let time = match *anim_pos_time {
+                AnimationPosition::Time(t) => t,
+                AnimationPosition::RelativeTime{start_time, weight} => {
+                    Milliseconds::from_msec(lerp(&start_time.to_msec(), &value.end_time().to_msec(), &weight))
+                },
+            };
+            let new_value = match value.surrounding(time) {
                 KeyframeRange::Before(kf) => kf.value,
                 KeyframeRange::After(kf) => kf.value,
                 KeyframeRange::Between(kf1, kf2) => {
                     let start = kf1.time;
                     let end = kf2.time;
                     // The time factor that gives weight to the start or end frame during interpolation
-                    let factor = (time - start) / (end - start);
-                    Quaternion::interpolate(&rot.interpolation, factor, kf1.value, kf2.value)
+                    let factor = (time.to_msec() - start.to_msec()) / (end.to_msec() - start.to_msec());
+                    Quaternion::interpolate(&value.interpolation, factor, kf1.value, kf2.value)
                 },
             };
-            matrix_transforms.rotation = Mat3::from(new_rot);
+            matrix_transforms.rotation = Mat3::from(new_value);
         }
-        if let Some(trans) = &self.translation_keyframes {
-            let new_trans = match trans.surrounding(time) {
+        if let Some(value) = &self.translation_keyframes {
+            let time = match *anim_pos_time {
+                AnimationPosition::Time(t) => t,
+                AnimationPosition::RelativeTime{start_time, weight} => {
+                    Milliseconds::from_msec(lerp(&start_time.to_msec(), &value.end_time().to_msec(), &weight))
+                },
+            };
+            let new_value = match value.surrounding(time) {
                 KeyframeRange::Before(kf) => kf.value,
                 KeyframeRange::After(kf) => kf.value,
                 KeyframeRange::Between(kf1, kf2) => {
                     let start = kf1.time;
                     let end = kf2.time;
                     // The time factor that gives weight to the start or end frame during interpolation
-                    let factor = (time - start) / (end - start);
-                    Vec3::interpolate(&trans.interpolation, factor, kf1.value, kf2.value)
+                    let factor = (time.to_msec() - start.to_msec()) / (end.to_msec() - start.to_msec());
+                    Vec3::interpolate(&value.interpolation, factor, kf1.value, kf2.value)
                 },
             };
-            matrix_transforms.translation = new_trans;
+            matrix_transforms.translation = new_value;
         }
 
         Mat4::from(matrix_transforms)
@@ -153,30 +171,35 @@ struct Keyframes<T> {
 }
 
 impl<T> Keyframes<T> {
-    // Retrieves the keyframes immediately surrounding the given time
-    // A time smaller than that of all keyframes will get back the first keyframe twice
-    // A time larger than all keyframes gets the last keyframe twice
-    fn surrounding(&self, time: f32) -> KeyframeRange<T> {
+    /// Retrieves the keyframes immediately surrounding the given time
+    /// A time smaller than that of all keyframes will get back the first keyframe twice
+    /// A time larger than all keyframes gets the last keyframe twice
+    fn surrounding(&self, time: Milliseconds) -> KeyframeRange<T> {
         // This unwrap is safe for partial_cmp as long as NaN is not one of the comparison values
         let index = match self.frames.binary_search_by(|frame| frame.time.partial_cmp(&time).unwrap()) {
             Ok(i) | Err(i) => i,
         };
-        let left_index = index.saturating_sub(1);
-        let right_index = min(index, self.frames.len() - 1);
 
-        if left_index == 0 {
-            KeyframeRange::Before(&self.frames[left_index])
-        } else if right_index == self.frames.len() - 1 {
-            KeyframeRange::After(&self.frames[right_index])
+        if index == 0 {
+            KeyframeRange::After(&self.frames[index])
+        } else if index == self.frames.len() {
+            KeyframeRange::Before(&self.frames[index - 1])
         } else {
+            let left_index = index - 1;
+            let right_index = min(index, self.frames.len() - 1);
             KeyframeRange::Between(&self.frames[left_index], &self.frames[right_index])
         }
+    }
+
+    fn end_time(&self) -> Milliseconds {
+        let last_index = self.frames.len() - 1;
+        self.frames[last_index].time
     }
 }
 
 #[derive(Debug)]
 struct Frame<T> {
-    time: f32,
+    time: Milliseconds,
     value: T,
 }
 
@@ -247,27 +270,37 @@ impl GltfFile {
                 };
 
                 // Create Keyframes
+                use gltf::animation::util::ReadOutputs::*;
                 let key_times = reader.read_inputs().expect("Animation detected with no sampler input values");
                 match reader.read_outputs().expect("Animation detected with no sampler output values") {
                     Scales(scale) => {
-                        assert!(anim.scale_keyframes.is_none());
-                        let key_frames = Keyframes {frames: key_times.zip(scale)
-                            .map(|(time, output)| Frame {time, value: Vec3::from(output)}).collect::<Vec<Frame<Vec3>>>(), interpolation};
-                        anim.scale_keyframes = Some(key_frames);
+                        assert!(anim.scale_keyframes.is_none(), "Did not expect animation with the same name to have multiple sets of scale keyframes");
+                        let keyframes = Keyframes {
+                            frames: key_times.zip(scale)
+                                .map(|(time, output)| Frame {time: Milliseconds::from_sec(time), value: Vec3::from(output)}).collect::<Vec<Frame<Vec3>>>(),
+                            interpolation,
+                        };
+                        anim.scale_keyframes = Some(keyframes);
                     },
                     Rotations(rot) => {
-                        assert!(anim.rotation_keyframes.is_none());
-                        let key_frames = Keyframes {frames: key_times.zip(rot.into_f32())
-                            .map(|(time, [x, y, z, w])| Frame {time, value: Quaternion::from_xyzw(x, y, z, w)}).collect::<Vec<Frame<Quaternion>>>(), interpolation};
-                        anim.rotation_keyframes = Some(key_frames);
+                        assert!(anim.rotation_keyframes.is_none(), "Did not expect animation with the same name to have multiple sets of rotation keyframes");
+                        let keyframes = Keyframes {
+                            frames: key_times.zip(rot.into_f32())
+                                .map(|(time, [x, y, z, w])| Frame {time: Milliseconds::from_sec(time), value: Quaternion::from_xyzw(x, y, z, w)}).collect::<Vec<Frame<Quaternion>>>(),
+                            interpolation,
+                        };
+                        anim.rotation_keyframes = Some(keyframes);
                     },
                     Translations(trans) => {
-                        assert!(anim.translation_keyframes.is_none());
-                        let key_frames = Keyframes {frames: key_times.zip(trans)
-                            .map(|(time, output)| Frame {time, value: Vec3::from(output)}).collect::<Vec<Frame<Vec3>>>(), interpolation};
-                        anim.translation_keyframes = Some(key_frames);
+                        assert!(anim.translation_keyframes.is_none(), "Did not expect animation with the same name to have multiple sets of translation keyframes");
+                        let keyframes = Keyframes {
+                            frames: key_times.zip(trans)
+                                .map(|(time, output)| Frame {time: Milliseconds::from_sec(time), value: Vec3::from(output)}).collect::<Vec<Frame<Vec3>>>(),
+                            interpolation,
+                        };
+                        anim.translation_keyframes = Some(keyframes);
                     },
-                    _ => todo!(), //Morph stuff
+                    MorphTargetWeights(_) => unimplemented!("Morph target animations are not supported yet"),
                 };
             }
         }
@@ -303,7 +336,43 @@ impl QueryBackend for GltfFile {
     fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Arc<Vec<Arc<ShaderGeometry>>>, QueryError> {
         let GeometryQuery {models, animation} = query;
 
-        //TODO: Restructure the code in this file to add animation support
+        let mut node_tree = self.nodes.clone();
+
+        if let Some(anim_query) = animation {
+            let mut animation_found = false;
+            node_tree = Arc::new(self.nodes.try_with_replacements(|node: &Node| -> Result<Option<Node>, QueryError> {
+                match self.animations.get(&node.id) {
+                    // If the node has a list of animations, look for the animations that match the AnimationQuery name
+                    Some(anims) => {
+                        // anim is the animation that will modify the transformation matrix of the current node
+                        let anim = anims.iter().find(|anim| match &anim_query.name {
+                            None => true,
+                            name@Some(_) if &anim.name == name => true,
+                            _ => false,
+                        });
+
+                        // Return if no animation matches the name in the animation query
+                        let anim = match anim {
+                            Some(anim) => anim,
+                            None => return Ok(None),
+                        };
+                        animation_found = true;
+
+                        // Create and set the new transformation matrix of the current node
+                        let new_transform = anim.apply_at(&node.transform, &anim_query.position);
+                        Ok(Some(node.with_transform(new_transform)))
+                    },
+                    None => Ok(None),
+                }
+            })?);
+
+            if !animation_found {
+                match &anim_query.name {
+                    Some(name) => return Err(QueryError::UnknownAnimation {name: name.to_string()}),
+                    None => return Err(QueryError::NoAnimationFound),
+                }
+            }
+        }
 
         use GeometryFilter::*;
         let scene_index = match models {
@@ -311,9 +380,9 @@ impl QueryBackend for GltfFile {
         };
 
         match self.scene_shader_geometry.get(&scene_index) {
-            Some(scene_geo) => Ok(scene_geo.clone()),
+            //Some(scene_geo) => Ok(scene_geo.clone()),
 
-            None => {
+            _ => {
                 // Need to split the borrow of self so we don't accidentally get two mut refs
                 let Self {nodes, scenes, default_joint_matrix_texture, ..} = self;
 
@@ -321,7 +390,7 @@ impl QueryBackend for GltfFile {
                 let node_world_transforms = nodes.world_transforms(&scene.roots);
 
                 let mut scene_geo = Vec::new();
-                for (parent_trans, node) in scene.roots.iter().flat_map(|&root| nodes.traverse(root)) {
+                for (parent_trans, node) in scene.roots.iter().flat_map(|&root| node_tree.traverse(root)) {
                     let model_transform = parent_trans * node.transform;
 
                     if let Some((mesh, skin)) = node.mesh() {

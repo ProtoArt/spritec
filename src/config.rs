@@ -2,7 +2,7 @@ use std::num::NonZeroU32;
 
 use serde::{Serialize, Deserialize};
 
-use crate::math::{Vec3, Rgba, Degrees};
+use crate::math::{Vec3, Rgba, Degrees, Milliseconds};
 
 // PathBuf is not imported to avoid its use in this module. Every path in this module should
 // be an UnresolvedPath.
@@ -124,10 +124,10 @@ pub enum AnimationFrames {
         animation: Option<String>,
         /// The "global" animation time in ms at which to start the animation (default: 0.0)
         #[serde(default)]
-        start_time: f32,
+        start_time: Milliseconds,
         /// The "global" animation time in ms at which to end the animation (default: time of the
         /// last keyframe in the animation)
-        end_time: Option<f32>,
+        end_time: Option<Milliseconds>,
         /// The number of steps to take between the start and end time.
         ///
         /// This is the number of frames that will be drawn in the spritesheet.
@@ -187,7 +187,7 @@ pub enum PoseModel {
         /// The specific time in ms in the animation to render. The default is to render the start
         /// of the animation, or the default pose of the model if there is no animation.
         #[serde(default)]
-        time: f32,
+        time: Milliseconds,
     },
     /// A single filename. An OBJ file will be used as is. For a glTF file, the model will be
     /// rendered as loaded regardless of the animations present in the file.

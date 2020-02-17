@@ -95,4 +95,11 @@ impl Node {
             _ => None,
         }
     }
+
+    pub fn with_transform(&self, new_transform: Mat4) -> Self {
+        Self {
+            transform: new_transform,
+            ..self.clone()
+        }
+    }
 }

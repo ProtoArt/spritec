@@ -1,3 +1,5 @@
+use crate::math::Milliseconds;
+
 #[derive(Debug, Clone)]
 pub struct GeometryQuery {
     pub models: GeometryFilter,
@@ -31,12 +33,12 @@ pub struct AnimationQuery {
 #[derive(Debug, Clone)]
 pub enum AnimationPosition {
     /// The time in ms on the global animation clock
-    Time(f32),
+    Time(Milliseconds),
     /// The time interpolated between the given start time and up to the time of the last keyframe of the
     /// animation
     RelativeTime {
         /// The start time in ms
-        start_time: f32,
+        start_time: Milliseconds,
         /// A value between 0.0 and 1.0 that specifies the interpolation factor between the
         /// provided start time and the end of the animation. The end of the animation is defined
         /// as the time of its last keyframe.
