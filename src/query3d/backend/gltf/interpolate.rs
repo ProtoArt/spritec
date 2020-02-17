@@ -1,34 +1,40 @@
 use crate::math::{Vec3, Quaternion};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Interpolation {
     Linear,
     Step,
 }
 
 pub trait Interpolate {
-    fn interpolate(interp: &Interpolation, t: f32, prev_keyframe: Self, next_keyframe: Self) -> Self;
+    /// Interpolate between two values using the given method.
+    ///
+    /// `weight` is always between 0.0 and 1.0
+    fn interpolate(method: Interpolation, weight: f32, start: &Self, end: &Self) -> Self;
 }
 
 impl Interpolate for Vec3 {
-    fn interpolate(interp: &Interpolation, t: f32, prev_keyframe: Vec3, next_keyframe: Vec3) -> Vec3 {
+    fn interpolate(method: Interpolation, weight: f32, start: &Vec3, end: &Vec3) -> Vec3 {
         use Interpolation::*;
-        match interp {
+        match method {
             Linear => {
-                let [x, y, z] = interpolation::lerp(&prev_keyframe.into_array(), &next_keyframe.into_array(), &t);
+                let start = start.into_array();
+                let end = end.into_array();
+                let [x, y, z] = interpolation::lerp(&start, &end, &weight);
+
                 Vec3 {x, y, z}
             },
-            Step => prev_keyframe,
+            Step => *start,
         }
     }
 }
 
 impl Interpolate for Quaternion {
-    fn interpolate(interp: &Interpolation, t: f32, prev_keyframe: Quaternion, next_keyframe: Quaternion) -> Quaternion {
+    fn interpolate(method: Interpolation, weight: f32, start: &Quaternion, end: &Quaternion) -> Quaternion {
         use Interpolation::*;
-        match interp {
-            Linear => Quaternion::slerp(prev_keyframe, next_keyframe, t),
-            Step => prev_keyframe,
+        match method {
+            Linear => Quaternion::slerp(*start, *end, weight),
+            Step => *start,
         }
     }
 }

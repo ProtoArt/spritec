@@ -19,6 +19,7 @@
     clippy::len_without_is_empty,
     clippy::large_enum_variant,
     clippy::unneeded_field_pattern,
+    clippy::match_ref_pats,
 )]
 #![deny(bare_trait_objects)] // Prefer Box<dyn Trait> over Box<Trait>
 #![deny(unused_must_use)] // Ignoring a Result is usually a sign of trouble
