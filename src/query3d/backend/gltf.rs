@@ -20,6 +20,9 @@ pub struct GltfFile {
     default_scene: usize,
     nodes: Arc<NodeTree>,
     scenes: Vec<Arc<Scene>>,
+    /// This is a mapping of Node ID to all the animations that act on that node
+    animations: HashMap<NodeId, AnimationSet>,
+
     /// Cache the default joint matrix texture so we don't upload it over and over again
     default_joint_matrix_texture: Option<Arc<JointMatrixTexture>>,
     /// Cache the geometry of the entire scene, referenced by scene index
@@ -30,9 +33,6 @@ pub struct GltfFile {
     scene_first_camera: Option<Arc<Camera>>,
     /// Cache each camera by scene index and name
     scene_cameras: HashMap<(usize, String), Arc<Camera>>,
-    /// Contains the transformation data of the animations
-    // This is a mapping of Node ID to all the animations that act on that node
-    animations: HashMap<NodeId, AnimationSet>,
 }
 
 impl GltfFile {
@@ -81,12 +81,13 @@ impl GltfFile {
             default_scene,
             nodes,
             scenes,
+            animations,
+
             default_joint_matrix_texture: None,
             scene_shader_geometry: HashMap::new(),
             scene_lights: HashMap::new(),
             scene_first_camera: None,
             scene_cameras: HashMap::new(),
-            animations,
         })
     }
 
