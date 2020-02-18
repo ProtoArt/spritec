@@ -26,7 +26,6 @@ class CameraList extends Component {
     // clear the list
     listElement.innerHTML = '';
 
-    console.log(cameras);
     listElement.disabled = (cameras.length == 0 || useCustomCamera);
     cameras.forEach(camera => listElement.add(new Option(
       camera.name, // text
