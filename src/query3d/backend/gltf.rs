@@ -2,6 +2,7 @@ mod scenes;
 mod animation;
 mod keyframes;
 mod interpolate;
+mod scene_anim_query_cache;
 
 use std::sync::Arc;
 use std::path::Path;
@@ -14,8 +15,9 @@ use crate::query3d::{GeometryQuery, GeometryFilter, AnimationQuery, CameraQuery,
 
 use super::{QueryBackend, QueryError};
 
-use animation::AnimationSet;
 use scenes::Scenes;
+use animation::AnimationSet;
+use scene_anim_query_cache::SceneAnimQueryCache;
 
 /// Represents a single glTF file
 #[derive(Debug)]
@@ -29,6 +31,8 @@ pub struct GltfFile {
     default_joint_matrix_texture: Option<Arc<JointMatrixTexture>>,
     /// Cache the geometry of the entire scene, referenced by scene index (no animation query)
     scene_shader_geometry: HashMap<usize, Arc<Vec<Arc<ShaderGeometry>>>>,
+    /// Cache the geometry of the entire scene, referenced by scene index and animation query
+    scene_anim_shader_geometry: SceneAnimQueryCache<Arc<Vec<Arc<ShaderGeometry>>>>,
     /// Cache all of the lights in an entire scene, referenced by scene index
     scene_lights: HashMap<usize, Arc<Vec<Arc<Light>>>>,
     /// Cache the first camera in the scene
@@ -86,6 +90,7 @@ impl GltfFile {
 
             default_joint_matrix_texture: None,
             scene_shader_geometry: HashMap::new(),
+            scene_anim_shader_geometry: SceneAnimQueryCache::default(),
             scene_lights: HashMap::new(),
             scene_first_camera: None,
             scene_cameras: HashMap::new(),
@@ -230,22 +235,28 @@ impl QueryBackend for GltfFile {
                 Scene {name} => {
                     let scene_index = scenes.query(name.as_deref())?;
 
-                    let nodes = apply_animation_query(anim_query, nodes, animations)?;
+                    match self.scene_anim_shader_geometry.get(scene_index, anim_query) {
+                        Some(scene_geo) => Ok(scene_geo.clone()),
 
-                    let scene = &scenes[scene_index];
-                    let node_world_transforms = nodes.world_transforms(&scene.roots);
+                        None => {
+                            let nodes = apply_animation_query(anim_query, nodes, animations)?;
 
-                    // Upload the geometry for the entire scene since that's what the
-                    // filter requested
-                    let scene_geo = upload_geometry(
-                        node_world_transforms.iter(&nodes),
-                        &node_world_transforms,
-                        display,
-                        default_joint_matrix_texture,
-                    )?;
-                    //TODO: self.scene_anim_shader_geometry.insert(scene_index, anim_query, scene_geo.clone());
+                            let scene = &scenes[scene_index];
+                            let node_world_transforms = nodes.world_transforms(&scene.roots);
 
-                    Ok(scene_geo)
+                            // Upload the geometry for the entire scene since that's what the
+                            // filter requested
+                            let scene_geo = upload_geometry(
+                                node_world_transforms.iter(&nodes),
+                                &node_world_transforms,
+                                display,
+                                default_joint_matrix_texture,
+                            )?;
+                            self.scene_anim_shader_geometry.insert(scene_index, anim_query, scene_geo.clone());
+
+                            Ok(scene_geo)
+                        },
+                    }
                 },
             },
 
