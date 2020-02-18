@@ -36,7 +36,7 @@ struct NodeTreeEntry {
     children: Arc<Vec<NodeId>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NodeTree {
     /// The nodes and their children, indexed by the node ID
     nodes: Vec<NodeTreeEntry>,
