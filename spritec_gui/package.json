@@ -35,7 +35,8 @@
   "homepage": "https://protoart.me",
   "dependencies": {
     "@reduxjs/toolkit": "^1.2.3",
-    "spritec_binding": "file:../spritec_binding"
+    "spritec_binding": "file:../spritec_binding",
+    "three": "^0.113.2"
   },
   "devDependencies": {
     "electron": "^7.1.9",

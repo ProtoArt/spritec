@@ -5,6 +5,9 @@ const { app, BrowserWindow } = require('electron')
 let win
 
 function createWindow () {
+  // Some plugins read from NODE_ENV for optimizations
+  process.env.NODE_ENV = app.isPackaged ? 'production' : 'development'
+
   // Create the browser window.
   win = new BrowserWindow({
     width: 1024,

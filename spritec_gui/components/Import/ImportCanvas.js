@@ -23,27 +23,36 @@ class ImportCanvas extends Component {
 
   mapStateToProps() {
     return {
-      width: (state) => state.import.width,
-      height: (state) => state.import.height,
-      file: (state) => state.import.selectedFile,
+      width: (state) => state.import.selected.width,
+      height: (state) => state.import.selected.height,
+      path: (state) => state.import.selected.path,
+      camera: (state) => state.import.selected.camera,
     };
   }
 
   render() {
     const {canvas, ctx} = this.state;
-    const {width, height, file} = this.props;
+    const {width, height, path, camera} = this.props;
 
     canvas.width = width;
     canvas.height = height;
 
-    if (file === null) return;
+    if (path === null) return;
 
     // TODO: use offscreen canvas when calling spritec
     let imageBuffer = new Uint8ClampedArray(spritec.render_sprite(
-      file,
+      path,
       width,
-      height
+      height,
+      new Float32Array(camera.position).buffer,
+      new Float32Array(camera.rotation).buffer,
+      new Float32Array(camera.scale).buffer,
+      camera.aspect_ratio,
+      camera.near_z,
+      camera.far_z,
+      camera.fov,
     ));
+
     let imageData = new ImageData(imageBuffer, width);
 
     createImageBitmap(imageData).then((bitmap) => {
