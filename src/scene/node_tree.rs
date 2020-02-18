@@ -24,6 +24,11 @@ impl NodeWorldTransforms {
         let NodeId(index) = id;
         node_world_transforms[index]
     }
+
+    /// Iterates over all the nodes and their model/world transforms
+    pub fn iter<'a>(&'a self, nodes: &'a NodeTree) -> impl Iterator<Item=(&'a Node, Mat4)> {
+        nodes.iter().map(move |node| (node, self.get(node.id)))
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -36,7 +41,7 @@ struct NodeTreeEntry {
     children: Arc<Vec<NodeId>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NodeTree {
     /// The nodes and their children, indexed by the node ID
     nodes: Vec<NodeTreeEntry>,
@@ -92,6 +97,11 @@ impl NodeTree {
     /// Iterate over the child nodes of the given node
     pub fn children(&self, node_id: NodeId) -> impl Iterator<Item=&Node> {
         self.entry(node_id).children.iter().map(move |&id| self.get(id))
+    }
+
+    /// Iterates through all the nodes in the node tree
+    pub fn iter(&self) -> impl Iterator<Item=&Node> {
+        self.nodes.iter().map(|entry| &*entry.node)
     }
 
     /// Returns the computed world transforms of every node
