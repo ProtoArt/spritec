@@ -5,9 +5,9 @@ const importSlice = createSlice({
   initialState: {
     selected: {
       path: null, // file path of selected model
-      cameras: [], // list of camera names for this model
+      cameras: [], // list of camera {id, name}
       camera: {
-        name: null,
+        id: null,
         position: [0, 0, 0],
         rotation: [0, 0, 0, 1], // quaternion
         scale: [1, 1, 1],

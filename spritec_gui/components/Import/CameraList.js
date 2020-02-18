@@ -7,31 +7,32 @@ class CameraList extends Component {
       listElement: element,
     }
     this.state.listElement.onchange = (event) => {
-      this.dispatch(loadCamera(event.target.value));
+      this.dispatch(loadCamera(Number(event.target.value)));
     }
   }
 
   mapStateToProps() {
     return {
       cameras: state => state.import.selected.cameras,
-      cameraName: state => state.import.selected.camera.name,
+      cameraId: state => state.import.selected.camera.id,
       useCustomCamera: state => state.import.useCustomCamera,
     };
   }
 
   render() {
-    const {cameras, cameraName, useCustomCamera} = this.props;
+    const {cameras, cameraId, useCustomCamera} = this.props;
     const {listElement} = this.state;
 
     // clear the list
     listElement.innerHTML = '';
 
+    console.log(cameras);
     listElement.disabled = (cameras.length == 0 || useCustomCamera);
     cameras.forEach(camera => listElement.add(new Option(
-      camera, // text
-      camera, // value
+      camera.name, // text
+      camera.id, // value
       false,  // default selected
-      camera === cameraName // selected
+      camera.id === cameraId // selected
     )));
   }
 }
