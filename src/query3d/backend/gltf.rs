@@ -91,52 +91,57 @@ impl GltfFile {
             scene_cameras: HashMap::new(),
         })
     }
+}
 
-    /// Returns a new node tree with the animations specified by the query applied to each matching
-    /// node. Returns an error if the query did not match any of the nodes or if a single node
-    /// was matched by multiple animations (ambiguous).
-    fn apply_animation_query(&self, query: &AnimationQuery) -> Result<NodeTree, QueryError> {
-        // Set to true if at least one animation was found and applied on any node
-        // If none are applied, the animation name was probably mispelled or something
-        let mut animation_found = false;
+/// Returns a new node tree with the animations specified by the query applied to each matching
+/// node. Returns an error if the query did not match any of the nodes or if a single node
+/// was matched by multiple animations (ambiguous).
+fn apply_animation_query(
+    anim_query: &AnimationQuery,
+    nodes: &NodeTree,
+    animations: &HashMap<NodeId, AnimationSet>,
+) -> Result<NodeTree, QueryError> {
+    // Set to true if at least one animation was found and applied on any node
+    // If none are applied, the animation name was probably mispelled or something
+    let mut animation_found = false;
 
-        let nodes = self.nodes.try_with_replacements(|node| {
-            match self.animations.get(&node.id) {
-                // If the node has a list of animations, look for the animations that match the AnimationQuery name
-                Some(anim_set) => {
-                    // anim is the animation that will modify the transformation matrix of the current node
-                    let mut anims = anim_set.filter(query.name.as_deref());
+    let nodes = nodes.try_with_replacements(|node| {
+        match animations.get(&node.id) {
+            // If the node has a list of animations, look for the animations that match the AnimationQuery name
+            Some(anim_set) => {
+                // anim is the animation that will modify the transformation matrix of the current node
+                let mut anims = anim_set.filter(anim_query.name.as_deref());
 
-                    // Return if no animation matches the name in the animation query
-                    let anim = match anims.next() {
-                        Some(anim) => anim,
-                        None => return Ok(None),
-                    };
+                // Return if no animation matches the name in the animation query
+                let anim = match anims.next() {
+                    Some(anim) => anim,
+                    None => return Ok(None),
+                };
 
-                    // Return if multiple animations match the query
-                    if anims.next().is_some() {
-                        return Err(QueryError::AmbiguousAnimation);
-                    }
+                // Return if multiple animations match the query
+                if anims.next().is_some() {
+                    return Err(QueryError::AmbiguousAnimation);
+                }
 
-                    animation_found = true;
+                animation_found = true;
 
-                    // Create and set the new transformation matrix of the current node
-                    let new_transform = anim.apply_at(&node.transform, &query.position);
-                    Ok(Some(node.with_transform(new_transform)))
-                },
-                None => Ok(None),
-            }
-        })?;
+                // Create and set the new transformation matrix of the current node
+                let new_transform = anim.apply_at(&node.transform, &anim_query.position);
+                Ok(Some(node.with_transform(new_transform)))
+            },
 
-        if !animation_found {
-            match &query.name {
-                Some(name) => Err(QueryError::UnknownAnimation {name: name.to_string()}),
-                None => Err(QueryError::NoAnimationFound),
-            }
-
-        } else {
-            Ok(nodes)
+            None => Ok(None),
         }
+    })?;
+
+    if !animation_found {
+        match &anim_query.name {
+            Some(name) => Err(QueryError::UnknownAnimation {name: name.to_string()}),
+            None => Err(QueryError::NoAnimationFound),
+        }
+
+    } else {
+        Ok(nodes)
     }
 }
 
@@ -217,16 +222,30 @@ impl QueryBackend for GltfFile {
         let GeometryQuery {models, animation} = query;
 
         // Need to split the borrow of self so we don't accidentally get two mut refs
-        let Self {nodes, scenes, default_joint_matrix_texture, ..} = self;
+        let Self {nodes, scenes, animations, default_joint_matrix_texture, ..} = self;
 
         use GeometryFilter::*;
         match animation {
-            Some(query) => match models {
+            Some(anim_query) => match models {
                 Scene {name} => {
-                    let scene_index = self.scenes.query(name.as_deref())?;
+                    let scene_index = scenes.query(name.as_deref())?;
 
-                    let nodes = self.apply_animation_query(query)?;
-                    todo!()
+                    let nodes = apply_animation_query(anim_query, nodes, animations)?;
+
+                    let scene = &scenes[scene_index];
+                    let node_world_transforms = nodes.world_transforms(&scene.roots);
+
+                    // Upload the geometry for the entire scene since that's what the
+                    // filter requested
+                    let scene_geo = upload_geometry(
+                        node_world_transforms.iter(&nodes),
+                        &node_world_transforms,
+                        display,
+                        default_joint_matrix_texture,
+                    )?;
+                    //TODO: self.scene_anim_shader_geometry.insert(scene_index, anim_query, scene_geo.clone());
+
+                    Ok(scene_geo)
                 },
             },
 
@@ -241,7 +260,8 @@ impl QueryBackend for GltfFile {
                             let scene = &scenes[scene_index];
                             let node_world_transforms = nodes.world_transforms(&scene.roots);
 
-                            // Upload the geometry for the entire scene
+                            // Upload the geometry for the entire scene since that's what the
+                            // filter requested
                             let scene_geo = upload_geometry(
                                 node_world_transforms.iter(nodes),
                                 &node_world_transforms,
