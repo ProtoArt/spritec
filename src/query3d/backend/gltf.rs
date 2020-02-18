@@ -1,3 +1,4 @@
+mod scenes;
 mod animation;
 mod keyframes;
 mod interpolate;
@@ -5,28 +6,28 @@ mod interpolate;
 use std::sync::Arc;
 use std::path::Path;
 use std::collections::HashMap;
-use std::borrow::Cow;
 
-use crate::scene::{Scene, NodeTree, NodeId, Node, Mesh, Skin, Material, CameraType, LightType};
+use crate::math::Mat4;
+use crate::scene::{Scene, NodeTree, NodeWorldTransforms, NodeId, Node, Mesh, Skin, Material, CameraType, LightType};
 use crate::renderer::{Display, ShaderGeometry, JointMatrixTexture, Camera, Light};
 use crate::query3d::{GeometryQuery, GeometryFilter, AnimationQuery, CameraQuery, LightQuery};
 
 use super::{QueryBackend, QueryError};
 
 use animation::AnimationSet;
+use scenes::Scenes;
 
 /// Represents a single glTF file
 #[derive(Debug)]
 pub struct GltfFile {
-    default_scene: usize,
     nodes: NodeTree,
-    scenes: Vec<Arc<Scene>>,
+    scenes: Scenes,
     /// This is a mapping of Node ID to all the animations that act on that node
     animations: HashMap<NodeId, AnimationSet>,
 
     /// Cache the default joint matrix texture so we don't upload it over and over again
     default_joint_matrix_texture: Option<Arc<JointMatrixTexture>>,
-    /// Cache the geometry of the entire scene, referenced by scene index
+    /// Cache the geometry of the entire scene, referenced by scene index (no animation query)
     scene_shader_geometry: HashMap<usize, Arc<Vec<Arc<ShaderGeometry>>>>,
     /// Cache all of the lights in an entire scene, referenced by scene index
     scene_lights: HashMap<usize, Arc<Vec<Arc<Light>>>>,
@@ -74,11 +75,11 @@ impl GltfFile {
 
         // Get the default scene, or just use the first scene if no default is provided
         let default_scene = document.default_scene().map(|scene| scene.index()).unwrap_or(0);
+        let scenes = Scenes::new(scenes, default_scene);
 
         let animations = animation::from_animations(document.animations(), &buffers);
 
         Ok(Self {
-            default_scene,
             nodes,
             scenes,
             animations,
@@ -89,19 +90,6 @@ impl GltfFile {
             scene_first_camera: None,
             scene_cameras: HashMap::new(),
         })
-    }
-
-    /// Attempts to find the index of a scene with the given name. If name is None, the default
-    /// scene is returned.
-    fn find_scene(&self, name: Option<&str>) -> Result<usize, QueryError> {
-        match name {
-            None => Ok(self.default_scene),
-            // This assumes that scene names are unique. If they are not unique, we might need to
-            // search for all matching scenes and produce an error if there is more than one result
-            Some(name) => self.scenes.iter()
-                .position(|scene| scene.name.as_deref() == Some(name))
-                .ok_or_else(|| QueryError::UnknownScene {name: name.to_string()}),
-        }
     }
 
     /// Returns a new node tree with the animations specified by the query applied to each matching
@@ -152,72 +140,120 @@ impl GltfFile {
     }
 }
 
+/// Returns the joint matrix texture for the given skin and model matrix
+///
+/// If `skin` is None, a default joint matrix texture will be returned
+fn joint_matrices_texture(
+    skin: Option<&Arc<Skin>>,
+    model_transform: Mat4,
+    node_world_transforms: &NodeWorldTransforms,
+    display: &Display,
+    default_joint_matrix_texture: &mut Option<Arc<JointMatrixTexture>>,
+) -> Result<Arc<JointMatrixTexture>, QueryError> {
+    Ok(match skin {
+        Some(skin) => {
+            let joint_matrices = skin.joint_matrices(model_transform, node_world_transforms);
+            // This texture is cached in ShaderGeometry and is specific to this node + skin
+            Arc::new(JointMatrixTexture::new(display, joint_matrices)?)
+        },
+
+        // The default joint matrix texture is always the same, so we try to only generate it once
+        None => match default_joint_matrix_texture {
+            Some(tex) => tex.clone(),
+
+            None => {
+                let tex = Arc::new(JointMatrixTexture::identity(display)?);
+                *default_joint_matrix_texture = Some(tex.clone());
+                tex
+            },
+        },
+    })
+}
+
+/// Given nodes and their model/world transforms, uploads each node's geometry
+///
+/// This can't be a method because we need to keep the &mut self borrow split
+fn upload_geometry<'a>(
+    nodes: impl Iterator<Item=(&'a Node, Mat4)>,
+    node_world_transforms: &NodeWorldTransforms,
+    display: &Display,
+    default_joint_matrix_texture: &mut Option<Arc<JointMatrixTexture>>,
+) -> Result<Arc<Vec<Arc<ShaderGeometry>>>, QueryError> {
+    let mut scene_geo = Vec::new();
+
+    for (node, model_transform) in nodes {
+        if let Some((mesh, skin)) = node.mesh() {
+            let joint_matrices_tex = joint_matrices_texture(
+                skin,
+                model_transform,
+                node_world_transforms,
+                display,
+                default_joint_matrix_texture,
+            )?;
+
+            for geo in &mesh.geometry {
+                let geo = ShaderGeometry::new(
+                    display,
+                    geo,
+                    &joint_matrices_tex,
+                    model_transform,
+                )?;
+
+                scene_geo.push(Arc::new(geo));
+            }
+        }
+    }
+
+    if scene_geo.is_empty() {
+        return Err(QueryError::NoGeometryFound);
+    }
+
+    let scene_geo = Arc::new(scene_geo);
+    Ok(scene_geo)
+}
+
 impl QueryBackend for GltfFile {
     fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Arc<Vec<Arc<ShaderGeometry>>>, QueryError> {
         let GeometryQuery {models, animation} = query;
 
-        let nodes = match animation {
-            Some(query) => Cow::Owned(self.apply_animation_query(query)?),
-            None => Cow::Borrowed(&self.nodes),
-        };
+        // Need to split the borrow of self so we don't accidentally get two mut refs
+        let Self {nodes, scenes, default_joint_matrix_texture, ..} = self;
 
         use GeometryFilter::*;
-        let scene_index = match models {
-            Scene {name} => self.find_scene(name.as_deref())?,
-        };
+        match animation {
+            Some(query) => match models {
+                Scene {name} => {
+                    let scene_index = self.scenes.query(name.as_deref())?;
 
-        match self.scene_shader_geometry.get(&scene_index) {
-            //Some(scene_geo) => Ok(scene_geo.clone()),
+                    let nodes = self.apply_animation_query(query)?;
+                    todo!()
+                },
+            },
 
-            _ => {
-                // Need to split the borrow of self so we don't accidentally get two mut refs
-                let Self {scenes, default_joint_matrix_texture, ..} = self;
+            None => match models {
+                Scene {name} => {
+                    let scene_index = scenes.query(name.as_deref())?;
 
-                let scene = &scenes[scene_index];
-                let node_world_transforms = nodes.world_transforms(&scene.roots);
+                    match self.scene_shader_geometry.get(&scene_index) {
+                        Some(scene_geo) => Ok(scene_geo.clone()),
 
-                let mut scene_geo = Vec::new();
-                for (parent_trans, node) in scene.roots.iter().flat_map(|&root| nodes.traverse(root)) {
-                    let model_transform = parent_trans * node.transform;
+                        None => {
+                            let scene = &scenes[scene_index];
+                            let node_world_transforms = nodes.world_transforms(&scene.roots);
 
-                    if let Some((mesh, skin)) = node.mesh() {
-                        let joint_matrices_tex = match skin {
-                            Some(skin) => {
-                                let joint_matrices = skin.joint_matrices(model_transform, &node_world_transforms);
-                                //TODO: Find a way to cache this texture so we don't have to upload it over and over again
-                                Arc::new(JointMatrixTexture::new(display, joint_matrices)?)
-                            },
-
-                            None => match default_joint_matrix_texture {
-                                Some(tex) => tex.clone(),
-                                None => {
-                                    let tex = Arc::new(JointMatrixTexture::identity(display)?);
-                                    *default_joint_matrix_texture = Some(tex.clone());
-                                    tex
-                                },
-                            },
-                        };
-
-                        for geo in &mesh.geometry {
-                            let geo = ShaderGeometry::new(
+                            // Upload the geometry for the entire scene
+                            let scene_geo = upload_geometry(
+                                node_world_transforms.iter(nodes),
+                                &node_world_transforms,
                                 display,
-                                geo,
-                                &joint_matrices_tex,
-                                model_transform,
+                                default_joint_matrix_texture,
                             )?;
+                            self.scene_shader_geometry.insert(scene_index, scene_geo.clone());
 
-                            scene_geo.push(Arc::new(geo));
-                        }
+                            Ok(scene_geo)
+                        },
                     }
-                }
-
-                if scene_geo.is_empty() {
-                    return Err(QueryError::NoGeometryFound);
-                }
-
-                let scene_geo = Arc::new(scene_geo);
-                self.scene_shader_geometry.insert(scene_index, scene_geo.clone());
-                Ok(scene_geo)
+                },
             },
         }
     }
@@ -226,7 +262,7 @@ impl QueryBackend for GltfFile {
         use CameraQuery::*;
         match query {
             FirstInScene {name} => {
-                let scene_index = self.find_scene(name.as_deref())?;
+                let scene_index = self.scenes.query(name.as_deref())?;
 
                 match &self.scene_first_camera {
                     Some(cam) => Ok(cam.clone()),
@@ -261,7 +297,7 @@ impl QueryBackend for GltfFile {
             },
 
             Named {name, scene} => {
-                let scene_index = self.find_scene(scene.as_deref())?;
+                let scene_index = self.scenes.query(scene.as_deref())?;
 
                 let cam_key = (scene_index, name.clone());
                 match self.scene_cameras.get(&cam_key) {
@@ -305,7 +341,7 @@ impl QueryBackend for GltfFile {
     fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<Light>>>, QueryError> {
         use LightQuery::*;
         let scene_index = match query {
-            Scene {name} => self.find_scene(name.as_deref())?,
+            Scene {name} => self.scenes.query(name.as_deref())?,
         };
 
         match self.scene_lights.get(&scene_index) {
