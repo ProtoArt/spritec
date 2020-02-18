@@ -7,13 +7,13 @@ path = "../../spritesheet0.png"
 scale = 2
 
 [[spritesheets.animations]]
-frames = { gltf = "gltf/bigboi.gltf", start_time = 0, end_time = 1000, steps = 4 }
+frames = { gltf = "bigboi.gltf", start_time = 0, end_time = 1000, steps = 5 }
 frame_width = 64
 frame_height = 64
 camera = { name = "front" }
 
 [[spritesheets.animations]]
-frames = { gltf = "gltf/bigboi.gltf", start_time = 0, end_time = 1000, steps = 4 }
+frames = { gltf = "bigboi.gltf", start_time = 0, end_time = 1000, steps = 5 }
 frame_width = 64
 frame_height = 64
 camera = { name = "right" }
@@ -24,16 +24,10 @@ path = "../../spritesheet1.png"
 scale = 2
 
 [[spritesheets.animations]]
-frames = [
-  "obj/bigboi_000001.obj",
-  "obj/bigboi_000010.obj",
-  "obj/bigboi_000020.obj",
-  "obj/bigboi_000030.obj",
-]
+frames = { gltf = "bigboi.gltf", start_time = 0, end_time = 1000, steps = 5 }
 frame_width = 64
 frame_height = 64
-camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
-outline = { thickness = 0.15 }
+camera = { name = "front" }
 
 
 [[spritesheets]]
@@ -41,45 +35,14 @@ path = "../../spritesheet2.png"
 scale = 2
 
 [[spritesheets.animations]]
-frames = [
-  "obj/bigboi_000001.obj",
-  "obj/bigboi_000010.obj",
-  "obj/bigboi_000020.obj",
-  "obj/bigboi_000030.obj",
-]
+frames = { gltf = "bigboi.gltf", start_time = 0, end_time = 1000, steps = 5 }
 frame_width = 64
 frame_height = 64
-camera = { eye = {x = 8.0, y = 2.6, z = 0}, fov_y = 54 }
-
-
-[[spritesheets]]
-path = "../../spritesheet3.png"
-
-[[spritesheets.animations]]
-frames = [
-  "obj/bigboi_000001.obj",
-  "obj/bigboi_000010.obj",
-  "obj/bigboi_000020.obj",
-  "obj/bigboi_000030.obj",
-]
-frame_width = 64
-frame_height = 64
-camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
-
-[[spritesheets.animations]]
-frames = [
-  "obj/bigboi_000001.obj",
-  "obj/bigboi_000010.obj",
-  "obj/bigboi_000020.obj",
-  "obj/bigboi_000030.obj",
-]
-frame_width = 64
-frame_height = 64
-camera = { eye = {x = 8.0, y = 2.6, z = 0}, fov_y = 54 }
+camera = { name = "right" }
 
 
 [[poses]]
-model = { gltf = "gltf/bigboi.gltf", time = 0 }
+model = { gltf = "bigboi.gltf", time = 0 }
 path = "../../pose000000.png"
 width = 64
 height = 64
@@ -87,7 +50,7 @@ scale = 2
 camera = { name = "front" }
 
 [[poses]]
-model = { gltf = "gltf/bigboi.gltf", time = 0 }
+model = { gltf = "bigboi.gltf", time = 0 }
 path = "../../pose000000b.png"
 width = 64
 height = 64
@@ -95,33 +58,65 @@ scale = 2
 camera = { name = "right" }
 
 [[poses]]
-model = "obj/bigboi_000001.obj"
+model = { gltf = "bigboi.gltf", time = 250 }
 path = "../../pose000001.png"
 width = 64
 height = 64
 scale = 2
-camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
+camera = { name = "front" }
 
 [[poses]]
-model = "obj/bigboi_000010.obj"
+model = { gltf = "bigboi.gltf", time = 250 }
+path = "../../pose000001b.png"
+width = 64
+height = 64
+scale = 2
+camera = { name = "right" }
+
+[[poses]]
+model = { gltf = "bigboi.gltf", time = 500 }
 path = "../../pose000002.png"
 width = 64
 height = 64
 scale = 2
-camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
+camera = { name = "front" }
 
 [[poses]]
-model = "obj/bigboi_000020.obj"
+model = { gltf = "bigboi.gltf", time = 500 }
+path = "../../pose000002b.png"
+width = 64
+height = 64
+scale = 2
+camera = { name = "right" }
+
+[[poses]]
+model = { gltf = "bigboi.gltf", time = 750 }
 path = "../../pose000003.png"
 width = 64
 height = 64
 scale = 2
-camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
+camera = { name = "front" }
 
 [[poses]]
-model = "obj/bigboi_000030.obj"
+model = { gltf = "bigboi.gltf", time = 750 }
+path = "../../pose000003b.png"
+width = 64
+height = 64
+scale = 2
+camera = { name = "right" }
+
+[[poses]]
+model = { gltf = "bigboi.gltf", time = 1000 }
 path = "../../pose000004.png"
 width = 64
 height = 64
 scale = 2
-camera = { eye = {x = 0, y = 2.6, z = 8.0}, fov_y = 54 }
+camera = { name = "front" }
+
+[[poses]]
+model = { gltf = "bigboi.gltf", time = 1000 }
+path = "../../pose000004b.png"
+width = 64
+height = 64
+scale = 2
+camera = { name = "right" }
