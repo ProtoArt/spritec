@@ -2,6 +2,7 @@ const {dialog} = require('electron').remote;
 const {basename} = require('path');
 
 const {actions} = require('./slice');
+const {loadGLTF} = require('./actions');
 const Component = require('../../lib/Component');
 
 class ModelList extends Component {
@@ -12,7 +13,7 @@ class ModelList extends Component {
     }
 
     this.state.selectElement.onchange = (event) => {
-      this.dispatch(actions.selectFile(event.target.value));
+      this.dispatch(loadGLTF(event.target.value));
     }
 
     element.querySelector('#spritec-model-add').onclick = (event) => {
@@ -24,7 +25,7 @@ class ModelList extends Component {
         filters: [{name: 'Models', extensions: ['glb', 'gltf']}]
       }).then(({filePaths}) => {
         if (filePaths.length === 0) return;
-        this.dispatch(actions.addFile(filePaths[0]));
+        this.dispatch(loadGLTF(filePaths[0]));
       });
     }
   }
@@ -32,7 +33,7 @@ class ModelList extends Component {
   mapStateToProps() {
     return {
       files: (state) => state.import.files,
-      selectedFile: (state) => state.import.selectedFile,
+      selectedFile: (state) => state.import.selected.path,
     }
   }
 

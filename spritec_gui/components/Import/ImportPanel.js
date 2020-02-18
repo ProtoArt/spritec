@@ -17,8 +17,8 @@ class ImportPanel extends Component {
 
   mapStateToProps() {
     return {
-      width: (state) => state.import.width,
-      height: (state) => state.import.height,
+      width: (state) => state.import.selected.width,
+      height: (state) => state.import.selected.height,
     };
   }
 
