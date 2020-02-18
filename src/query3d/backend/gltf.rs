@@ -5,10 +5,11 @@ mod interpolate;
 use std::sync::Arc;
 use std::path::Path;
 use std::collections::HashMap;
+use std::borrow::Cow;
 
 use crate::scene::{Scene, NodeTree, NodeId, Node, Mesh, Skin, Material, CameraType, LightType};
 use crate::renderer::{Display, ShaderGeometry, JointMatrixTexture, Camera, Light};
-use crate::query3d::{GeometryQuery, GeometryFilter, CameraQuery, LightQuery};
+use crate::query3d::{GeometryQuery, GeometryFilter, AnimationQuery, CameraQuery, LightQuery};
 
 use super::{QueryBackend, QueryError};
 
@@ -18,7 +19,7 @@ use animation::AnimationSet;
 #[derive(Debug)]
 pub struct GltfFile {
     default_scene: usize,
-    nodes: Arc<NodeTree>,
+    nodes: NodeTree,
     scenes: Vec<Arc<Scene>>,
     /// This is a mapping of Node ID to all the animations that act on that node
     animations: HashMap<NodeId, AnimationSet>,
@@ -60,12 +61,11 @@ impl GltfFile {
             lights.map(|light| Arc::new(LightType::from(light))).collect()
         }).unwrap_or_default();
 
-        let nodes = document.nodes().map(|node| {
+        let nodes = NodeTree::from_ordered_nodes(document.nodes().map(|node| {
             let children = node.children().map(|node| NodeId::from_gltf(&node)).collect();
             let node = Node::from_gltf(node, &meshes, &skins, &cameras, &lights);
             (node, children)
-        });
-        let nodes = Arc::new(NodeTree::from_ordered_nodes(nodes));
+        }));
 
         let scenes: Vec<_> = document.scenes()
             .map(|scene| Arc::new(Scene::from_gltf(scene)))
@@ -103,54 +103,63 @@ impl GltfFile {
                 .ok_or_else(|| QueryError::UnknownScene {name: name.to_string()}),
         }
     }
+
+    /// Returns a new node tree with the animations specified by the query applied to each matching
+    /// node. Returns an error if the query did not match any of the nodes or if a single node
+    /// was matched by multiple animations (ambiguous).
+    fn apply_animation_query(&self, query: &AnimationQuery) -> Result<NodeTree, QueryError> {
+        // Set to true if at least one animation was found and applied on any node
+        // If none are applied, the animation name was probably mispelled or something
+        let mut animation_found = false;
+
+        let nodes = self.nodes.try_with_replacements(|node| {
+            match self.animations.get(&node.id) {
+                // If the node has a list of animations, look for the animations that match the AnimationQuery name
+                Some(anim_set) => {
+                    // anim is the animation that will modify the transformation matrix of the current node
+                    let mut anims = anim_set.filter(query.name.as_deref());
+
+                    // Return if no animation matches the name in the animation query
+                    let anim = match anims.next() {
+                        Some(anim) => anim,
+                        None => return Ok(None),
+                    };
+
+                    // Return if multiple animations match the query
+                    if anims.next().is_some() {
+                        return Err(QueryError::AmbiguousAnimation);
+                    }
+
+                    animation_found = true;
+
+                    // Create and set the new transformation matrix of the current node
+                    let new_transform = anim.apply_at(&node.transform, &query.position);
+                    Ok(Some(node.with_transform(new_transform)))
+                },
+                None => Ok(None),
+            }
+        })?;
+
+        if !animation_found {
+            match &query.name {
+                Some(name) => Err(QueryError::UnknownAnimation {name: name.to_string()}),
+                None => Err(QueryError::NoAnimationFound),
+            }
+
+        } else {
+            Ok(nodes)
+        }
+    }
 }
 
 impl QueryBackend for GltfFile {
     fn query_geometry(&mut self, query: &GeometryQuery, display: &Display) -> Result<Arc<Vec<Arc<ShaderGeometry>>>, QueryError> {
         let GeometryQuery {models, animation} = query;
 
-        let mut node_tree = self.nodes.clone();
-
-        if let Some(anim_query) = animation {
-            // Set to true if at least one animation was found and applied on any node
-            // If none are applied, the animation name was probably mispelled or something
-            let mut animation_found = false;
-
-            node_tree = Arc::new(self.nodes.try_with_replacements(|node: &Node| -> Result<Option<Node>, QueryError> {
-                match self.animations.get(&node.id) {
-                    // If the node has a list of animations, look for the animations that match the AnimationQuery name
-                    Some(anim_set) => {
-                        // anim is the animation that will modify the transformation matrix of the current node
-                        let mut anims = anim_set.filter(anim_query.name.as_deref());
-
-                        // Return if no animation matches the name in the animation query
-                        let anim = match anims.next() {
-                            Some(anim) => anim,
-                            None => return Ok(None),
-                        };
-
-                        // Return if multiple animations match the query
-                        if anims.next().is_some() {
-                            return Err(QueryError::AmbiguousAnimation);
-                        }
-
-                        animation_found = true;
-
-                        // Create and set the new transformation matrix of the current node
-                        let new_transform = anim.apply_at(&node.transform, &anim_query.position);
-                        Ok(Some(node.with_transform(new_transform)))
-                    },
-                    None => Ok(None),
-                }
-            })?);
-
-            if !animation_found {
-                match &anim_query.name {
-                    Some(name) => return Err(QueryError::UnknownAnimation {name: name.to_string()}),
-                    None => return Err(QueryError::NoAnimationFound),
-                }
-            }
-        }
+        let nodes = match animation {
+            Some(query) => Cow::Owned(self.apply_animation_query(query)?),
+            None => Cow::Borrowed(&self.nodes),
+        };
 
         use GeometryFilter::*;
         let scene_index = match models {
@@ -165,10 +174,10 @@ impl QueryBackend for GltfFile {
                 let Self {scenes, default_joint_matrix_texture, ..} = self;
 
                 let scene = &scenes[scene_index];
-                let node_world_transforms = node_tree.world_transforms(&scene.roots);
+                let node_world_transforms = nodes.world_transforms(&scene.roots);
 
                 let mut scene_geo = Vec::new();
-                for (parent_trans, node) in scene.roots.iter().flat_map(|&root| node_tree.traverse(root)) {
+                for (parent_trans, node) in scene.roots.iter().flat_map(|&root| nodes.traverse(root)) {
                     let model_transform = parent_trans * node.transform;
 
                     if let Some((mesh, skin)) = node.mesh() {
