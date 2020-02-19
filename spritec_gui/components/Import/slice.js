@@ -4,10 +4,7 @@ const initialSelectedState = {
   path: null, // file path of selected model
   cameras: [], // list of camera {id, name}
   animations: [], // list of animations {name, duration}
-  animation: {
-    name: null, // null means no animation
-    duration: 1, // duration of animation in seconds
-  },
+  animation: null, // chosen animation {name, duration}, null means no animation
   animation_total_steps: 16, // number of frames to generate for the animation
   camera: {
     id: null,
@@ -51,7 +48,10 @@ const importSlice = createSlice({
     },
     setCamera(state, action) {
       state.selected.camera = action.payload;
-    }
+    },
+    setAnimationSteps(state, action) {
+      state.selected.animation_total_steps = action.payload
+    },
   }
 })
 
