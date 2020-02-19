@@ -1,4 +1,4 @@
-const spritec = require('spritec_binding');
+const {Spritec} = require('spritec_binding');
 const Component = require('../../lib/Component');
 
 class ImportCanvas extends Component {
@@ -7,6 +7,10 @@ class ImportCanvas extends Component {
     this.state = {
       canvas,
       ctx: canvas.getContext('2d'),
+      startTime: performance.now(),
+      step: -1,
+      renderCanvas: this.renderCanvas.bind(this),
+      spritec: new Spritec(),
     };
     this.state.ctx.imageSmoothingEnabled = false;
 
@@ -19,6 +23,9 @@ class ImportCanvas extends Component {
       scale = Math.max(0.125, scale);
       this.state.canvas.style.transform = `scale(${scale})`;
     }
+
+    this.renderCanvas = this.renderCanvas.bind(this);
+    requestAnimationFrame(this.renderCanvas);
   }
 
   mapStateToProps() {
@@ -27,39 +34,80 @@ class ImportCanvas extends Component {
       height: (state) => state.import.selected.height,
       path: (state) => state.import.selected.path,
       camera: (state) => state.import.selected.camera,
+      animation: (state) => state.import.selected.animation,
+      animation_total_steps: (state) => state.import.selected.animation_total_steps,
     };
   }
 
-  render() {
-    const {canvas, ctx} = this.state;
-    const {width, height, path, camera} = this.props;
+  componentDidUpdate(prevProps) {
+    if (prevProps.path !== this.props.path && this.props.path) {
+      this.state.spritec.setFile(this.props.path);
+    }
 
-    canvas.width = width;
-    canvas.height = height;
+    // Only set canvas dimensions when we need to as this call resets the canvas
+    const {width, height} = this.props;
+    if (prevProps.width !== width || prevProps.height !== height) {
+      this.state.canvas.width = width;
+      this.state.canvas.height = height;
+    }
+  }
 
-    if (path === null) return;
-
-    // TODO: use offscreen canvas when calling spritec
-    let imageBuffer = new Uint8ClampedArray(spritec.render_sprite(
-      path,
+  async renderCanvas(timestamp) {
+    const {canvas, ctx, startTime, step, spritec} = this.state;
+    const {
       width,
       height,
-      new Float32Array(camera.position).buffer,
-      new Float32Array(camera.rotation).buffer,
-      new Float32Array(camera.scale).buffer,
-      camera.aspect_ratio,
-      camera.near_z,
-      camera.far_z,
-      camera.fov,
-    ));
+      camera,
+      animation,
+      animation_total_steps
+    } = this.props;
 
-    let imageData = new ImageData(imageBuffer, width);
+    const time = (timestamp - startTime) / 1000;
+    /**
+     * If animation is null then the step is 0. If there is animation, then
+     * this produces a graph that cycles through the steps given the time:
+     * For example with animation_total_steps = 4:
+     *
+     * s |      **      **
+     * t |    **      **
+     * e |  **      **
+     * p |**      **
+     * --+----------------->
+     *    time
+     */
+    const current_step = animation === null ? 0 : Math.floor(
+      (((animation_total_steps - 1) * time) / animation.duration) %
+      animation_total_steps
+    );
 
-    createImageBitmap(imageData).then((bitmap) => {
+    // Only render if there is something new to render
+    if (this.props.path !== null && step !== current_step) {
+      this.state.step = current_step;
+
+      let imageBuffer = new Uint8ClampedArray(spritec.render(
+        width,
+        height,
+        new Float32Array(camera.position).buffer,
+        new Float32Array(camera.rotation).buffer,
+        new Float32Array(camera.scale).buffer,
+        camera.aspect_ratio,
+        camera.near_z,
+        camera.far_z,
+        camera.fov,
+        animation && animation.name,
+        animation_total_steps,
+        current_step
+      ));
+
+      let imageData = new ImageData(imageBuffer, width);
+
+      const bitmap = await createImageBitmap(imageData);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(bitmap, 0, 0);
       bitmap.close();
-    });
+    }
+
+    requestAnimationFrame(this.renderCanvas);
   }
 }
 

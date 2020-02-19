@@ -1,3 +1,4 @@
+const AnimationList = require('./components/Import/AnimationList');
 const CameraList = require('./components/Import/CameraList');
 const ImportCanvas = require('./components/Import/ImportCanvas');
 const ImportPanel = require('./components/Import/ImportPanel');
@@ -16,6 +17,7 @@ let components = [
   new ImportPanel(document.querySelector('#spritec-import'), store),
   new ModelList(document.querySelector('#spritec-model-list'), store),
   new CameraList(document.querySelector('#spritec-camera-list'), store),
+  new AnimationList(document.querySelector('#spritec-animation-list'), store),
 ];
 
 store.subscribe(() => {

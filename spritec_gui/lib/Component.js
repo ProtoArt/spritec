@@ -25,11 +25,20 @@ class Component {
   onCreate(_) {}
 
   /**
+   * Called when the component values are updated but before it is rendered
+   * again.
+   */
+  componentDidUpdate(_prevProps) {}
+
+  /**
    * Updates the props of this Component.
-   * Returns true if the component should render again
+   * Returns true if the component should render again because a prop changed.
    */
   _updateComponent(newState) {
-    return Object.entries(this._mapStateToProps)
+    // Get a copy of the props before we update it.
+    let prevProps = Object.assign({}, this.props);
+
+    let shouldRender = Object.entries(this._mapStateToProps)
       .reduce((shouldRender, entry) => {
         let prevValue = this.props[entry[0]];
         let newValue = (entry[1])(newState);
@@ -38,6 +47,9 @@ class Component {
 
         return shouldRender || (newValue !== prevValue);
       }, false)
+
+    if (shouldRender) this.componentDidUpdate(prevProps);
+    return shouldRender;
   }
 
   /**
