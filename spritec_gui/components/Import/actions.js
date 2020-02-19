@@ -16,10 +16,11 @@ const loadGLTF = path => dispatch => {
   const loader = new THREE.GLTFLoader();
   loader.load(path,
     (gltf) => {
+      dispatch(actions.clearSelected());
+
       // Cache the scene outside of redux
       scene = gltf.scene;
 
-      // load the camera info first before loading the model
       const cameras = gltf.cameras.map(camera => ({
         id: camera.id,
         name: parseCameraName(camera),
@@ -28,7 +29,16 @@ const loadGLTF = path => dispatch => {
         dispatch(loadCamera(cameras[0].id));
       }
 
-      dispatch(actions.loadModel({path, cameras}));
+      const animations = gltf.animations.map(animation => ({
+        name: animation.name,
+        duration: animation.duration,
+      }));
+      if (animations.length > 0) {
+        dispatch(actions.setAnimation(animations[0]));
+      }
+
+      // Load model last to render the canvas
+      dispatch(actions.loadModel({path, cameras, animations}));
     },
     null, // onProgress
     err => console.error(err),
