@@ -41,7 +41,7 @@ impl LightUniform {
 
         use LightType::*;
         match light {
-            Point {color, intensity, range} => Self {
+            Point {name: _, color, intensity, range} => Self {
                 position: UniformValue::Vec4([pos.x, pos.y, pos.z, 1.0]),
                 color: UniformValue::Vec3((color * intensity).into_array()),
                 range: UniformValue::Float(range.unwrap_or(0.0)),
@@ -50,7 +50,7 @@ impl LightUniform {
                 light_angle_offset: UniformValue::Float(0.0),
             },
 
-            Directional {color, intensity} => Self {
+            Directional {name: _, color, intensity} => Self {
                 position: UniformValue::Vec4([direction.x, direction.y, direction.z, 0.0]),
                 color: UniformValue::Vec3((color * intensity).into_array()),
                 range: UniformValue::Float(0.0),
@@ -59,7 +59,7 @@ impl LightUniform {
                 light_angle_offset: UniformValue::Float(0.0),
             },
 
-            Spot {color, intensity, range, inner_cone_angle, outer_cone_angle} => {
+            Spot {name: _, color, intensity, range, inner_cone_angle, outer_cone_angle} => {
                 // cos() expects a value in radians
                 let inner_cone_angle = inner_cone_angle.get_radians();
                 let outer_cone_angle = outer_cone_angle.get_radians();

@@ -35,10 +35,12 @@ pub struct GltfFile {
     scene_anim_shader_geometry: SceneAnimQueryCache<Arc<Vec<Arc<ShaderGeometry>>>>,
     /// Cache all of the lights in an entire scene, referenced by scene index
     scene_lights: HashMap<usize, Arc<Vec<Arc<Light>>>>,
+    /// Cache each light by scene index and name
+    scene_named_lights: HashMap<(usize, String), Arc<Vec<Arc<Light>>>>,
     /// Cache the first camera in the scene
     scene_first_camera: Option<Arc<Camera>>,
     /// Cache each camera by scene index and name
-    scene_cameras: HashMap<(usize, String), Arc<Camera>>,
+    scene_named_cameras: HashMap<(usize, String), Arc<Camera>>,
 }
 
 impl GltfFile {
@@ -92,8 +94,9 @@ impl GltfFile {
             scene_shader_geometry: HashMap::new(),
             scene_anim_shader_geometry: SceneAnimQueryCache::default(),
             scene_lights: HashMap::new(),
+            scene_named_lights: HashMap::new(),
             scene_first_camera: None,
-            scene_cameras: HashMap::new(),
+            scene_named_cameras: HashMap::new(),
         })
     }
 }
@@ -331,7 +334,7 @@ impl QueryBackend for GltfFile {
                 let scene_index = self.scenes.query(scene.as_deref())?;
 
                 let cam_key = (scene_index, name.clone());
-                match self.scene_cameras.get(&cam_key) {
+                match self.scene_named_cameras.get(&cam_key) {
                     Some(cam) => Ok(cam.clone()),
 
                     None => {
@@ -357,7 +360,7 @@ impl QueryBackend for GltfFile {
 
                         match found_camera {
                             Some(cam) => {
-                                self.scene_cameras.insert(cam_key, cam.clone());
+                                self.scene_named_cameras.insert(cam_key, cam.clone());
                                 Ok(cam)
                             },
 
@@ -371,33 +374,70 @@ impl QueryBackend for GltfFile {
 
     fn query_lights(&mut self, query: &LightQuery) -> Result<Arc<Vec<Arc<Light>>>, QueryError> {
         use LightQuery::*;
-        let scene_index = match query {
-            Scene {name} => self.scenes.query(name.as_deref())?,
-        };
+        match query {
+            Scene {name} => {
+                let scene_index = self.scenes.query(name.as_deref())?;
 
-        match self.scene_lights.get(&scene_index) {
-            Some(scene_lights) => Ok(scene_lights.clone()),
+                match self.scene_lights.get(&scene_index) {
+                    Some(scene_lights) => Ok(scene_lights.clone()),
 
-            None => {
-                let scene = &self.scenes[scene_index];
+                    None => {
+                        let scene = &self.scenes[scene_index];
 
-                let mut scene_lights = Vec::new();
-                for (parent_trans, node) in scene.roots.iter().flat_map(|&root| self.nodes.traverse(root)) {
-                    let world_transform = parent_trans * node.transform;
+                        let mut scene_lights = Vec::new();
+                        for (parent_trans, node) in scene.roots.iter().flat_map(|&root| self.nodes.traverse(root)) {
+                            let world_transform = parent_trans * node.transform;
 
-                    if let Some(light) = node.light() {
-                        let light = Light {data: light.clone(), world_transform};
-                        scene_lights.push(Arc::new(light));
-                    }
+                            if let Some(light) = node.light() {
+                                let light = Light {data: light.clone(), world_transform};
+                                scene_lights.push(Arc::new(light));
+                            }
+                        }
+
+                        if scene_lights.is_empty() {
+                            return Err(QueryError::NoLightsFound);
+                        }
+
+                        let scene_lights = Arc::new(scene_lights);
+                        self.scene_lights.insert(scene_index, scene_lights.clone());
+                        Ok(scene_lights)
+                    },
                 }
+            },
 
-                if scene_lights.is_empty() {
-                    return Err(QueryError::NoLightsFound);
+            Named {name, scene} => {
+                let scene_index = self.scenes.query(scene.as_deref())?;
+
+                let light_key = (scene_index, name.clone());
+                match self.scene_named_lights.get(&light_key) {
+                    Some(scene_lights) => Ok(scene_lights.clone()),
+
+                    None => {
+                        let scene = &self.scenes[scene_index];
+
+                        let nodes = scene.roots.iter().flat_map(|&root| self.nodes.traverse(root));
+                        let scene_lights: Vec<_> = nodes.filter_map(|(parent_trans, node)| {
+                            let world_transform = parent_trans * node.transform;
+
+                            match node.light() {
+                                Some(light) if node.name.as_ref() == Some(name) || light.name() == Some(name) => {
+                                    Some(Arc::new(Light {data: light.clone(), world_transform}))
+                                },
+
+                                Some(_) |
+                                None => None,
+                            }
+                        }).collect();
+
+                        if scene_lights.is_empty() {
+                            return Err(QueryError::NoLightsFound);
+                        }
+
+                        let scene_lights = Arc::new(scene_lights);
+                        self.scene_named_lights.insert(light_key, scene_lights.clone());
+                        Ok(scene_lights)
+                    },
                 }
-
-                let scene_lights = Arc::new(scene_lights);
-                self.scene_lights.insert(scene_index, scene_lights.clone());
-                Ok(scene_lights)
             },
         }
     }

@@ -23,10 +23,8 @@ pub enum QueryError {
 
     #[error("Could not find animation named `{name}` in model file")]
     UnknownAnimation {name: String},
-
     #[error("Could not find any matching animation in model file")]
     NoAnimationFound,
-
     #[error("Multiple animations matched for a single node, please specify an animation name")]
     AmbiguousAnimation,
 
@@ -35,10 +33,11 @@ pub enum QueryError {
 
     #[error("Could not find camera named `{name}` in model file")]
     UnknownCamera {name: String},
-
     #[error("Could not find any matching cameras in model file")]
     NoCameraFound,
 
+    #[error("Could not find light named `{name}` in model file")]
+    UnknownLight {name: String},
     #[error("Could not find any matching lights in model file")]
     NoLightsFound,
 }

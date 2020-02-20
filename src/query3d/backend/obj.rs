@@ -111,8 +111,11 @@ impl QueryBackend for ObjFile {
         // This code still does the work to produce useful errors
         match query {
             LightQuery::Scene {name: None} => Err(QueryError::NoLightsFound),
+            LightQuery::Named {name, scene: None} => Err(QueryError::UnknownCamera {name: name.clone()}),
+
             // OBJ files do not contain any named scenes
-            LightQuery::Scene {name: Some(name)} => Err(QueryError::UnknownScene {
+            LightQuery::Scene {name: Some(name)} |
+            LightQuery::Named {name: _, scene: Some(name)} => Err(QueryError::UnknownScene {
                 name: name.clone(),
             }),
         }
