@@ -75,6 +75,13 @@ pub enum LightQuery {
         /// The name of the scene to look in or None if the default scene should be used
         name: Option<String>,
     },
+    /// Returns the light with the given name
+    Named {
+        /// The name of the light to look for
+        name: String,
+        /// The name of the scene to look in or None if the default scene should be used
+        scene: Option<String>,
+    },
 }
 
 impl LightQuery {

@@ -114,6 +114,7 @@ pub fn generate_pose_task(
             //TODO: Figure out how we want to allow lights to be configured
             lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
                 data: Arc::new(LightType::Directional {
+                    name: None,
                     color: Rgb::white(),
                     intensity: 1.0,
                 }),
@@ -174,6 +175,7 @@ pub fn generate_spritesheet_task(
                         //TODO: Figure out how we want to allow lights to be configured
                         lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
                             data: Arc::new(LightType::Directional {
+                                name: None,
                                 color: Rgb::white(),
                                 intensity: 1.0,
                             }),
@@ -219,6 +221,7 @@ pub fn generate_spritesheet_task(
                         //TODO: Figure out how we want to allow lights to be configured
                         lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
                             data: Arc::new(LightType::Directional {
+                                name: None,
                                 color: Rgb::white(),
                                 intensity: 1.0,
                             }),

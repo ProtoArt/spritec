@@ -8,6 +8,9 @@ pub enum LightType {
     /// The brightness of the light attenuates in a physically correct manner as distance increases
     /// from the light's position (i.e. brightness goes like the inverse square of the distance).
     Point {
+        /// The name of the light (if any)
+        name: Option<String>,
+
         /// The color of the light in linear space
         color: Rgb,
 
@@ -25,6 +28,9 @@ pub enum LightType {
     ///
     /// The light is not attenuated, because it is at an infinite distance away.
     Directional {
+        /// The name of the light (if any)
+        name: Option<String>,
+
         /// The color of the light in linear space
         color: Rgb,
 
@@ -38,6 +44,9 @@ pub enum LightType {
     /// The brightness attenuates in a physically correct manner as distance increases from the
     /// light's position (i.e. brightness goes like the inverse square of the distance).
     Spot {
+        /// The name of the light (if any)
+        name: Option<String>,
+
         /// The color of the light in linear space
         color: Rgb,
 
@@ -62,6 +71,8 @@ pub enum LightType {
 
 impl<'a> From<gltf::khr_lights_punctual::Light<'a>> for LightType {
     fn from(light: gltf::khr_lights_punctual::Light<'a>) -> Self {
+        let name = light.name().map(|s| s.to_string());
+
         let color = Rgb::from(light.color());
         // HACK: The glTF exporter for Blender has a bug where it exports the light intensity in
         //   the wrong units. This works around that issue.
@@ -72,23 +83,38 @@ impl<'a> From<gltf::khr_lights_punctual::Light<'a>> for LightType {
         use gltf::khr_lights_punctual::Kind::*;
         match light.kind() {
             Point => LightType::Point {
+                name,
                 color,
                 intensity,
                 range,
             },
 
             Directional => LightType::Directional {
+                name,
                 color,
                 intensity,
             },
 
             Spot {inner_cone_angle, outer_cone_angle} => LightType::Spot {
+                name,
                 color,
                 intensity,
                 range,
                 inner_cone_angle: Radians::from_radians(inner_cone_angle),
                 outer_cone_angle: Radians::from_radians(outer_cone_angle),
             },
+        }
+    }
+}
+
+impl LightType {
+    /// Returns the name of this light
+    pub fn name(&self) -> Option<&str> {
+        use LightType::*;
+        match self {
+            Point {name, ..} |
+            Directional {name, ..} |
+            Spot {name, ..} => name.as_deref(),
         }
     }
 }
