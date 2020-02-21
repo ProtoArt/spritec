@@ -1,0 +1,11 @@
+# Configuration file for generating images with spritec
+#
+# Paths in this file are relative to the location of this configuration file
+
+[[poses]]
+model = "isodog.gltf"
+path = "../../isodog.png"
+width = 32
+height = 32
+scale = 32
+camera = { name = "Camera" }
