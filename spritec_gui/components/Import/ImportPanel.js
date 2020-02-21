@@ -32,6 +32,7 @@ class ImportPanel extends Component {
 
   render() {
     this.state.buttonExport.disabled = (this.props.path === null);
+    this.state.buttonExport.disabled = false; // TODO: remove this line
     this.state.inputWidth.value = this.props.width;
     this.state.inputHeight.value = this.props.height;
     this.state.inputSteps.value = this.props.steps;

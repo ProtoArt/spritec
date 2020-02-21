@@ -72,14 +72,69 @@
         </form>
         <hr class="uk-margin-remove">
         <div class="uk-padding-small">
+          <!-- TODO: add disabled to the button below -->
           <button
             disabled
             id="button-export"
+            uk-toggle="target: #spritec-export-modal"
             class="uk-button uk-button-primary uk-width-1-1"
           >
           Export Sprites
           </button>
         </div>
+      </div>
+    </div>
+    <div id="spritec-export-modal" class="uk-flex-top" uk-modal>
+      <div class="uk-modal-dialog uk-margin-auto-vertical">
+              <form class="uk-form-stacked" id="export-form">
+        <button class="uk-modal-close-default" type="button" uk-close></button>
+        <div class="uk-modal-header">
+          <h4>Export options</h4>
+        </div>
+        <div class="uk-modal-body">
+          <div uk-grid>
+            <div class="uk-width-auto@m">
+              <ul class="uk-tab-left" uk-tab="connect: #export-switcher">
+                <li><a href="#">png</a></li>
+                <li><a href="#">gif</a></li>
+              </ul>
+            </div>
+            <div class="uk-width-expand@m">
+                <label class="uk-form-label" for="export-name">Name</label>
+                <div class="uk-form-controls">
+                  <input required id="export-name" class="uk-input" type="text" placeholder="bigboi">
+                </div>
+                <div class="uk-margin">
+                  <label class="uk-form-label" for="export-scale">Scale<b class="uk-margin-small-left">1x</b></label>
+                  <div class="uk-form-controls">
+                    <input id="export-scale" class="uk-range" type="range" value="1" min="1" max="10" step="1">
+                  </div>
+                </div>
+                <div id="export-switcher" class="uk-switcher uk-margin">
+                  <div id="export-png">
+                    <div class="uk-form-label">
+                      Format
+                    </div>
+                    <label>
+                      <input class="uk-radio" type="radio" name="png-format" checked>
+                      Spritesheet
+                    </label>
+                    <br>
+                    <label>
+                      <input class="uk-radio" type="radio" name="png-format">
+                      Frame by frame (001.png, 002.png, ...)
+                    </label>
+                  </div>
+                  <div id="export-gif"></div>
+                </div>
+            </div>
+          </div>
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+          <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+          <input id="export-modal-button" class="uk-button uk-button-primary" type="submit" value="Export"></input>
+        </div>
+              </form>
       </div>
     </div>
   </body>
