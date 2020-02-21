@@ -14,7 +14,7 @@ const store = configureStore({
 
 let components = [
   new ImportCanvas(document.querySelector('#spritec-container'), store),
-  new ImportPanel(document.querySelector('#spritec-import'), store),
+  new ImportPanel(document.querySelector('#import-panel'), store),
   new ModelList(document.querySelector('#spritec-model-list'), store),
   new CameraList(document.querySelector('#spritec-camera-list'), store),
   new AnimationList(document.querySelector('#spritec-animation-list'), store),
