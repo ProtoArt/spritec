@@ -1,3 +1,4 @@
+use gif::Repeat::Infinite;
 use neon::prelude::*;
 use spritec::math::{
     Mat4,
@@ -178,6 +179,7 @@ declare_types! {
             frames.iter().for_each(|frame| {
                 encoder.write_frame(&frame).expect("Failed to encode gif")
             });
+            encoder.write_extension(gif::ExtensionData::Repetitions(Infinite)).unwrap();
 
             Ok(cx.undefined().upcast())
         }

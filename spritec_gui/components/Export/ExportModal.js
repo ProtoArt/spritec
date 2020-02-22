@@ -1,5 +1,6 @@
+const {basename, extname} = require('path');
 const Component = require('../../lib/Component');
-const {actions} = require ('../Import/slice');
+const {actions} = require('../Import/slice');
 const {exportSprites} = require('./actions');
 
 class ExportModal extends Component {
@@ -7,6 +8,7 @@ class ExportModal extends Component {
     this.state = {
       scaleText: element.querySelector('#export-scale-text'),
       scaleElement: element.querySelector('#export-scale'),
+      nameElement: element.querySelector('#export-name'),
       submitButton: element.querySelector('#export-modal-button'),
     };
 
@@ -27,15 +29,19 @@ class ExportModal extends Component {
       submitting: state => state.import.submitting,
       width: state => state.import.selected.width,
       height: state => state.import.selected.height,
+      path: state => state.import.selected.path,
     };
   }
 
   render() {
-    const {width, height, scale, submitting} = this.props;
+    const {width, height, scale, submitting, path} = this.props;
     this.state.submitButton.disabled = submitting;
     this.state.scaleText.innerText =
       `${scale}x (${width * scale}x${height * scale})`;
     this.state.scaleElement.value = scale;
+    if (path) {
+      this.state.nameElement.value = basename(path, extname(path));
+    }
   }
 }
 
