@@ -19,10 +19,8 @@ let components = [
   new ModelList(document.getElementById('spritec-model-list'), store),
   new CameraList(document.getElementById('spritec-camera-list'), store),
   new AnimationList(document.getElementById('spritec-animation-list'), store),
+  new ExportModal(document, store),
 ];
-
-// Static components
-new ExportModal(document, store);
 
 store.subscribe(() => {
   let state = store.getState();

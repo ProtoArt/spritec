@@ -59,6 +59,128 @@ declare_types! {
             });
             Ok(cx.undefined().upcast())
         }
+        /*
+
+        /// Saves all the sprites on one spritesheet.
+        method saveSpritesheet(mut cx) {
+            Ok(cx.undefined().upcast())
+        }
+
+        /// Saves each sprite as its own image.
+        method saveSprites(mut cx) {
+            Ok(cx.undefined().upcast())
+        }
+
+*/
+        method saveGif(mut cx) {
+            let mut this = cx.this();
+
+            let file = cx.borrow(&this, |spritec| {
+                spritec.file.as_ref().expect("No file to render").clone()
+            });
+
+            // Arguments from JavaScript
+            let path_out = cx.argument::<JsString>(0)?.value();
+            let width = cx.argument::<JsNumber>(1)?.value() as u32;
+            let height = cx.argument::<JsNumber>(2)?.value() as u32;
+            let scale = cx.argument::<JsNumber>(3)?.value() as u32;
+
+            let cam_position = cx.argument::<JsArrayBuffer>(4)?;
+            let cam_rotation = cx.argument::<JsArrayBuffer>(5)?;
+            let cam_scale = cx.argument::<JsArrayBuffer>(6)?;
+            let cam_aspect_ratio = cx.argument::<JsNumber>(7)?.value() as f32;
+            let cam_near_z = cx.argument::<JsNumber>(8)?.value() as f32;
+            let cam_far_z = cx.argument::<JsNumber>(9)?.value() as f32;
+            let cam_fov_deg = cx.argument::<JsNumber>(10)?.value() as f32;
+
+            // Map JavaScript null to default values (None, 0.0).
+            let (animation_name, animation_duration) = cx
+                .argument::<JsValue>(11)?
+                .downcast::<JsObject>()
+                .map_or((None, 0.0), |obj| {
+                    let name = obj
+                        .get(&mut cx, "name")
+                        .expect("'name' property not found in animation")
+                        .downcast::<JsString>().unwrap().value();
+                    let duration = obj
+                        .get(&mut cx, "duration")
+                        .expect("'duration' property not found in animation")
+                        .downcast::<JsNumber>().unwrap().value() as f32;
+                    (Some(name), duration)
+                });
+            let animation_total_steps = cx.argument::<JsNumber>(12)?.value() as u32;
+
+            let file_out = std::fs::File::create(
+                Path::new(&path_out)
+            ).expect("Can't write to destination");
+
+            let camera = Arc::new(create_camera(
+                Vec3::from(take_3(&cx, &cam_position)),
+                Quaternion::from(Vec4::from(take_4(&cx, &cam_rotation))),
+                Vec3::from(take_3(&cx, &cam_scale)),
+                cam_aspect_ratio,
+                cam_near_z,
+                cam_far_z,
+                cam_fov_deg,
+            ));
+
+            let lights = Arc::new(vec![Arc::new(Light {
+                data: Arc::new(LightType::Directional {
+                    color: Rgb::white(),
+                    intensity: 1.0,
+                }),
+                world_transform: Mat4::rotation_x((-60.0f32).to_radians()),
+            })]);
+
+            // Delay between frames, where each unit is 10ms.
+            let frame_delay = {
+                let delay_ms = (animation_duration * 1000.0) / (animation_total_steps as f32);
+                (delay_ms / 10.0).round() as u16
+            };
+
+            let frames = cx.borrow_mut(&mut this, |mut spritec| {
+                let mut frames = Vec::<gif::Frame>::new();
+                for animation_cur_step in 0..animation_total_steps {
+                    let job = RenderJob {
+                        scale: NonZeroU32::new(scale).expect("Scale to be a positive integer"),
+                        root: RenderNode::RenderedImage(describe_sprite(
+                                file.clone(),
+                                width,
+                                height,
+                                camera.clone(),
+                                lights.clone(),
+                                &animation_name,
+                                animation_total_steps,
+                                animation_cur_step,
+                        )),
+                    };
+                    let image = job.execute(&mut spritec.ctx).expect("Sprite creation failed");
+                    let mut frame = gif::Frame::from_rgba(
+                        image.width() as u16,
+                        image.height() as u16,
+                        &mut image.into_raw(),
+                    );
+                    frame.delay = frame_delay;
+                    frame.dispose = gif::DisposalMethod::Background;
+                    frames.push(frame);
+                }
+
+                frames
+            });
+
+            let (final_width, final_height) = {
+                let frame = frames.first().unwrap();
+                (frame.width, frame.height)
+            };
+
+            let mut encoder = gif::Encoder::new(file_out, final_width, final_height, &[])
+                .expect("Failed to create gif encoder");
+            frames.iter().for_each(|frame| {
+                encoder.write_frame(&frame).expect("Failed to encode gif")
+            });
+
+            Ok(cx.undefined().upcast())
+        }
 
         method render(mut cx) {
             let mut this = cx.this();
@@ -88,7 +210,7 @@ declare_types! {
             let animation_total_steps = cx.argument::<JsNumber>(10)?.value() as u32;
             let animation_cur_step = cx.argument::<JsNumber>(11)?.value() as u32;
 
-            let camera = RenderCamera::Camera(Arc::new(create_camera(
+            let camera = Arc::new(create_camera(
                 Vec3::from(take_3(&cx, &cam_position)),
                 Quaternion::from(Vec4::from(take_4(&cx, &cam_rotation))),
                 Vec3::from(take_3(&cx, &cam_scale)),
@@ -96,52 +218,32 @@ declare_types! {
                 cam_near_z,
                 cam_far_z,
                 cam_fov_deg,
-            )));
+            ));
 
-            let job = RenderJob {
-                scale: unsafe { NonZeroU32::new_unchecked(1) },
-                root: RenderNode::RenderedImage(RenderedImage {
-                    size: Size {
-                        width: NonZeroU32::new(width).expect("Width is not a u32"),
-                        height: NonZeroU32::new(height).expect("Height is not a u32"),
-                    },
-                    background: Rgba {
-                        r: 0.0,
-                        g: 0.0,
-                        b: 0.0,
-                        a: 0.0,
-                    },
-                    camera,
-                    lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
-                        data: Arc::new(LightType::Directional {
-                            color: Rgb::white(),
-                            intensity: 1.0,
-                        }),
-                        world_transform: Mat4::rotation_x((-60.0f32).to_radians()),
-                    })])),
-                    ambient_light: Rgb::white() * 0.5,
-                    geometry: FileQuery {
-                        query: GeometryQuery {
-                            models: GeometryFilter::all_in_default_scene(),
-                            animation: animation_name.map(|name| AnimationQuery {
-                                name: Some(name),
-                                position: AnimationPosition::RelativeTime {
-                                    start_time: Milliseconds::from_sec(0.0),
-                                    weight: get_weight(animation_cur_step, animation_total_steps),
-                                },
-                            }),
-                        },
-                        file,
-                    },
-                    outline: Outline {
-                        thickness: 0.0,
-                        color: Rgba::black(),
-                    },
+            let lights = Arc::new(vec![Arc::new(Light {
+                data: Arc::new(LightType::Directional {
+                    color: Rgb::white(),
+                    intensity: 1.0,
                 }),
-            };
+                world_transform: Mat4::rotation_x((-60.0f32).to_radians()),
+            })]);
+
+            let sprite = describe_sprite(
+                file,
+                width,
+                height,
+                camera.clone(),
+                lights.clone(),
+                &animation_name,
+                animation_total_steps,
+                animation_cur_step,
+            );
 
             let image = cx.borrow_mut(&mut this, |mut spritec| {
-                job.execute(&mut spritec.ctx).expect("Sprite creation failed")
+                RenderJob {
+                    scale: unsafe { NonZeroU32::new_unchecked(1) },
+                    root: RenderNode::RenderedImage(sprite),
+                }.execute(&mut spritec.ctx).expect("Sprite creation failed")
             });
 
             let mut array_buffer = cx.array_buffer(image.width() * image.height() * 4)?;
@@ -156,6 +258,54 @@ declare_types! {
             });
             Ok(array_buffer.upcast())
         }
+    }
+}
+
+/// Describes the sprite to be rendered. This information is used by the
+/// ThreadRenderContext to render the sprite.
+///
+/// If `animation_name` is None then the default pose is used.
+fn describe_sprite(
+    file: Arc<Mutex<File>>,
+    width: u32,
+    height: u32,
+    camera: Arc<Camera>,
+    lights: Arc<Vec<Arc<Light>>>,
+    animation_name: &Option<String>,
+    animation_total_steps: u32,
+    animation_cur_step: u32,
+) -> RenderedImage {
+    RenderedImage {
+        size: Size {
+            width: NonZeroU32::new(width).expect("Width is not a u32"),
+            height: NonZeroU32::new(height).expect("Height is not a u32"),
+        },
+        background: Rgba {
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            a: 0.0,
+        },
+        camera: RenderCamera::Camera(camera),
+        lights: RenderLights::Lights(lights),
+        ambient_light: Rgb::white() * 0.5,
+        geometry: FileQuery {
+            query: GeometryQuery {
+                models: GeometryFilter::all_in_default_scene(),
+                animation: animation_name.as_ref().map(|name| AnimationQuery {
+                    name: Some(name.to_string()),
+                    position: AnimationPosition::RelativeTime {
+                        start_time: Milliseconds::from_sec(0.0),
+                        weight: get_weight(animation_cur_step, animation_total_steps),
+                    },
+                }),
+            },
+            file,
+        },
+        outline: Outline {
+            thickness: 0.0,
+            color: Rgba::black(),
+        },
     }
 }
 

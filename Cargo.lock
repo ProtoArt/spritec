@@ -1338,6 +1338,8 @@ dependencies = [
 name = "spritec_binding"
 version = "0.1.0"
 dependencies = [
+ "gif",
+ "image 0.23.0",
  "neon",
  "neon-build",
  "spritec",

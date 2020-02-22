@@ -19,5 +19,9 @@ crate-type = ["cdylib"]
 neon-build = "0.3.3"
 
 [dependencies]
+image = "0.23"
+# Sets gif version to be the same as image's dependency
+# https://github.com/image-rs/image/issues/1041#issuecomment-534194252
+gif = "*"
 neon = "0.3.3"
 spritec = { path = "../.." }

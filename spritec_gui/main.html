@@ -105,7 +105,7 @@
                   <input required id="export-name" class="uk-input" type="text" placeholder="bigboi">
                 </div>
                 <div class="uk-margin">
-                  <label class="uk-form-label" for="export-scale">Scale<b class="uk-margin-small-left">1x</b></label>
+                  <label class="uk-form-label" for="export-scale">Scale<b id="export-scale-text" class="uk-margin-small-left">1x</b></label>
                   <div class="uk-form-controls">
                     <input id="export-scale" class="uk-range" type="range" value="1" min="1" max="10" step="1">
                   </div>
@@ -116,12 +116,12 @@
                       Format
                     </div>
                     <label>
-                      <input class="uk-radio" type="radio" name="png-format" checked>
+                      <input class="uk-radio" type="radio" name="png-format" value="spritesheet" checked>
                       Spritesheet
                     </label>
                     <br>
                     <label>
-                      <input class="uk-radio" type="radio" name="png-format">
+                      <input class="uk-radio" type="radio" name="png-format" value="frame">
                       Frame by frame (001.png, 002.png, ...)
                     </label>
                   </div>

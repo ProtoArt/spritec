@@ -18,6 +18,7 @@ const initialSelectedState = {
   },
   width: 64,
   height: 64,
+  scale: 1,
 };
 
 const importSlice = createSlice({
@@ -26,6 +27,9 @@ const importSlice = createSlice({
     selected: initialSelectedState,
     useCustomCamera: false,
     files: [],
+    // TODO: `submitting` is here temporarily since we are exporting from the
+    // import screen. In the future we will export from the spritesheet overview
+    submitting: false,
   },
   reducers: {
     stopAnimation(state, _) {state.selected.animation = null},
@@ -52,6 +56,9 @@ const importSlice = createSlice({
     setAnimationSteps(state, action) {
       state.selected.animation_total_steps = action.payload
     },
+    setScale(state, action) {state.selected.scale = action.payload},
+    startSubmit(state, _) {state.submitting = true},
+    endSubmit(state, _) {state.submitting = false},
   }
 })
 

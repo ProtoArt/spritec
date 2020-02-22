@@ -1,4 +1,4 @@
-const {Spritec} = require('spritec_binding');
+const spritec = require('../../spritec');
 const Component = require('../../lib/Component');
 
 class ImportCanvas extends Component {
@@ -10,7 +10,6 @@ class ImportCanvas extends Component {
       startTime: performance.now(),
       step: -1,
       renderCanvas: this.renderCanvas.bind(this),
-      spritec: new Spritec(),
     };
     this.state.ctx.imageSmoothingEnabled = false;
 
@@ -41,7 +40,7 @@ class ImportCanvas extends Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.path !== this.props.path && this.props.path) {
-      this.state.spritec.setFile(this.props.path);
+      spritec.setFile(this.props.path);
     }
 
     // Only set canvas dimensions when we need to as this call resets the canvas
@@ -53,7 +52,7 @@ class ImportCanvas extends Component {
   }
 
   async renderCanvas(timestamp) {
-    const {canvas, ctx, startTime, step, spritec} = this.state;
+    const {canvas, ctx, startTime, step} = this.state;
     const {
       width,
       height,
