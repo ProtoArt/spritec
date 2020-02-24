@@ -7,6 +7,7 @@ class ImportPanel extends Component {
       inputWidth: element.querySelector('#input-width'),
       inputHeight: element.querySelector('#input-height'),
       inputSteps: element.querySelector('#input-steps'),
+      buttonExport: element.querySelector('#button-export'),
     }
     this.state.inputWidth.onchange = (event) => {
       this.dispatch(actions.setWidth(Number(event.target.value)));
@@ -25,10 +26,12 @@ class ImportPanel extends Component {
       height: (state) => state.import.selected.height,
       steps: (state) => state.import.selected.animation_total_steps,
       animation: (state) => state.import.selected.animation,
+      path: (state) => state.import.selected.path,
     };
   }
 
   render() {
+    this.state.buttonExport.disabled = (this.props.path === null);
     this.state.inputWidth.value = this.props.width;
     this.state.inputHeight.value = this.props.height;
     this.state.inputSteps.value = this.props.steps;
