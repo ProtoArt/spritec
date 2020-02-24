@@ -27,3 +27,7 @@
   height: 100vh;
   overflow: auto;
 }
+
+#export-switcher {
+  min-height: 150px;
+}
