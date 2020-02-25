@@ -1,7 +1,7 @@
 {
   "name": "spritec_gui",
   "version": "0.1.0",
-  "description": "Electron app that uses spritec to convert 3D models into spritesheets.",
+  "description": "Convert 3D model into pixel art",
   "main": "index.js",
   "scripts": {
     "build": "electron-build-env neon build -p ../spritec_binding --release",
@@ -15,6 +15,7 @@
   },
   "build": {
     "appId": "com.protoart.spritec",
+    "productName": "Spritec",
     "linux": {
       "target": "AppImage"
     }
