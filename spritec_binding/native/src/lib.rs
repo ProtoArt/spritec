@@ -282,7 +282,6 @@ declare_types! {
             let animation_cur_step = cx.argument::<JsNumber>(11)?.value() as u32;
 
             // Create the sprite
-            let lights = default_lights();
             let sprite = describe_sprite(
                 file,
                 width,
