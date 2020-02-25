@@ -108,6 +108,12 @@ class ImportCanvas extends Component {
 
     requestAnimationFrame(this.renderCanvas);
   }
+
+  render() {
+    // Whenever something changes reset the animation
+    // TODO: implement proper media controls (play/pause) instead of this flag
+    this.state.step = -1;
+  }
 }
 
 module.exports = ImportCanvas;
