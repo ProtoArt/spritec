@@ -30,3 +30,8 @@ store.subscribe(() => {
     }
   });
 });
+
+// TODO: implement proper error handling in the app
+// Loudly announce all errors. Reload the app so it's not left in a dead state.
+window.onerror = (message) => {alert(message); location.reload();}
+window.onunhandledrejection = ({reason}) => {alert(reason); location.reload();}
