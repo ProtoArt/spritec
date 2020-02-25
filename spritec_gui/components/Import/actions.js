@@ -1,9 +1,9 @@
 const {actions} = require('./slice');
-const THREE = require('three');
+const THREE = require('../../three/three.min');
 // We don't support ES6 import statements, so have to bring THREE into window
 // scope and require the GLTFLoader separately.
 window.THREE = THREE;
-require('three/examples/js/loaders/GLTFLoader.js');
+require('../../three/GLTFLoader');
 
 // Reuse the same renderer
 const renderer = new THREE.WebGLRenderer();
