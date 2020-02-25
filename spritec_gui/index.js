@@ -1,4 +1,7 @@
-const { app, BrowserWindow } = require('electron')
+const { app, Menu, BrowserWindow } = require('electron')
+
+// Remove default menu
+Menu.setApplicationMenu(null);
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -21,8 +24,8 @@ function createWindow () {
   // and load the index.html of the app.
   win.loadFile('main.html')
 
-  // Open the DevTools.
-  // win.webContents.openDevTools()
+  // Open the DevTools for developers
+  if (!app.isPackaged) win.webContents.openDevTools()
 
   // Emitted when the window is closed.
   win.on('closed', () => {
