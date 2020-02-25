@@ -106,7 +106,8 @@
                 <div class="uk-margin">
                   <label class="uk-form-label" for="export-scale">Scale<b id="export-scale-text" class="uk-margin-small-left">1x</b></label>
                   <div class="uk-form-controls">
-                    <input id="export-scale" class="uk-range" type="range" value="1" min="1" max="10" step="1">
+                    <!-- TODO: set max based on max file size instead of max scale size -->
+                    <input id="export-scale" class="uk-range" type="range" value="1" min="1" max="20" step="1">
                   </div>
                 </div>
                 <div id="export-switcher" class="uk-switcher uk-margin">
