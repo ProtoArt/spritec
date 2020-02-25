@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const {dialog, shell} = require('electron').remote;
-const spritec = require('../../spritec');
+const spritec = require('../../spritec_binding');
 const {actions} = require('../Import/slice');
 
 const exportSprites = (element) => async (dispatch, getState) => {

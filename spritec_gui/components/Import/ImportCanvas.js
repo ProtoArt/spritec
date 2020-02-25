@@ -1,4 +1,4 @@
-const spritec = require('../../spritec');
+const spritec = require('../../spritec_binding');
 const Component = require('../../lib/Component');
 
 class ImportCanvas extends Component {
