@@ -5,9 +5,11 @@
   "main": "index.js",
   "scripts": {
     "build": "electron-build-env neon build -p ../spritec_binding --release",
-    "prestart": "npm run build",
+    "precopy": "npm run build",
+    "copy": "node -e \"require('fs').copyFileSync('../spritec_binding/native/index.node', './spritec_binding/spritec.node')\"",
+    "prestart": "npm run copy",
     "start": "electron .",
-    "predist": "npm run build",
+    "predist": "npm run copy",
     "dist": "electron-builder --publish never",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -34,8 +36,7 @@
   },
   "homepage": "https://protoart.me",
   "dependencies": {
-    "@reduxjs/toolkit": "^1.2.3",
-    "spritec_binding": "file:../spritec_binding"
+    "@reduxjs/toolkit": "^1.2.3"
   },
   "devDependencies": {
     "electron": "^7.1.9",
