@@ -1,4 +1,5 @@
 const AnimationList = require('./components/Import/AnimationList');
+const CameraControl = require('./components/Import/CameraControl');
 const CameraList = require('./components/Import/CameraList');
 const ImportCanvas = require('./components/Import/ImportCanvas');
 const ImportPanel = require('./components/Import/ImportPanel');
@@ -20,6 +21,7 @@ let components = [
   new CameraList(document.getElementById('spritec-camera-list'), store),
   new AnimationList(document.getElementById('spritec-animation-list'), store),
   new ExportModal(document, store),
+  new CameraControl(document, store),
 ];
 
 store.subscribe(() => {

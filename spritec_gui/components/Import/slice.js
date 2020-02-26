@@ -25,7 +25,6 @@ const importSlice = createSlice({
   name: 'import',
   initialState: {
     selected: initialSelectedState,
-    useCustomCamera: false,
     files: [],
     // TODO: `submitting` is here temporarily since we are exporting from the
     // import screen. In the future we will export from the spritesheet overview
@@ -43,15 +42,18 @@ const importSlice = createSlice({
       // same model twice we won't have duplicate entries.
       state.files = Array.from(new Set(state.files).add(path))
       state.selected.path = path;
-
-      // If no cameras then enable custom camera
-      state.useCustomCamera = (cameras.length === 0);
       state.selected.cameras = cameras;
-
       state.selected.animations = animations;
     },
     setCamera(state, action) {
       state.selected.camera = action.payload;
+    },
+    setCameraPosition(state, action) {
+      const [value, index] = action.payload;
+      state.selected.camera.position[index] = value;
+    },
+    setCameraRotation(state, action) {
+      state.selected.camera.rotation = action.payload;
     },
     setAnimationSteps(state, action) {
       state.selected.animation_total_steps = action.payload
