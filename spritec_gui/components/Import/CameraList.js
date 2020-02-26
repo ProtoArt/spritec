@@ -15,18 +15,17 @@ class CameraList extends Component {
     return {
       cameras: state => state.import.selected.cameras,
       cameraId: state => state.import.selected.camera.id,
-      useCustomCamera: state => state.import.useCustomCamera,
     };
   }
 
   render() {
-    const {cameras, cameraId, useCustomCamera} = this.props;
+    const {cameras, cameraId} = this.props;
     const {listElement} = this.state;
 
     // clear the list
     listElement.innerHTML = '';
 
-    listElement.disabled = (cameras.length == 0 || useCustomCamera);
+    listElement.disabled = (cameras.length == 0);
     cameras.forEach(camera => listElement.add(new Option(
       camera.name, // text
       camera.id, // value
