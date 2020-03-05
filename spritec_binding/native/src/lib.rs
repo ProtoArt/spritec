@@ -465,6 +465,7 @@ fn create_camera(
 fn default_lights() -> Arc<Vec<Arc<Light>>> {
     Arc::new(vec![Arc::new(Light {
         data: Arc::new(LightType::Directional {
+            name: None,
             color: Rgb::white(),
             intensity: 1.0,
         }),
