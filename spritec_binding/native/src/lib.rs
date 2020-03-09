@@ -78,9 +78,9 @@ declare_types! {
             let (camera, i) = parse_camera_args(&mut cx, 4);
             let (animation_name, _) = parse_animation_arg(&mut cx, i);
             let animation_total_steps = cx.argument::<JsNumber>(i+1)?.value() as u32;
+            let (lights, _i) = parse_light_args(&mut cx, i+2);
 
             let camera = Arc::new(camera);
-            let lights = default_lights();
 
             let mut sprites = Vec::with_capacity(animation_total_steps as usize);
             for animation_cur_step in 0..animation_total_steps {
@@ -137,12 +137,12 @@ declare_types! {
             let (camera, i) = parse_camera_args(&mut cx, 4);
             let (animation_name, _) = parse_animation_arg(&mut cx, i);
             let animation_total_steps = cx.argument::<JsNumber>(i+1)?.value() as u32;
+            let (lights, _i) = parse_light_args(&mut cx, i+2);
 
             let folder_path = Path::new(&folder_out);
             std::fs::create_dir_all(folder_path).expect("Unable to create directory");
 
             let camera = Arc::new(camera);
-            let lights = default_lights();
 
             let images: Vec<image::RgbaImage> = {
                 let mut jobs = Vec::new();
@@ -201,13 +201,13 @@ declare_types! {
             let (camera, i) = parse_camera_args(&mut cx, 4);
             let (animation_name, animation_duration) = parse_animation_arg(&mut cx, i);
             let animation_total_steps = cx.argument::<JsNumber>(i+1)?.value() as u32;
+            let (lights, _i) = parse_light_args(&mut cx, i+2);
 
             let file_out = std::fs::File::create(
                 Path::new(&path_out)
             ).expect("Can't write to destination");
 
             let camera = Arc::new(camera);
-            let lights = default_lights();
 
             // Delay between frames, where each unit is 10ms. This is not
             // going to be 100% precise but it's what we have to work with.
@@ -278,8 +278,9 @@ declare_types! {
                 .argument::<JsValue>(i)?
                 .downcast::<JsString>()
                 .map_or(None, |name| Some(name.value()));
-            let animation_total_steps = cx.argument::<JsNumber>(10)?.value() as u32;
-            let animation_cur_step = cx.argument::<JsNumber>(11)?.value() as u32;
+            let animation_total_steps = cx.argument::<JsNumber>(i+1)?.value() as u32;
+            let animation_cur_step = cx.argument::<JsNumber>(i+2)?.value() as u32;
+            let (lights, _i) = parse_light_args(&mut cx, i+3);
 
             // Create the sprite
             let sprite = describe_sprite(
@@ -287,7 +288,7 @@ declare_types! {
                 width,
                 height,
                 Arc::new(camera),
-                default_lights(),
+                lights,
                 &animation_name,
                 animation_total_steps,
                 animation_cur_step,
@@ -393,6 +394,29 @@ fn take_4(cx: &CallContext<JsSpritec>, array_buffer: &Handle<JsArrayBuffer>) -> 
     })
 }
 
+fn parse_light_args(
+    cx: &mut CallContext<JsSpritec>,
+    index: i32
+) -> (Arc<Vec<Arc<Light>>>, i32) {
+    let light_color = cx.argument::<JsArrayBuffer>(index).unwrap();
+    let intensity = cx.argument::<JsNumber>(index+1).unwrap().value() as f32;
+
+    let world_transform = {
+        let light_rotation = cx.argument::<JsArrayBuffer>(index+2).unwrap();
+        let arr = take_4(&cx, &light_rotation);
+        Mat4::from(Quaternion::from_xyzw(arr[0], arr[1], arr[2], arr[3]))
+    };
+
+    (Arc::new(vec![Arc::new(Light {
+        data: Arc::new(LightType::Directional {
+            name: None,
+            color: Rgb::from(take_3(&cx, &light_color)),
+            intensity,
+        }),
+        world_transform,
+    })]), index+3)
+}
+
 /// Parse camera arguments starting at `index` and returns the camera and next
 /// index to parse.
 fn parse_camera_args(cx: &mut CallContext<JsSpritec>, index: i32) -> (Camera, i32) {
@@ -460,17 +484,6 @@ fn create_camera(
         view: (trans_mat * rot_mat * scale_mat).inverted(),
         projection: cam_type.to_projection(),
     }
-}
-
-fn default_lights() -> Arc<Vec<Arc<Light>>> {
-    Arc::new(vec![Arc::new(Light {
-        data: Arc::new(LightType::Directional {
-            name: None,
-            color: Rgb::white(),
-            intensity: 1.0,
-        }),
-        world_transform: Mat4::rotation_x((-60.0f32).to_radians()),
-    })])
 }
 
 register_module!(mut cx, {

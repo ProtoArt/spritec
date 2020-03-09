@@ -5,6 +5,7 @@ const ImportCanvas = require('./components/Import/ImportCanvas');
 const ImportPanel = require('./components/Import/ImportPanel');
 const importSlice = require('./components/Import/slice');
 const ExportModal = require('./components/Export/ExportModal');
+const LightControl = require('./components/Import/LightControl');
 const ModelList = require('./components/Import/ModelList');
 const {configureStore} = require('@reduxjs/toolkit');
 
@@ -22,6 +23,7 @@ let components = [
   new AnimationList(document.getElementById('spritec-animation-list'), store),
   new ExportModal(document, store),
   new CameraControl(document, store),
+  new LightControl(document, store),
 ];
 
 store.subscribe(() => {
