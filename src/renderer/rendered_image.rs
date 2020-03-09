@@ -40,9 +40,7 @@ impl Size {
             height: unsafe { NonZeroU32::new_unchecked(1) },
         }
     }
-}
 
-impl Size {
     pub fn max(self, other: Self) -> Self {
         let Self {width, height} = self;
 

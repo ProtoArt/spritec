@@ -4,6 +4,8 @@
 
 [[spritesheets]]
 path = "../../spritesheet0.png"
+cell_width = 64
+cell_height = 64
 scale = 2
 
 [[spritesheets.animations]]
@@ -21,6 +23,8 @@ camera = { name = "right" }
 
 [[spritesheets]]
 path = "../../spritesheet1.png"
+cell_width = 64
+cell_height = 64
 scale = 2
 
 [[spritesheets.animations]]
@@ -32,6 +36,8 @@ camera = { name = "front" }
 
 [[spritesheets]]
 path = "../../spritesheet2.png"
+cell_width = 64
+cell_height = 64
 scale = 2
 
 [[spritesheets.animations]]

@@ -22,7 +22,7 @@ impl RenderJob {
     pub fn execute(self, ctx: &mut ThreadRenderContext) -> Result<RgbaImage, DrawLayoutError> {
         let Self {scale, root} = self;
 
-        let layout = LayoutNode::from(root);
+        let layout = LayoutNode::from_render_node(root)?;
 
         let image = ctx.draw(layout)?;
         let image = ctx.scale(&image, scale)?;

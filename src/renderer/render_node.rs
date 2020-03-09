@@ -12,18 +12,29 @@ pub enum RenderNode {
 
 /// Lays out one or more nodes in the given configuration
 #[derive(Debug)]
-pub struct RenderLayout {
-    pub nodes: Vec<RenderNode>,
-    pub layout: LayoutType,
+pub enum RenderLayout {
+    Grid(GridLayout),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum LayoutType {
-  /// All renders are placed in a regular grid with the given number of columns
-  Grid { cols: NonZeroU32 },
+#[derive(Debug)]
+pub struct GridLayout {
+    /// Number of grid rows
+    pub rows: NonZeroU32,
+    /// Number of grid columns
+    pub cols: NonZeroU32,
+    /// Dimensions of each cell in pixels
+    pub cell_size: Size,
+    /// The nodes to layout
+    pub cells: Vec<Vec<GridLayoutCell>>,
+}
 
-  //TODO: This is an example of a layout we could have in the future
-  // Tightly packs all sprites into an image of width at most the given value. The packing is not
-  // guaranteed to be a regular grid.
-  //Packed { width: NonZeroU32 },
+/// A cell on a grid
+#[derive(Debug)]
+pub struct GridLayoutCell {
+    /// The node to render in this cell
+    pub node: RenderNode,
+    /// The number of columns spanned for this cell
+    pub colspan: NonZeroU32,
+    /// The number of rows spanned for this cell
+    pub rowspan: NonZeroU32,
 }

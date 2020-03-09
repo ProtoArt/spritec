@@ -87,6 +87,10 @@ pub struct TaskConfig {
 pub struct Spritesheet {
     /// The path to output the generated spritesheet, relative to configuration file
     pub path: UnresolvedPath,
+    /// The width of each cell in the spritesheet in pixels
+    pub cell_width: NonZeroU32,
+    /// The height of each cell in the spritesheet in pixels
+    pub cell_height: NonZeroU32,
     /// Animations to include in the spritesheet
     pub animations: Vec<Animation>,
     /// A scale factor to apply to the generated images. Each image is scaled without interpolation.
