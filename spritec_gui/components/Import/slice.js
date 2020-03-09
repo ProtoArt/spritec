@@ -16,6 +16,9 @@ const initialSelectedState = {
     far_z: 2000,
     fov: 50, // field of view (from bottom to top, in degrees)
   },
+  light_rotation: [-0.5, 0, 0, 1], // quaternion
+  light_color: '#ffffff',
+  light_intensity: 1.0, // scale from [0, 1]
   width: 64,
   height: 64,
   scale: 1,
@@ -61,6 +64,9 @@ const importSlice = createSlice({
     setScale(state, action) {state.selected.scale = action.payload},
     startSubmit(state, _) {state.submitting = true},
     endSubmit(state, _) {state.submitting = false},
+    setLightRotation(state, action) {state.selected.light_rotation = action.payload},
+    setLightColor(state, action) {state.selected.light_color = action.payload},
+    setLightIntensity(state, action) {state.selected.light_intensity = action.payload},
   }
 })
 

@@ -1,5 +1,6 @@
 const spritec = require('../../spritec_binding');
 const Component = require('../../lib/Component');
+const {hex_to_rgb} = require('../../lib/color');
 
 class ImportCanvas extends Component {
   onCreate(container) {
@@ -35,6 +36,9 @@ class ImportCanvas extends Component {
       camera: (state) => state.import.selected.camera,
       animation: (state) => state.import.selected.animation,
       animation_total_steps: (state) => state.import.selected.animation_total_steps,
+      light_rotation: state => state.import.selected.light_rotation,
+      light_color: state => state.import.selected.light_color,
+      light_intensity: state => state.import.selected.light_intensity,
     };
   }
 
@@ -58,7 +62,10 @@ class ImportCanvas extends Component {
       height,
       camera,
       animation,
-      animation_total_steps
+      animation_total_steps,
+      light_color,
+      light_intensity,
+      light_rotation,
     } = this.props;
 
     const time = (timestamp - startTime) / 1000;
@@ -95,7 +102,10 @@ class ImportCanvas extends Component {
         camera.fov,
         animation && animation.name,
         animation_total_steps,
-        current_step
+        current_step,
+        hex_to_rgb(light_color).buffer,
+        light_intensity,
+        new Float32Array(light_rotation).buffer,
       ));
 
       let imageData = new ImageData(imageBuffer, width);

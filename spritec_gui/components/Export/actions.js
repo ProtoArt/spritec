@@ -3,6 +3,7 @@ const path = require('path');
 const {dialog, shell} = require('electron').remote;
 const spritec = require('../../spritec_binding');
 const {actions} = require('../Import/slice');
+const {hex_to_rgb} = require('../../lib/color');
 
 const exportSprites = (element) => async (dispatch, getState) => {
   dispatch(actions.startSubmit());
@@ -22,6 +23,9 @@ const exportSprites = (element) => async (dispatch, getState) => {
         camera,
         animation,
         animation_total_steps,
+        light_rotation,
+        light_color,
+        light_intensity,
       }},
     } = getState();
 
@@ -43,6 +47,9 @@ const exportSprites = (element) => async (dispatch, getState) => {
         camera.fov,
         animation,
         (animation ? animation_total_steps : 1),
+        hex_to_rgb(light_color).buffer,
+        light_intensity,
+        new Float32Array(light_rotation).buffer,
       );
       openFn(filePath);
     }
