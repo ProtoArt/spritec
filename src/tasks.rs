@@ -28,7 +28,8 @@ use crate::renderer::{
     RenderJob,
     RenderNode,
     RenderLayout,
-    LayoutType,
+    GridLayout,
+    GridLayoutCell,
     RenderedImage,
     Size,
     Outline,
@@ -137,16 +138,14 @@ pub fn generate_spritesheet_task(
     base_dir: &Path,
     file_cache: &mut WeakFileCache,
 ) -> Result<Task, FileError> {
-    let config::Spritesheet {path, animations, scale, background} = sheet;
-
-    let cols = animations.iter().map(|anim| anim.frames.len()).max()
-        .expect("zero-length animations are not supported");
+    let config::Spritesheet {path, cell_width, cell_height, animations, scale, background} = sheet;
 
     // Flatten all of the animations into a single list of nodes, inserting empty nodes along the
     // way to fill any gaps in the grid
-    let mut nodes = Vec::new();
+    let mut max_cols = 0;
+    let mut grid = Vec::new();
     for anim in animations {
-        let extra = cols - anim.frames.len();
+        let mut row = Vec::new();
 
         let config::Animation {frames, frame_width, frame_height, camera, outline} = anim;
         let outline = config_to_outline(outline);
@@ -168,43 +167,47 @@ pub fn generate_spritesheet_task(
                 for step in 0..steps {
                     let weight = step as f32 / max(steps - 1, 1) as f32;
 
-                    nodes.push(RenderNode::RenderedImage(RenderedImage {
-                        size: frame_size,
-                        background,
-                        camera: camera.clone(),
-                        //TODO: Figure out how we want to allow lights to be configured
-                        lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
-                            data: Arc::new(LightType::Directional {
-                                name: None,
-                                color: Rgb::white(),
-                                intensity: 1.0,
-                            }),
-                            world_transform: Mat4::rotation_x((-60.0f32).to_radians()),
-                        })])),
-                        ambient_light: Rgb::white() * 0.5,
-                        geometry: FileQuery {
-                            query: GeometryQuery {
-                                models: GeometryFilter::all_in_default_scene(),
+                    row.push(GridLayoutCell {
+                        node: RenderNode::RenderedImage(RenderedImage {
+                            size: frame_size,
+                            background,
+                            camera: camera.clone(),
+                            //TODO: Figure out how we want to allow lights to be configured
+                            lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
+                                data: Arc::new(LightType::Directional {
+                                    name: None,
+                                    color: Rgb::white(),
+                                    intensity: 1.0,
+                                }),
+                                world_transform: Mat4::rotation_x((-60.0f32).to_radians()),
+                            })])),
+                            ambient_light: Rgb::white() * 0.5,
+                            geometry: FileQuery {
+                                query: GeometryQuery {
+                                    models: GeometryFilter::all_in_default_scene(),
 
-                                animation: Some(AnimationQuery {
-                                    name: name.clone(),
-                                    position: match end_time {
-                                        Some(end_time) => AnimationPosition::Time(
-                                            Milliseconds::from_msec(lerp(&start_time.to_msec(), &end_time.to_msec(), &weight))
-                                        ),
+                                    animation: Some(AnimationQuery {
+                                        name: name.clone(),
+                                        position: match end_time {
+                                            Some(end_time) => AnimationPosition::Time(
+                                                Milliseconds::from_msec(lerp(&start_time.to_msec(), &end_time.to_msec(), &weight))
+                                            ),
 
-                                        None => AnimationPosition::RelativeTime {
-                                            start_time,
-                                            weight,
-                                        },
-                                    }
-                                })
+                                            None => AnimationPosition::RelativeTime {
+                                                start_time,
+                                                weight,
+                                            },
+                                        }
+                                    })
+                                },
+
+                                file: file.clone(),
                             },
-
-                            file: file.clone(),
-                        },
-                        outline: outline.clone(),
-                    }));
+                            outline: outline.clone(),
+                        }),
+                        colspan: unsafe { NonZeroU32::new_unchecked(1) },
+                        rowspan: unsafe { NonZeroU32::new_unchecked(1) },
+                    });
                 }
             },
 
@@ -214,49 +217,57 @@ pub fn generate_spritesheet_task(
                     let file = file_cache.open(&model_path.resolve(base_dir))?;
                     let camera = preset_to_camera(&camera, &file);
 
-                    nodes.push(RenderNode::RenderedImage(RenderedImage {
-                        size: frame_size,
-                        background,
-                        camera,
-                        //TODO: Figure out how we want to allow lights to be configured
-                        lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
-                            data: Arc::new(LightType::Directional {
-                                name: None,
-                                color: Rgb::white(),
-                                intensity: 1.0,
-                            }),
-                            world_transform: Mat4::rotation_x((-60.0f32).to_radians()),
-                        })])),
-                        ambient_light: Rgb::white() * 0.5,
-                        geometry: FileQuery {
-                            query: GeometryQuery {
-                                models: GeometryFilter::all_in_default_scene(),
-                                // Use the default state of the scene
-                                animation: None,
-                            },
+                    row.push(GridLayoutCell {
+                        node: RenderNode::RenderedImage(RenderedImage {
+                            size: frame_size,
+                            background,
+                            camera,
+                            //TODO: Figure out how we want to allow lights to be configured
+                            lights: RenderLights::Lights(Arc::new(vec![Arc::new(Light {
+                                data: Arc::new(LightType::Directional {
+                                    name: None,
+                                    color: Rgb::white(),
+                                    intensity: 1.0,
+                                }),
+                                world_transform: Mat4::rotation_x((-60.0f32).to_radians()),
+                            })])),
+                            ambient_light: Rgb::white() * 0.5,
+                            geometry: FileQuery {
+                                query: GeometryQuery {
+                                    models: GeometryFilter::all_in_default_scene(),
+                                    // Use the default state of the scene
+                                    animation: None,
+                                },
 
-                            file,
-                        },
-                        outline: outline.clone(),
-                    }));
+                                file,
+                            },
+                            outline: outline.clone(),
+                        }),
+                        colspan: unsafe { NonZeroU32::new_unchecked(1) },
+                        rowspan: unsafe { NonZeroU32::new_unchecked(1) },
+                    });
                 }
             },
         }
-
-        // Fill out the rest of the row with extra empty cells
-        for _ in 0..extra {
-            nodes.push(RenderNode::Empty {size: frame_size});
-        }
+        max_cols = max(max_cols, row.len() as u32);
+        grid.push(row);
     }
 
     let job = RenderJob {
         scale,
-        root: RenderNode::Layout(RenderLayout {
-            nodes,
-            layout: LayoutType::Grid {
-                cols: NonZeroU32::new(cols).expect("zero-length animations are not supported"),
-            },
-        }),
+        root: RenderNode::Layout(
+            RenderLayout::Grid(
+                GridLayout {
+                    rows: NonZeroU32::new(grid.len() as u32).expect("Expected a non-zero amount of rows"),
+                    cols: NonZeroU32::new(max_cols).expect("Expected a non-zero amount of columns"),
+                    cell_size: Size {
+                        width: cell_width,
+                        height: cell_height,
+                    },
+                    cells: grid,
+                }
+            )
+        ),
     };
 
     Ok(Task {

@@ -58,7 +58,7 @@ use super::{
     Size,
     FileQuery,
     Camera,
-    layout::LayoutNode,
+    layout::{LayoutNode,LayoutError},
     imageops::{scale_to_fit, copy},
 };
 
@@ -85,6 +85,7 @@ pub enum DrawLayoutError {
     DrawError(#[from] glium::DrawError),
     ReadError(#[from] glium::ReadError),
     QueryError(#[from] QueryError),
+    LayoutError(#[from] LayoutError),
 }
 
 pub(in super) struct Shaders {
