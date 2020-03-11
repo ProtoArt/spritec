@@ -249,7 +249,7 @@ mod tests {
                     cells: vec![
                         vec![
                             GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(30)}},
+                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
                                 col_span: nz32(1),
                                 row_span: nz32(1),
                             },
@@ -268,7 +268,7 @@ mod tests {
                         ],
                         vec![
                             GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(30)}},
+                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
                                 col_span: nz32(1),
                                 row_span: nz32(1),
                             },
@@ -295,6 +295,7 @@ mod tests {
                     cells: vec![
                         vec![
                             GridLayoutCell {
+                                // 30px height will fit in a row span of 3, but not in the grid
                                 node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(30)}},
                                 col_span: nz32(1),
                                 row_span: nz32(3),
