@@ -299,6 +299,8 @@ mod tests {
     // Offsets in Node: [(0,0), (20,0), (12, 22)]
     // Offsets in Inner Grid: [(1,0), (5,0), (9,1), (1,9), (8,8), (1,13), (5,13), (9,13), (13,13)]
     //
+    // The area from (4,4) to (8,8) is completely empty as in there's no node there at all
+    //
     //         ┌──────┐              ┌───────────┐
     //         │ Node │              │Inner Grid │
     //     0   └──20──┘    40      0 └─4───8───12┘ 16
@@ -306,11 +308,11 @@ mod tests {
     //     │       │       │       ││ │ │ │ ┌─────┐│
     //     │       │       │       ││ │ │ │ │     ││
     //     │       │       │       ││ │ │ │ │     ││
-    //     │       │       │      4││ │ │ │ │     ││
-    //     │       │       │       ││ │ │ │ │     ││
-    //   20├───────┴───────┤       ││ │ │ │ │     ││
-    //     │   ┌───────┐   │       ││ │ │ │ └─────┘│
-    //     │   │ Inner │   │      8│└─┘ └─┘┌───────┤
+    //     │       │       │      4││ │ └─┘ │     ││
+    //     │       │       │       ││ │     │     ││
+    //   20├───────┴───────┤       ││ │     │     ││
+    //     │   ┌───────┐   │       ││ │     └─────┘│
+    //     │   │ Inner │   │      8│└─┘    ┌───────┤
     //     │   │ Grid  │   │       │┌──────┤       │
     //     │   │       │   │       ││      │       │
     //     │   └───────┘   │       ││      │       │
@@ -336,9 +338,9 @@ mod tests {
                                 row_span: nz32(2),
                             },
                             GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(8)}},
+                                node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(4)}},
                                 col_span: nz32(1),
-                                row_span: nz32(2),
+                                row_span: nz32(1),
                             },
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(6), height: nz32(6)}},
@@ -471,7 +473,7 @@ mod tests {
                                         node: LayoutNode::Empty {
                                             size: Size {
                                                 width: nz32(2),
-                                                height: nz32(8),
+                                                height: nz32(4),
                                             },
                                         },
                                     },
