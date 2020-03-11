@@ -7,13 +7,14 @@ use super::layout::grid::{Grid, GridIter};
 
 #[derive(Debug, Error, PartialEq)]
 pub enum LayoutError {
-    // Number of rows/cols required surpasses the amount making up the grid
-    #[error("Could not fit all images into a {row} by {col} grid")]
+    /// The layout nodes span an area larger than the specified grid
+    /// Number of rows/cols required surpasses the amount making up the grid
+    #[error("Grid nodes spanned an area larger than the {row} by {col} grid")]
     InsufficientGridSize {row: u32, col: u32},
 
-    // Width or height of a layout node is greater than cellsize * row/col span
-    #[error("One of the layout nodes is larger than the region allocated for it")]
-    LayoutNodeTooLarge,
+    /// The node spanned an area that did not (entirely) fit in its designated cell(s)
+    #[error("A node did not fit in its designated area on the grid")]
+    LayoutNodeDoesNotFit,
 }
 
 /// The offset in the image to draw at
@@ -36,10 +37,8 @@ impl LayoutNode {
         use RenderNode::*;
         match node {
             RenderedImage(image) => Ok(LayoutNode::RenderedImage(image)),
-            Layout(layout) => match layout {
-                RenderLayout::Grid(grid) => {
-                    Ok(LayoutNode::Grid(Grid::from_grid_layout(grid)?))
-                },
+            Layout(RenderLayout::Grid(grid)) => {
+                Ok(LayoutNode::Grid(Grid::from_grid_layout(grid)?))
             },
             Empty {size} => Ok(LayoutNode::Empty {size}),
         }
@@ -73,16 +72,12 @@ impl Iterator for LayoutTargetIter {
 
     fn next(&mut self) -> Option<Self::Item> {
         use LayoutTargetIter::*;
-
         match self {
-            Single(node) => {
-                // This default LayoutOffset is specifying that the image takes up all the space
-                // give to the image (as opposed to an offset in cells)
-                Some((LayoutOffset::default(), node.take()?))
-            },
-            GridIter(grid_iter) => {
-                grid_iter.next()
-            },
+            // This default LayoutOffset is specifying that the image takes up all the space
+            // given to the image (as opposed to an offset in cells)
+            Single(node) => Some((LayoutOffset::default(), node.take()?)),
+
+            GridIter(grid_iter) => grid_iter.next(),
         }
     }
 }

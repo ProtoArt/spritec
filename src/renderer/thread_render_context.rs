@@ -58,7 +58,7 @@ use super::{
     Size,
     FileQuery,
     Camera,
-    layout::{LayoutNode,LayoutError},
+    layout::{LayoutNode, LayoutError},
     imageops::{scale_to_fit, copy},
 };
 

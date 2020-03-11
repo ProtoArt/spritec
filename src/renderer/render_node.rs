@@ -34,7 +34,7 @@ pub struct GridLayoutCell {
     /// The node to render in this cell
     pub node: RenderNode,
     /// The number of columns spanned for this cell
-    pub colspan: NonZeroU32,
+    pub col_span: NonZeroU32,
     /// The number of rows spanned for this cell
-    pub rowspan: NonZeroU32,
+    pub row_span: NonZeroU32,
 }
