@@ -10,7 +10,7 @@ pub enum LayoutError {
     /// The layout nodes span an area larger than the specified grid
     /// Number of rows/cols required surpasses the amount making up the grid
     #[error("Grid nodes spanned an area larger than the {row} by {col} grid")]
-    InsufficientGridSize {row: u32, col: u32},
+    InsufficientGridSize {row: usize, col: usize},
 
     /// The node spanned an area that did not (entirely) fit in its designated cell(s)
     #[error("A node did not fit in its designated area on the grid")]

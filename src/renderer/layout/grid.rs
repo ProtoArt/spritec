@@ -7,45 +7,64 @@ use crate::renderer::render_node::{GridLayout};
 
 use super::LayoutError;
 
-// Availability status of a cell in the grid
+/// Availability status of a cell in the grid
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Cell {
+    /// No part of a node is currently in this cell
     Open,
+    /// Some part of a node is currently in this cell
     Used,
 }
 
+/// Tracks the available cells in the grid during grid layout
 #[derive(Debug)]
-pub struct GridAvail {
+struct GridAvail {
     /// The availability status of each cell stored in a row-wise manner
     cells: Vec<Vec<Cell>>,
-    max_row: usize,
-    max_col: usize,
-    cell_size: Size,
+    /// The total number of rows of the grid
+    rows: usize,
+    /// The total number of columns of the grid
+    cols: usize,
 }
 
 impl GridAvail {
     // Creates a new availability grid with all cells set to Open
-    fn new(rows: usize, cols: usize, cell_size: Size) -> Self {
-        Self {cells: vec![vec![Cell::Open; cols]; rows], max_row: rows, max_col: cols, cell_size}
+    fn new(rows: usize, cols: usize) -> Self {
+        Self {cells: vec![vec![Cell::Open; cols]; rows], rows, cols}
     }
 
     /// Searches the given row starting at the given column for a region of the given size.
-    /// If a region is found, sets that region to 'Used' and returns the top-left position of the
-    /// region as a row index and a column index.
+    ///
+    /// If a region is found, sets the cells in that region to `Used` and returns the top-left
+    /// position of the region as a row index and a column index.
+    ///
     /// If no region is found, returns an error.
-    fn find_avail_region(&mut self, row: usize, start_col: usize, row_span: usize, col_span: usize) -> Result<(usize, usize), LayoutError> {
-        if row + row_span > self.max_row || start_col + col_span > self.max_col {
-            return Err(LayoutError::InsufficientGridSize {row: self.max_row as u32, col: self.max_col as u32})
+    fn find_avail_region(
+        &mut self,
+        row: usize,
+        start_col: usize,
+        row_span: usize,
+        col_span: usize,
+    ) -> Result<(usize, usize), LayoutError> {
+        let &mut Self {rows, cols, ..} = self;
+
+        // row_span and col_span will always be at least 1, so we compare using `>`, not `>=`
+        // Another option would be to use row_span-1 and col_span-1 to get the actual indexes
+        if row + row_span > rows || start_col + col_span > cols {
+            return Err(LayoutError::InsufficientGridSize {row: rows, col: cols})
         }
 
-        // Subtract col_span from max_col to avoid checking columns we know the node won't fit in
-        for col in start_col..=self.max_col - col_span {
+        // Column of top-left corner of region may only be up to `cols - col_span`.
+        // This helps us avoid checking columns we know the node won't fit in.
+        for col in start_col..=cols - col_span {
             if self.check_avail(row, col, row_span, col_span) {
                 self.set_unavail(row, col, row_span, col_span);
                 return Ok((row, col));
             }
         }
-        Err(LayoutError::InsufficientGridSize {row: self.max_row as u32, col: self.max_col as u32})
+
+        // No available region found
+        Err(LayoutError::InsufficientGridSize {row: rows, col: cols})
     }
 
     fn check_avail(&self, row: usize, col: usize, row_span: usize, col_span: usize) -> bool {
@@ -88,8 +107,7 @@ impl Grid {
         let GridLayout {cell_size, rows, cols, ..} = grid;
 
         let mut cells = Vec::new();
-        // This tracks the available cells in the grid
-        let mut free_cells = GridAvail::new(rows.get() as usize, cols.get() as usize, cell_size);
+        let mut free_cells = GridAvail::new(rows.get() as usize, cols.get() as usize);
 
         for (row_index, grid_row) in grid.cells.into_iter().enumerate() {
             for (col_index, grid_layout_cell) in grid_row.into_iter().enumerate() {
@@ -98,18 +116,16 @@ impl Grid {
                 let col_span = grid_layout_cell.col_span.get();
                 let cell_width = cell_size.width.get();
                 let cell_height = cell_size.height.get();
-                let layout_node_width = layout_node.size().width.get();
-                let layout_node_height = layout_node.size().height.get();
+                let layout_node_size = layout_node.size();
+                let layout_node_width = layout_node_size.width.get();
+                let layout_node_height = layout_node_size.height.get();
+
                 // Generate an error if the layout node is larger its specified grid space
                 if layout_node_width > (cell_width * col_span)
                     || layout_node_height > (cell_height * row_span) {
                         return Err(LayoutError::LayoutNodeDoesNotFit);
                 }
-                // Calculation to find the relative offset to centre the image:
-                // Find the centre of the region of the grid that the layout node resides in
-                // and subtract half the size of the image from it.
-                let x_centre_offset = (cell_width * col_span / 2) - (layout_node_width / 2);
-                let y_centre_offset = (cell_height * row_span / 2) - (layout_node_height / 2);
+
                 // Get the row and column index of the top-left corner of an available region
                 // that can fit the layout
                 let (free_row, free_col) = free_cells.find_avail_region(
@@ -118,12 +134,19 @@ impl Grid {
                     row_span as usize,
                     col_span as usize
                 )?;
-                let layout_offset = LayoutOffset {
+
+                // Calculation to find the relative offset to centre the image:
+                // Find the centre of the region of the grid that the layout node resides in
+                // and subtract half the size of the image from it.
+                let x_centre_offset = (cell_width * col_span / 2) - (layout_node_width / 2);
+                let y_centre_offset = (cell_height * row_span / 2) - (layout_node_height / 2);
+
+                let offset = LayoutOffset {
                     x: free_col as u32 * cell_width + x_centre_offset,
                     y: free_row as u32 * cell_height + y_centre_offset,
                 };
 
-                cells.push(GridCell {offset: layout_offset, node: layout_node});
+                cells.push(GridCell {offset, node: layout_node});
             }
         }
 
