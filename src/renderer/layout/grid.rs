@@ -94,8 +94,8 @@ impl Grid {
         for (row_index, grid_row) in grid.cells.into_iter().enumerate() {
             for (col_index, grid_layout_cell) in grid_row.into_iter().enumerate() {
                 let layout_node = LayoutNode::from_render_node(grid_layout_cell.node)?;
-                let row_span = grid_layout_cell.rowspan.get();
-                let col_span = grid_layout_cell.colspan.get();
+                let row_span = grid_layout_cell.row_span.get();
+                let col_span = grid_layout_cell.col_span.get();
                 let cell_width = cell_size.width.get();
                 let cell_height = cell_size.height.get();
                 let layout_node_width = layout_node.size().width.get();
@@ -103,7 +103,7 @@ impl Grid {
                 // Generate an error if the layout node is larger its specified grid space
                 if layout_node_width > (cell_width * col_span)
                     || layout_node_height > (cell_height * row_span) {
-                        return Err(LayoutError::LayoutNodeTooLarge);
+                        return Err(LayoutError::LayoutNodeDoesNotFit);
                 }
                 // Calculation to find the relative offset to centre the image:
                 // Find the centre of the region of the grid that the layout node resides in
@@ -185,15 +185,15 @@ mod tests {
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(25), height: nz32(10)}},
-                                colspan: nz32(2),
-                                rowspan: nz32(1),
+                                col_span: nz32(2),
+                                row_span: nz32(1),
                             },
                         ],
                     ],
                 }
             )
         );
-        let expected = LayoutError::LayoutNodeTooLarge;
+        let expected = LayoutError::LayoutNodeDoesNotFit;
 
         let actual = LayoutNode::from_render_node(node);
         match actual {
@@ -216,20 +216,20 @@ mod tests {
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(30)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(3),
+                                col_span: nz32(1),
+                                row_span: nz32(3),
                             },
                         ],
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(1),
+                                col_span: nz32(1),
+                                row_span: nz32(1),
                             },
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(1),
+                                col_span: nz32(1),
+                                row_span: nz32(1),
                             },
                         ],
                     ],
@@ -258,25 +258,25 @@ mod tests {
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(1),
+                                col_span: nz32(1),
+                                row_span: nz32(1),
                             },
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(1),
+                                col_span: nz32(1),
+                                row_span: nz32(1),
                             },
                         ],
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(1),
+                                col_span: nz32(1),
+                                row_span: nz32(1),
                             },
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(20), height: nz32(10)}},
-                                colspan: nz32(2),
-                                rowspan: nz32(1),
+                                col_span: nz32(2),
+                                row_span: nz32(1),
                             },
                         ],
                     ],
@@ -332,53 +332,53 @@ mod tests {
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(8)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(2),
+                                col_span: nz32(1),
+                                row_span: nz32(2),
                             },
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(8)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(2),
+                                col_span: nz32(1),
+                                row_span: nz32(2),
                             },
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(6), height: nz32(6)}},
-                                colspan: nz32(2),
-                                rowspan: nz32(2),
+                                col_span: nz32(2),
+                                row_span: nz32(2),
                             },
                         ],
                         vec![],
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(7), height: nz32(3)}},
-                                colspan: nz32(2),
-                                rowspan: nz32(1),
+                                col_span: nz32(2),
+                                row_span: nz32(1),
                             },
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(8), height: nz32(4)}},
-                                colspan: nz32(2),
-                                rowspan: nz32(1),
+                                col_span: nz32(2),
+                                row_span: nz32(1),
                             },
                         ],
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(2)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(1),
+                                col_span: nz32(1),
+                                row_span: nz32(1),
                             },
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(2)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(1),
+                                col_span: nz32(1),
+                                row_span: nz32(1),
                             },
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(2)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(1),
+                                col_span: nz32(1),
+                                row_span: nz32(1),
                             },
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(2)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(1),
+                                col_span: nz32(1),
+                                row_span: nz32(1),
                             },
                         ],
                     ],
@@ -396,20 +396,20 @@ mod tests {
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(20), height: nz32(20)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(1),
+                                col_span: nz32(1),
+                                row_span: nz32(1),
                             },
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(20), height: nz32(20)}},
-                                colspan: nz32(1),
-                                rowspan: nz32(1),
+                                col_span: nz32(1),
+                                row_span: nz32(1),
                             },
                         ],
                         vec![
                             GridLayoutCell {
                                 node: inner_grid,
-                                colspan: nz32(2),
-                                rowspan: nz32(1),
+                                col_span: nz32(2),
+                                row_span: nz32(1),
                             },
                         ],
                     ],

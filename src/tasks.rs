@@ -205,8 +205,8 @@ pub fn generate_spritesheet_task(
                             },
                             outline: outline.clone(),
                         }),
-                        colspan: unsafe { NonZeroU32::new_unchecked(1) },
-                        rowspan: unsafe { NonZeroU32::new_unchecked(1) },
+                        col_span: unsafe { NonZeroU32::new_unchecked(1) },
+                        row_span: unsafe { NonZeroU32::new_unchecked(1) },
                     });
                 }
             },
@@ -243,8 +243,8 @@ pub fn generate_spritesheet_task(
                             },
                             outline: outline.clone(),
                         }),
-                        colspan: unsafe { NonZeroU32::new_unchecked(1) },
-                        rowspan: unsafe { NonZeroU32::new_unchecked(1) },
+                        col_span: unsafe { NonZeroU32::new_unchecked(1) },
+                        row_span: unsafe { NonZeroU32::new_unchecked(1) },
                     });
                 }
             },
