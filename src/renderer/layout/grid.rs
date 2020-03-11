@@ -204,6 +204,42 @@ mod tests {
         };
     }
 
+    macro_rules! glc {
+        (width: $width:expr, height: $height:expr, col_span: $col_span:expr, row_span: $row_span:expr) => (
+            GridLayoutCell {
+                node: RenderNode::Empty {size: Size {width: nz32($width), height: nz32($height)}},
+                col_span: nz32($col_span),
+                row_span: nz32($row_span),
+            }
+        );
+    }
+
+    macro_rules! cell {
+        (x: $x:expr, y: $y:expr, node: $node:expr) => (
+            GridCell {
+                offset: LayoutOffset {
+                    x: $x,
+                    y: $y,
+                },
+                node: $node,
+            }
+        );
+        (x: $x:expr, y: $y:expr, width: $width:expr, height: $height:expr) => (
+            GridCell {
+                offset: LayoutOffset {
+                    x: $x,
+                    y: $y,
+                },
+                node: LayoutNode::Empty {
+                    size: Size {
+                        width: nz32($width),
+                        height: nz32($height),
+                    },
+                },
+            }
+        );
+    }
+
     #[test]
     fn image_too_large() {
         // Checks that we get an error if a node is bigger than the cell size
@@ -248,30 +284,14 @@ mod tests {
                     cell_size: Size {width: nz32(10), height: nz32(10)},
                     cells: vec![
                         vec![
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
+                            glc!{width: 10, height: 10, col_span: 1, row_span: 1},
                         ],
                         vec![
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
+                            glc!{width: 10, height: 10, col_span: 1, row_span: 1},
+                            glc!{width: 10, height: 10, col_span: 1, row_span: 1},
                         ],
                         vec![
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
+                            glc!{width: 10, height: 10, col_span: 1, row_span: 1},
                         ],
                     ],
                 }
@@ -294,24 +314,12 @@ mod tests {
                     cell_size: Size {width: nz32(10), height: nz32(10)},
                     cells: vec![
                         vec![
-                            GridLayoutCell {
-                                // 30px height will fit in a row span of 3, but not in the grid
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(30)}},
-                                col_span: nz32(1),
-                                row_span: nz32(3),
-                            },
+                            // 30px height will fit in a row span of 3, but not in the grid
+                            glc!{width: 10, height: 30, col_span: 1, row_span: 3},
                         ],
                         vec![
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
+                            glc!{width: 10, height: 10, col_span: 1, row_span: 1},
+                            glc!{width: 10, height: 10, col_span: 1, row_span: 1},
                         ],
                     ],
                 }
@@ -334,28 +342,12 @@ mod tests {
                     cell_size: Size {width: nz32(10), height: nz32(10)},
                     cells: vec![
                         vec![
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
+                            glc!{width: 10, height: 10, col_span: 1, row_span: 1},
+                            glc!{width: 10, height: 10, col_span: 1, row_span: 1},
                         ],
                         vec![
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(20), height: nz32(10)}},
-                                col_span: nz32(2),
-                                row_span: nz32(1),
-                            },
+                            glc!{width: 10, height: 10, col_span: 1, row_span: 1},
+                            glc!{width: 20, height: 10, col_span: 2, row_span: 1},
                         ],
                     ],
                 }
@@ -408,56 +400,20 @@ mod tests {
                     cell_size: Size {width: nz32(4), height: nz32(4)},
                     cells: vec![
                         vec![
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(8)}},
-                                col_span: nz32(1),
-                                row_span: nz32(2),
-                            },
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(4)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(6), height: nz32(6)}},
-                                col_span: nz32(2),
-                                row_span: nz32(2),
-                            },
+                            glc!{width: 2, height: 8, col_span: 1, row_span: 2},
+                            glc!{width: 2, height: 4, col_span: 1, row_span: 1},
+                            glc!{width: 6, height: 6, col_span: 2, row_span: 2},
                         ],
                         vec![],
                         vec![
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(7), height: nz32(3)}},
-                                col_span: nz32(2),
-                                row_span: nz32(1),
-                            },
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(8), height: nz32(4)}},
-                                col_span: nz32(2),
-                                row_span: nz32(1),
-                            },
+                            glc!{width: 7, height: 3, col_span: 2, row_span: 1},
+                            glc!{width: 8, height: 4, col_span: 2, row_span: 1},
                         ],
                         vec![
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(2)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(2)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(2)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(2)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
+                            glc!{width: 2, height: 2, col_span: 1, row_span: 1},
+                            glc!{width: 2, height: 2, col_span: 1, row_span: 1},
+                            glc!{width: 2, height: 2, col_span: 1, row_span: 1},
+                            glc!{width: 2, height: 2, col_span: 1, row_span: 1},
                         ],
                     ],
                 }
@@ -471,16 +427,8 @@ mod tests {
                     cell_size: Size {width: nz32(20), height: nz32(20)},
                     cells: vec![
                         vec![
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(20), height: nz32(20)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
-                            GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(20), height: nz32(20)}},
-                                col_span: nz32(1),
-                                row_span: nz32(1),
-                            },
+                            glc!{width: 20, height: 20, col_span: 1, row_span: 1},
+                            glc!{width: 20, height: 20, col_span: 1, row_span: 1},
                         ],
                         vec![
                             GridLayoutCell {
@@ -496,156 +444,29 @@ mod tests {
         let expected = LayoutNode::Grid(
             Grid {
                 cells: vec![
-                    GridCell {
-                        offset: LayoutOffset {
-                            x: 0,
-                            y: 0,
-                        },
-                        node: LayoutNode::Empty {
-                            size: Size {
-                                width: nz32(20),
-                                height: nz32(20),
+                    cell!{x: 0, y: 0, width: 20, height: 20},
+                    cell!{x: 20, y: 0, width: 20, height: 20},
+                    cell!{x: 12, y: 22, node: LayoutNode::Grid(
+                        Grid {
+                            cells: vec![
+                                cell!{x: 1, y: 0, width: 2, height: 8},
+                                cell!{x: 5, y: 0, width: 2, height: 4},
+                                cell!{x: 9, y: 1, width: 6, height: 6},
+                                cell!{x: 1, y: 9, width: 7, height: 3},
+                                cell!{x: 8, y: 8, width: 8, height: 4},
+                                cell!{x: 1, y: 13, width: 2, height: 2},
+                                cell!{x: 5, y: 13, width: 2, height: 2},
+                                cell!{x: 9, y: 13, width: 2, height: 2},
+                                cell!{x: 13, y: 13, width: 2, height: 2},
+                            ],
+                            cell_size: Size {
+                                width: nz32(4),
+                                height: nz32(4),
                             },
+                            rows: nz32(4),
+                            cols: nz32(4),
                         },
-                    },
-                    GridCell {
-                        offset: LayoutOffset {
-                            x: 20,
-                            y: 0,
-                        },
-                        node: LayoutNode::Empty {
-                            size: Size {
-                                width: nz32(20),
-                                height: nz32(20),
-                            },
-                        },
-                    },
-                    GridCell {
-                        offset: LayoutOffset {
-                            x: 12,
-                            y: 22,
-                        },
-                        node: LayoutNode::Grid(
-                            Grid {
-                                cells: vec![
-                                    GridCell {
-                                        offset: LayoutOffset {
-                                            x: 1,
-                                            y: 0,
-                                        },
-                                        node: LayoutNode::Empty {
-                                            size: Size {
-                                                width: nz32(2),
-                                                height: nz32(8),
-                                            },
-                                        },
-                                    },
-                                    GridCell {
-                                        offset: LayoutOffset {
-                                            x: 5,
-                                            y: 0,
-                                        },
-                                        node: LayoutNode::Empty {
-                                            size: Size {
-                                                width: nz32(2),
-                                                height: nz32(4),
-                                            },
-                                        },
-                                    },
-                                    GridCell {
-                                        offset: LayoutOffset {
-                                            x: 9,
-                                            y: 1,
-                                        },
-                                        node: LayoutNode::Empty {
-                                            size: Size {
-                                                width: nz32(6),
-                                                height: nz32(6),
-                                            },
-                                        },
-                                    },
-                                    GridCell {
-                                        offset: LayoutOffset {
-                                            x: 1,
-                                            y: 9,
-                                        },
-                                        node: LayoutNode::Empty {
-                                            size: Size {
-                                                width: nz32(7),
-                                                height: nz32(3),
-                                            },
-                                        },
-                                    },
-                                    GridCell {
-                                        offset: LayoutOffset {
-                                            x: 8,
-                                            y: 8,
-                                        },
-                                        node: LayoutNode::Empty {
-                                            size: Size {
-                                                width: nz32(8),
-                                                height: nz32(4),
-                                            },
-                                        },
-                                    },
-                                    GridCell {
-                                        offset: LayoutOffset {
-                                            x: 1,
-                                            y: 13,
-                                        },
-                                        node: LayoutNode::Empty {
-                                            size: Size {
-                                                width: nz32(2),
-                                                height: nz32(2),
-                                            },
-                                        },
-                                    },
-                                    GridCell {
-                                        offset: LayoutOffset {
-                                            x: 5,
-                                            y: 13,
-                                        },
-                                        node: LayoutNode::Empty {
-                                            size: Size {
-                                                width: nz32(2),
-                                                height: nz32(2),
-                                            },
-                                        },
-                                    },
-                                    GridCell {
-                                        offset: LayoutOffset {
-                                            x: 9,
-                                            y: 13,
-                                        },
-                                        node: LayoutNode::Empty {
-                                            size: Size {
-                                                width: nz32(2),
-                                                height: nz32(2),
-                                            },
-                                        },
-                                    },
-                                    GridCell {
-                                        offset: LayoutOffset {
-                                            x: 13,
-                                            y: 13,
-                                        },
-                                        node: LayoutNode::Empty {
-                                            size: Size {
-                                                width: nz32(2),
-                                                height: nz32(2),
-                                            },
-                                        },
-                                    },
-                                ],
-                                cell_size: Size {
-                                    width: nz32(4),
-                                    height: nz32(4),
-                                },
-                                rows: nz32(4),
-                                cols: nz32(4),
-                            },
-                        ),
-                    },
+                    )},
                 ],
                 cell_size: Size {
                     width: nz32(20),
