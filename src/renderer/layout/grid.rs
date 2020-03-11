@@ -195,19 +195,34 @@ mod tests {
     use super::*;
     use crate::renderer::{RenderNode, RenderLayout, GridLayout, GridLayoutCell};
 
+    macro_rules! assert_err {
+        ($actual:expr, $expected:expr) => {
+            match $actual {
+                Ok(_) => panic!("Expected an Err(...) but everything was Ok!"),
+                Err(err) => assert_eq!(err, $expected),
+            }
+        };
+    }
+
     #[test]
     fn image_too_large() {
+        // Checks that we get an error if a node is bigger than the cell size
+        let cell_size = Size {width: nz32(10), height: nz32(10)};
+        let node_size = Size {width: nz32(25), height: nz32(10)};
+
         let node = RenderNode::Layout(
             RenderLayout::Grid(
                 GridLayout {
                     rows: nz32(1),
                     cols: nz32(3),
-                    cell_size: Size {width: nz32(10), height: nz32(10)},
+                    cell_size,
                     cells:
                     vec![
                         vec![
                             GridLayoutCell {
-                                node: RenderNode::Empty {size: Size {width: nz32(25), height: nz32(10)}},
+                                node: RenderNode::Empty {size: node_size},
+                                // These spans fit within the grid size, only the `node_size`
+                                // is a problem
                                 col_span: nz32(2),
                                 row_span: nz32(1),
                             },
@@ -216,26 +231,68 @@ mod tests {
                 }
             )
         );
-        let expected = LayoutError::LayoutNodeDoesNotFit;
 
+        let expected = LayoutError::LayoutNodeDoesNotFit;
         let actual = LayoutNode::from_render_node(node);
-        match actual {
-            Ok(_) => panic!("at the disco"),
-            Err(err) => assert_eq!(err, expected),
-        }
+        assert_err!(actual, expected);
     }
 
-
     #[test]
-    fn row_span_bound() {
+    fn row_size_bound() {
+        // 2x2 grid where 3 rows are provided
         let node = RenderNode::Layout(
             RenderLayout::Grid(
                 GridLayout {
                     rows: nz32(2),
                     cols: nz32(2),
                     cell_size: Size {width: nz32(10), height: nz32(10)},
-                    cells:
-                    vec![
+                    cells: vec![
+                        vec![
+                            GridLayoutCell {
+                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(30)}},
+                                col_span: nz32(1),
+                                row_span: nz32(1),
+                            },
+                        ],
+                        vec![
+                            GridLayoutCell {
+                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
+                                col_span: nz32(1),
+                                row_span: nz32(1),
+                            },
+                            GridLayoutCell {
+                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
+                                col_span: nz32(1),
+                                row_span: nz32(1),
+                            },
+                        ],
+                        vec![
+                            GridLayoutCell {
+                                node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(30)}},
+                                col_span: nz32(1),
+                                row_span: nz32(1),
+                            },
+                        ],
+                    ],
+                }
+            )
+        );
+
+        let expected = LayoutError::InsufficientGridSize {row: 2, col: 2};
+        let actual = LayoutNode::from_render_node(node);
+        assert_err!(actual, expected);
+    }
+
+    #[test]
+    fn row_span_bound() {
+        // 2x2 grid where a cell has row span 3
+        let node = RenderNode::Layout(
+            RenderLayout::Grid(
+                GridLayout {
+                    rows: nz32(2),
+                    cols: nz32(2),
+                    cell_size: Size {width: nz32(10), height: nz32(10)},
+                    cells: vec![
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(30)}},
@@ -259,25 +316,22 @@ mod tests {
                 }
             )
         );
-        let expected = LayoutError::InsufficientGridSize {row: 2, col: 2};
 
+        let expected = LayoutError::InsufficientGridSize {row: 2, col: 2};
         let actual = LayoutNode::from_render_node(node);
-        match actual {
-            Ok(_) => panic!("at the disco"),
-            Err(err) => assert_eq!(err, expected),
-        }
+        assert_err!(actual, expected);
     }
 
     #[test]
     fn col_span_bound() {
+        // 2x2 grid where a node in the second column has a col span > 1
         let node = RenderNode::Layout(
             RenderLayout::Grid(
                 GridLayout {
                     rows: nz32(2),
                     cols: nz32(2),
                     cell_size: Size {width: nz32(10), height: nz32(10)},
-                    cells:
-                    vec![
+                    cells: vec![
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(10), height: nz32(10)}},
@@ -306,26 +360,25 @@ mod tests {
                 }
             )
         );
-        let expected = LayoutError::InsufficientGridSize {row: 2, col: 2};
 
+        let expected = LayoutError::InsufficientGridSize {row: 2, col: 2};
         let actual = LayoutNode::from_render_node(node);
-        match actual {
-            Ok(_) => panic!("at the disco"),
-            Err(err) => assert_eq!(err, expected),
-        }
+        assert_err!(actual, expected);
     }
 
-
-    // The following test case creates an inner grid of Emptys that is embedded into the bottom row
-    // of a 2x2 (40x40 px) grid called node.
-    // Offsets refer to the relative top-left position of each layout node (ie. Image, Grid, Empty)
-    // Offsets in Node: [(0,0), (20,0), (12, 22)]
-    // Offsets in Inner Grid: [(1,0), (5,0), (9,1), (1,9), (8,8), (1,13), (5,13), (9,13), (13,13)]
+    // The following test case creates a nested grid of Emptys where the inner grid is embedded
+    // into the bottom row of a 2x2 (40x40 px) grid called node.
     //
-    // The area from (4,4) to (8,8) is completely empty as in there's no node there at all
+    // Offsets refer to the relative top-left position of each layout node (ie. Image, Grid, Empty)
+    //
+    // * Offsets in node: [(0,0), (20,0), (12, 22)]
+    //   * (12, 22) is because the inner grid is centered within its cell
+    // * Offsets in inner_grid: [(1,0), (5,0), (9,1), (1,9), (8,8), (1,13), (5,13), (9,13), (13,13)]
+    //   * Some of these offsets are at odd numbers because of centering
+    // * The area from (4,4) to (8,8) is *completely* empty as in there's no node there at all
     //
     //         ┌──────┐              ┌───────────┐
-    //         │ Node │              │Inner Grid │
+    //         │ node │              │inner_grid │
     //     0   └──20──┘    40      0 └─4───8───12┘ 16
     //    0┌───────┬───────┐      0┌┬─┬─┬─┬────────┐
     //     │       │       │       ││ │ │ │ ┌─────┐│
@@ -352,8 +405,7 @@ mod tests {
                     rows: nz32(4),
                     cols: nz32(4),
                     cell_size: Size {width: nz32(4), height: nz32(4)},
-                    cells:
-                    vec![
+                    cells: vec![
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(2), height: nz32(8)}},
@@ -416,8 +468,7 @@ mod tests {
                     rows: nz32(2),
                     cols: nz32(2),
                     cell_size: Size {width: nz32(20), height: nz32(20)},
-                    cells:
-                    vec![
+                    cells: vec![
                         vec![
                             GridLayoutCell {
                                 node: RenderNode::Empty {size: Size {width: nz32(20), height: nz32(20)}},
@@ -607,7 +658,6 @@ mod tests {
         let actual = LayoutNode::from_render_node(node).unwrap();
         assert!(layout_node_eq(&actual, &expected));
     }
-
 
     fn layout_node_eq(node1: &LayoutNode, node2: &LayoutNode) -> bool {
         use LayoutNode::*;
