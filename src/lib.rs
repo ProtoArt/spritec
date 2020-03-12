@@ -30,3 +30,4 @@ pub mod renderer;
 pub mod query3d;
 pub mod scene;
 pub mod math;
+pub mod resolve_path;

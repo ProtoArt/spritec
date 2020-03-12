@@ -2,11 +2,12 @@ use std::num::NonZeroU32;
 
 use serde::{Serialize, Deserialize};
 
+use crate::resolve_path::ResolvePath;
 use crate::math::{Vec3, Rgba, Degrees, Milliseconds};
 
 // PathBuf is not imported to avoid its use in this module. Every path in this module should
 // be an UnresolvedPath.
-use std::path::{Path, Component};
+use std::path::Path;
 
 /// A newtype around PathBuf to force the path to be resolved relative to a base directory before
 /// it can be used. Good to prevent something that is pretty easy to do accidentally.
@@ -15,58 +16,10 @@ use std::path::{Path, Component};
 #[serde(transparent)]
 pub struct UnresolvedPath(std::path::PathBuf);
 
-impl UnresolvedPath {
+impl ResolvePath for UnresolvedPath {
     /// Resolves this path relative to the given base directory. Returns an absolute path.
-    pub fn resolve(&self, base_dir: &Path) -> std::path::PathBuf {
-        use std::path::PathBuf;
-
-        // Path resolution based on code found at
-        // https://github.com/rust-lang/cargo/blob/9ef364a5507ef87843c5f37b11d3ccfbd8cbe478/src/cargo/util/paths.rs#L65-L90
-        //
-        // Resolution removes . and .. from the path, where . is removed without affecting the rest
-        // of the path and .. will remove its parent from the path.
-        // This is needed because Windows extended-length paths disallow string parsing, so ".."
-        // and "." aren't resolved in path names.
-        //
-        // Reference: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
-
-        // Constraint: The base directory path (base_dir) should always be an absolute path.
-        assert!(base_dir.is_absolute(), "Base directory path was not absolute.");
-
-        let UnresolvedPath(path) = self;
-        // Create an absolute path, using base_dir only if necessary
-        let path = if path.is_absolute() {
-            path.to_path_buf()
-        } else {
-            base_dir.join(path)
-        };
-
-        // All slashes are converted to backslahes (for Windows) or to forward slashes (for every other OS)
-        // so that PathBuf's components function can properly extract out the components of the path
-        #[cfg(windows)]
-        let path_str = path.to_str()
-            .expect("Path was not valid Unicode")
-            .replace("/", "\\");
-        #[cfg(not(windows))]
-        let path_str = path.to_str()
-            .expect("Path was not valid Unicode")
-            .replace("\\", "/");
-        let path = Path::new(&path_str);
-
-        let mut normalized_path = PathBuf::new();
-        for component in path.components().peekable() {
-            match component {
-                Component::Prefix(_) |
-                Component::RootDir => normalized_path.push(component.as_os_str()),
-                Component::CurDir => {},
-                Component::ParentDir => {
-                    normalized_path.pop();
-                },
-                Component::Normal(c) => normalized_path.push(c),
-            }
-        }
-
-        normalized_path
+    fn resolve(&self, base_dir: &Path) -> std::path::PathBuf {
+        self.0.resolve(base_dir)
     }
 }
 
@@ -305,85 +258,6 @@ fn default_background() -> Rgba { Rgba {r: 0.0, g: 0.0, b: 0.0, a: 0.0} }
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    macro_rules! resolve_check {
-        ($base:expr, $input:expr, $output:expr) => {
-            let input_path = UnresolvedPath(std::path::PathBuf::from($input));
-            let base_path = Path::new($base);
-            assert_eq!(input_path.resolve(base_path), std::path::PathBuf::from($output));
-        }
-    }
-
-    #[cfg(not(windows))]
-    #[test]
-    fn resolve_absolute_path() {
-        let input_path = "/home/yourname/spritec/sample/bigboi/test";
-
-        let base_path = "/home/yourname/spritec/sample";
-        let output_path = "/home/yourname/spritec/sample/bigboi/test";
-        resolve_check!(base_path, input_path, output_path);
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn resolve_absolute_path() {
-        let input_path = "C:\\user\\yourname\\spritec\\sample\\bigboi\\test";
-
-        let base_path = "C:\\user\\yourname\\spritec\\sample";
-        let output_path = "C:\\user\\yourname\\spritec\\sample\\bigboi\\test";
-        resolve_check!(base_path, input_path, output_path);
-    }
-
-    #[cfg(not(windows))]
-    #[test]
-    fn resolve_relative_path_forward_slash() {
-        let input_path = "../../../spritec/../src/./bin";
-
-        let base_path = "/home/yourname/spritec";
-        let output_path = "/src/bin";
-        resolve_check!(base_path, input_path, output_path);
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn resolve_relative_path_forward_slash() {
-        let input_path = "../../../spritec/../src/./bin";
-
-        let base_path = "C:\\user\\yourname\\spritec";
-        let output_path = "C:\\src\\bin";
-        resolve_check!(base_path, input_path, output_path);
-    }
-
-    #[cfg(not(windows))]
-    #[test]
-    fn resolve_relative_path_backslash() {
-        let input_path = "..\\..\\..\\spritec\\..\\src\\.\\bin";
-
-        let base_path = "/home/yourname/spritec";
-        let output_path = "/src/bin";
-        resolve_check!(base_path, input_path, output_path);
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn resolve_relative_path_backslash() {
-        let input_path = "..\\..\\..\\spritec\\..\\src\\.\\bin";
-
-        let base_path = "C:\\user\\yourname\\spritec";
-        let output_path = "C:\\src\\bin";
-        resolve_check!(base_path, input_path, output_path);
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn resolve_relative_path_backslash_prefix() {
-        let input_path = "..\\..\\..\\spritec\\..\\src\\.\\bin";
-
-        // This special prefix is an old Windows feature that no one uses
-        let base_path = "\\\\?\\C:\\user\\yourname\\spritec";
-        let output_path = "\\\\?\\C:\\src\\bin";
-        resolve_check!(base_path, input_path, output_path);
-    }
 
     #[test]
     fn parse_bigboi_config() {
