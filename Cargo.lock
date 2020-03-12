@@ -112,12 +112,9 @@ dependencies = [
 
 [[package]]
 name = "base64"
-version = "0.10.1"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b25d992356d2eb0ed82172f5248873db5560c4721f564b13cb5193bda5e668e"
-dependencies = [
- "byteorder",
-]
+checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
 
 [[package]]
 name = "bitflags"
@@ -323,16 +320,6 @@ checksum = "697c714f50560202b1f4e2e09cd50a421881c83e9025db75d15f276616f04f40"
 
 [[package]]
 name = "deflate"
-version = "0.7.20"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "707b6a7b384888a70c8d2e8650b3e60170dfc6a67bb4aa67b6dfca57af4bedb4"
-dependencies = [
- "adler32",
- "byteorder",
-]
-
-[[package]]
-name = "deflate"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "050ef6de42a33903b30a7497b76b40d3d58691d4d3eec355348c122444a388f0"
@@ -456,21 +443,19 @@ dependencies = [
 [[package]]
 name = "gltf"
 version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f06661c228301a856edc516331e9647516efdc6afd3ae9ee066f9a6b0c53c48"
+source = "git+https://github.com/gltf-rs/gltf#ff59a70e346ae4f0f846c13e78532ec0726cfafa"
 dependencies = [
  "base64",
  "byteorder",
  "gltf-json",
- "image 0.21.3",
+ "image",
  "lazy_static",
 ]
 
 [[package]]
 name = "gltf-derive"
 version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b0f757720a1e90d629a38a4a14c58c3d35d2be4fad24b92e3dc38e10a1012ec"
+source = "git+https://github.com/gltf-rs/gltf#ff59a70e346ae4f0f846c13e78532ec0726cfafa"
 dependencies = [
  "inflections",
  "proc-macro2 1.0.8",
@@ -481,8 +466,7 @@ dependencies = [
 [[package]]
 name = "gltf-json"
 version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8451dc5d6ccde987760d68faf3081765e248bc8f684168899b3781b6dd89aa16"
+source = "git+https://github.com/gltf-rs/gltf#ff59a70e346ae4f0f846c13e78532ec0726cfafa"
 dependencies = [
  "gltf-derive",
  "serde",
@@ -582,21 +566,6 @@ dependencies = [
 
 [[package]]
 name = "image"
-version = "0.21.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35371e467cd7b0b3d1d6013d619203658467df12d61b0ca43cd67b743b1965eb"
-dependencies = [
- "byteorder",
- "jpeg-decoder",
- "lzw",
- "num-iter",
- "num-rational",
- "num-traits 0.2.11",
- "png 0.14.1",
-]
-
-[[package]]
-name = "image"
 version = "0.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "403f0c29211dc50a78eb53eeeae87945d44cb63071881834212f36677fccb2b4"
@@ -608,7 +577,7 @@ dependencies = [
  "num-iter",
  "num-rational",
  "num-traits 0.2.11",
- "png 0.16.1",
+ "png",
  "scoped_threadpool",
  "tiff",
 ]
@@ -1025,25 +994,13 @@ checksum = "05da548ad6865900e60eaba7f589cc0783590a92e940c26953ff81ddbab2d677"
 
 [[package]]
 name = "png"
-version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63daf481fdd0defa2d1d2be15c674fbfa1b0fd71882c303a91f9a79b3252c359"
-dependencies = [
- "bitflags",
- "deflate 0.7.20",
- "inflate",
- "num-iter",
-]
-
-[[package]]
-name = "png"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "46060468187c21c00ffa2a920690b29997d7fd543f5a4d400461e4a7d4fccde8"
 dependencies = [
  "bitflags",
  "crc32fast",
- "deflate 0.8.3",
+ "deflate",
  "inflate",
 ]
 
@@ -1331,7 +1288,7 @@ dependencies = [
  "approx 0.1.1",
  "glium",
  "gltf",
- "image 0.23.1",
+ "image",
  "interpolation",
  "num-traits 0.1.43",
  "rayon",
@@ -1349,7 +1306,7 @@ name = "spritec_binding"
 version = "0.1.0"
 dependencies = [
  "gif",
- "image 0.23.1",
+ "image",
  "neon",
  "neon-build",
  "spritec",
