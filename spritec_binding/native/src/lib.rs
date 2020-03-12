@@ -20,7 +20,8 @@ use spritec::query3d::{
 use spritec::renderer::{
     Camera,
     FileQuery,
-    LayoutType,
+    GridLayout,
+    GridLayoutCell,
     Light,
     Outline,
     RenderCamera,
@@ -84,7 +85,7 @@ declare_types! {
 
             let mut sprites = Vec::with_capacity(animation_total_steps as usize);
             for animation_cur_step in 0..animation_total_steps {
-                sprites.push(RenderNode::RenderedImage(describe_sprite(
+                sprites.push(GridLayoutCell::single(RenderNode::RenderedImage(describe_sprite(
                     file.clone(),
                     width,
                     height,
@@ -93,27 +94,20 @@ declare_types! {
                     &animation_name,
                     animation_total_steps,
                     animation_cur_step,
-                )));
+                ))));
             }
-
-            // Number of columns is the minimum of number of sprites or the max
-            // number of sprites that can fit in 2048px.
-            // 2048 is chosen arbitrarily but is a power of 2. Power of 2 is
-            // optimal for loading into game engines.
-            let final_sprite_width = width * scale;
-            let cols = min(
-                animation_total_steps,
-                max(2048 / final_sprite_width, 1)
-            );
 
             let job = RenderJob {
                 scale: NonZeroU32::new(scale).expect("Scale to be a positive integer"),
-                root: RenderNode::Layout(RenderLayout {
-                    nodes: sprites,
-                    layout: LayoutType::Grid {
-                        cols: NonZeroU32::new(cols).unwrap(),
-                    }
-                })
+                root: RenderNode::Layout(RenderLayout::Grid(GridLayout {
+                    rows: unsafe { NonZeroU32::new_unchecked(1) },
+                    cols: NonZeroU32::new(animation_total_steps).unwrap(),
+                    cell_size: Size {
+                        width: NonZeroU32::new(width).unwrap(),
+                        height: NonZeroU32::new(height).unwrap(),
+                    },
+                    cells: vec![sprites],
+                })),
             };
             let image = cx.borrow_mut(&mut this, |mut spritec| {
                 job.execute(&mut spritec.ctx).expect("Spritesheet creation failed")
