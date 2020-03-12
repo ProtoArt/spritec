@@ -38,3 +38,14 @@ pub struct GridLayoutCell {
     /// The number of rows spanned for this cell
     pub row_span: NonZeroU32,
 }
+
+impl GridLayoutCell {
+    /// Creates a new cell that spans a single cell
+    pub fn single(node: RenderNode) -> Self {
+        Self {
+            node,
+            col_span: unsafe { NonZeroU32::new_unchecked(1) },
+            row_span: unsafe { NonZeroU32::new_unchecked(1) },
+        }
+    }
+}
