@@ -9,7 +9,21 @@ use std::path::Path;
 use std::collections::HashMap;
 
 use crate::math::Mat4;
-use crate::scene::{Scene, NodeTree, NodeWorldTransforms, NodeId, Node, Mesh, Skin, Material, CameraType, LightType};
+use crate::scene::{
+    Scene,
+    NodeTree,
+    NodeWorldTransforms,
+    NodeId,
+    Node,
+    Mesh,
+    Skin,
+    Material,
+    ImageId,
+    TexImage,
+    Texture,
+    CameraType,
+    LightType,
+};
 use crate::renderer::{Display, ShaderGeometry, JointMatrixTexture, Camera, Light};
 use crate::query3d::{GeometryQuery, GeometryFilter, AnimationQuery, CameraQuery, LightQuery};
 
@@ -46,10 +60,16 @@ pub struct GltfFile {
 impl GltfFile {
     /// Opens a glTF file
     pub fn open(path: &Path) -> Result<Self, gltf::Error> {
-        let (document, buffers, _images) = gltf::import(path)?;
+        let (document, buffers, images) = gltf::import(path)?;
 
+        let images: Vec<_> = images.into_iter().enumerate()
+            .map(|(id, data)| Arc::new(TexImage {id: ImageId(id), data}))
+            .collect();
+        let textures: Vec<_> = document.textures()
+            .map(|tex| Arc::new(Texture::from_gltf(tex, &images)))
+            .collect();
         let materials: Vec<_> = document.materials()
-            .map(|mat| Arc::new(Material::from(mat)))
+            .map(|mat| Arc::new(Material::from_gltf(mat, &textures)))
             .collect();
 
         let meshes: Vec<_> = document.meshes()

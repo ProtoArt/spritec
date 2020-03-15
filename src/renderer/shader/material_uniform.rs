@@ -16,7 +16,7 @@ impl Uniforms for MaterialUniform {
 
 impl MaterialUniform {
     pub fn new(material: &Material) -> Self {
-        let &Material {diffuse_color} = material;
+        let &Material {diffuse_color, ref texture} = material;
 
         Self {
             diffuse_color: UniformValue::Vec4(diffuse_color.into_array()),
