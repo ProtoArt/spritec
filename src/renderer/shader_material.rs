@@ -19,7 +19,7 @@ pub struct ShaderMaterial {
 impl ShaderMaterial {
     pub fn new(
         material: &Material,
-        image_lookup: impl FnMut(&TexImage) -> Result<&Arc<Texture2d>, TextureCreationError>,
+        image_lookup: impl FnMut(&TexImage) -> Result<Arc<Texture2d>, TextureCreationError>,
     ) -> Result<Self, TextureCreationError> {
         let &Material {diffuse_color, ref texture} = material;
         let texture = texture.as_ref()
@@ -42,12 +42,12 @@ pub struct ShaderTexture {
 impl ShaderTexture {
     pub fn new(
         texture: &Texture,
-        mut image_lookup: impl FnMut(&TexImage) -> Result<&Arc<Texture2d>, TextureCreationError>,
+        mut image_lookup: impl FnMut(&TexImage) -> Result<Arc<Texture2d>, TextureCreationError>,
     ) -> Result<Self, TextureCreationError> {
         let &Texture {ref image, magnify_filter, minify_filter, wrap_function} = texture;
 
         Ok(Self {
-            image: image_lookup(image)?.clone(),
+            image: image_lookup(image)?,
             magnify_filter: magnify_filter.map(|filter| filter.into()),
             minify_filter: minify_filter.map(|filter| filter.into()),
             wrap_function: wrap_function.into(),

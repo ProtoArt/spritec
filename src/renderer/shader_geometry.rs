@@ -46,7 +46,7 @@ impl ShaderGeometry {
         geo: &Geometry,
         joint_matrices: &Arc<JointMatrixTexture>,
         model_transform: Mat4,
-        image_lookup: impl FnMut(&TexImage) -> Result<&Arc<Texture2d>, TextureCreationError>,
+        image_lookup: impl FnMut(&TexImage) -> Result<Arc<Texture2d>, TextureCreationError>,
     ) -> Result<Self, ShaderGeometryError> {
         const POSITION_ATTR_TYPE: AttributeType = AttributeType::F32F32F32;
         let position_bindings: VertexFormat = Cow::Borrowed(&[
