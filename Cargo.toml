@@ -33,8 +33,4 @@ interpolation = "0.2"
 
 [dependencies.gltf]
 version = "0.15"
-#TODO: Remove this `git` dependency and rely on the version from crates.io.
-# Problem: https://github.com/gltf-rs/gltf/pull/278#issuecomment-598402015
-# Update to a version released after March 11, 2020.
-git = "https://github.com/gltf-rs/gltf"
 features = ["KHR_lights_punctual"]
