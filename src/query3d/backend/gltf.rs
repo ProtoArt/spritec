@@ -8,6 +8,11 @@ use std::sync::Arc;
 use std::path::Path;
 use std::collections::HashMap;
 
+use glium::{
+    Texture2d,
+    texture::{RawImage2d, TextureCreationError, ClientFormat},
+};
+
 use crate::math::Mat4;
 use crate::scene::{
     Scene,
@@ -55,6 +60,8 @@ pub struct GltfFile {
     scene_first_camera: Option<Arc<Camera>>,
     /// Cache each camera by scene index and name
     scene_named_cameras: HashMap<(usize, String), Arc<Camera>>,
+    /// Cache of each image by image ID
+    images: HashMap<ImageId, Arc<Texture2d>>,
 }
 
 impl GltfFile {
@@ -117,6 +124,7 @@ impl GltfFile {
             scene_named_lights: HashMap::new(),
             scene_first_camera: None,
             scene_named_cameras: HashMap::new(),
+            images: HashMap::new(),
         })
     }
 }
@@ -203,6 +211,47 @@ fn joint_matrices_texture(
     })
 }
 
+/// Returns the uploaded texture for the given image
+///
+/// If the image was previously uploaded, this will return a cached version
+fn image_lookup(
+    images: &mut HashMap<ImageId, Arc<Texture2d>>,
+    display: &Display,
+    img: &TexImage,
+) -> Result<Arc<Texture2d>, TextureCreationError> {
+    let TexImage {id, data} = img;
+    match images.get(id) {
+        Some(tex) => Ok(tex.clone()),
+        None => {
+            use gltf::image::{Data, Format};
+
+            let &Data {ref pixels, format, width, height} = data;
+            let raw_image = RawImage2d {
+                data: pixels.into(),
+                width,
+                height,
+                format: match format {
+                    Format::R8 => ClientFormat::U8,
+                    Format::R8G8 => ClientFormat::U8U8,
+                    Format::R8G8B8 => ClientFormat::U8U8U8,
+                    Format::R8G8B8A8 => ClientFormat::U8U8U8U8,
+                    Format::B8G8R8 => ClientFormat::U8U8U8,
+                    Format::B8G8R8A8 => ClientFormat::U8U8U8U8,
+                    Format::R16 => ClientFormat::U16,
+                    Format::R16G16 => ClientFormat::U16U16,
+                    Format::R16G16B16 => ClientFormat::U16U16U16,
+                    Format::R16G16B16A16 => ClientFormat::U16U16U16U16,
+                },
+            };
+
+            let texture = Arc::new(Texture2d::new(display, raw_image)?);
+            images.insert(*id, texture);
+            // This unwrap is safe because we just inserted
+            Ok(images.get(id).unwrap().clone())
+        },
+    }
+}
+
 /// Given nodes and their model/world transforms, uploads each node's geometry
 ///
 /// This can't be a method because we need to keep the &mut self borrow split
@@ -211,6 +260,7 @@ fn upload_geometry<'a>(
     node_world_transforms: &NodeWorldTransforms,
     display: &Display,
     default_joint_matrix_texture: &mut Option<Arc<JointMatrixTexture>>,
+    images: &mut HashMap<ImageId, Arc<Texture2d>>,
 ) -> Result<Arc<Vec<Arc<ShaderGeometry>>>, QueryError> {
     let mut scene_geo = Vec::new();
 
@@ -230,7 +280,7 @@ fn upload_geometry<'a>(
                     geo,
                     &joint_matrices_tex,
                     model_transform,
-                    |_| todo!(),
+                    |img| image_lookup(images, display, img),
                 )?;
 
                 scene_geo.push(Arc::new(geo));
@@ -275,6 +325,7 @@ impl QueryBackend for GltfFile {
                                 &node_world_transforms,
                                 display,
                                 default_joint_matrix_texture,
+                                &mut self.images,
                             )?;
                             self.scene_anim_shader_geometry.insert(scene_index, anim_query, scene_geo.clone());
 
@@ -302,6 +353,7 @@ impl QueryBackend for GltfFile {
                                 &node_world_transforms,
                                 display,
                                 default_joint_matrix_texture,
+                                &mut self.images,
                             )?;
                             self.scene_shader_geometry.insert(scene_index, scene_geo.clone());
 
