@@ -10,9 +10,8 @@ use std::cmp::max;
 use interpolation::lerp;
 use thiserror::Error;
 
-use crate::config;
-use crate::resolve_path::ResolvePath;
 use crate::math::{Mat4, Vec3, Rgb, Milliseconds};
+use crate::config;
 use crate::scene::{CameraType, LightType};
 use crate::query3d::{
     File,
