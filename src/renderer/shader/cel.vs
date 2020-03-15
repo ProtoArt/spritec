@@ -15,6 +15,7 @@ uniform sampler2D joint_matrices;
 
 in vec3 position;
 in vec3 normal;
+in vec2 tex_coord;
 
 // Indexes into joint_matrices
 in uvec4 joint_influences;
@@ -24,6 +25,8 @@ in vec4 joint_weights;
 out vec3 v_normal;
 // The position, in the world coordinate system
 out vec3 v_position;
+// The texture coordinate
+out vec2 v_tex_coord;
 
 mat4 joint_matrix(uint i) {
     return mat4(
@@ -56,6 +59,8 @@ void main() {
     // > to have a linear sum of 1.0. No joint may have more than one non-zero
     // > weight for a given vertex.
     v_position = vec3(model_transform * skin_mat * vec4(position, 1.0));
+
+    v_tex_coord = tex_coord;
 
     // Transforms the position to screen space
     gl_Position = mvp * skin_mat * vec4(position, 1.0);
