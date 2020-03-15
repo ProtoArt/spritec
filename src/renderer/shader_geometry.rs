@@ -12,7 +12,7 @@ use glium::{
 };
 use thiserror::Error;
 
-use crate::math::{Vec3, Vec4, Mat4};
+use crate::math::{Vec2, Vec3, Vec4, Mat4};
 use crate::scene::{Geometry, TexImage};
 use crate::renderer::{Display, ShaderMaterial, JointMatrixTexture};
 
@@ -30,6 +30,7 @@ pub struct ShaderGeometry {
     pub indices: IndexBuffer<u32>,
     pub positions: VertexBuffer<Vec3>,
     pub normals: VertexBuffer<Vec3>,
+    pub tex_coords: VertexBuffer<Vec2>,
     pub joint_influences: VertexBuffer<[u32; 4]>,
     pub joint_weights: VertexBuffer<Vec4>,
 
@@ -58,6 +59,12 @@ impl ShaderGeometry {
             // This name must correspond to the name in our shaders
             (Cow::Borrowed("normal"), 0, NORMAL_ATTR_TYPE, false),
         ]);
+        const TEX_COORD_ATTR_TYPE: AttributeType = AttributeType::F32F32;
+        let tex_coord_bindings: VertexFormat = Cow::Borrowed(&[
+            // This name must correspond to the name in our shaders
+            (Cow::Borrowed("tex_coord"), 0, TEX_COORD_ATTR_TYPE, false),
+        ]);
+
         const JOINT_INFLUENCES_ATTR_TYPE: AttributeType = AttributeType::U32U32U32U32;
         let joint_influences_bindings: VertexFormat = Cow::Borrowed(&[
             // This name must correspond to the name in our shaders
@@ -69,7 +76,18 @@ impl ShaderGeometry {
             (Cow::Borrowed("joint_weights"), 0, JOINT_WEIGHTS_ATTR_TYPE, false),
         ]);
 
-        let Geometry {name: _, indices, positions, normals, joint_influences, joint_weights, material} = geo;
+        let Geometry {name: _, indices, positions, normals, tex_coords, joint_influences, joint_weights, material} = geo;
+
+        let tex_coords = match tex_coords {
+            Some(tex_coords) => Cow::Borrowed(tex_coords),
+            None => {
+                if material.texture.is_some() {
+                    panic!("model had a texture in its material but no texture coordinates");
+                }
+                // Default to a set of zero coordinates for the texture coords
+                Cow::Owned(vec![Vec2::zero(); positions.len()])
+            },
+        };
 
         let (joint_influences, joint_weights) = match (joint_influences, joint_weights) {
             (Some(joint_influences), Some(joint_weights)) => {
@@ -89,7 +107,7 @@ impl ShaderGeometry {
                 (joint_influences, joint_weights)
             },
 
-            _ => unreachable!("Did not expect geometry to only have either joint influences or joint weights"),
+            _ => unreachable!("bug: did not expect geometry to only have either joint influences or joint weights"),
         };
 
         let material = ShaderMaterial::new(material, image_lookup)?;
@@ -112,6 +130,8 @@ impl ShaderGeometry {
                 POSITION_ATTR_TYPE.get_size_bytes())? },
             normals: unsafe { VertexBuffer::new_raw(display, normals, normal_bindings,
                 NORMAL_ATTR_TYPE.get_size_bytes())? },
+            tex_coords: unsafe { VertexBuffer::new_raw(display, tex_coords.as_ref(),
+                tex_coord_bindings, TEX_COORD_ATTR_TYPE.get_size_bytes())? },
             joint_influences: unsafe { VertexBuffer::new_raw(display, joint_influences.as_ref(),
                 joint_influences_bindings, JOINT_INFLUENCES_ATTR_TYPE.get_size_bytes())? },
             joint_weights: unsafe { VertexBuffer::new_raw(display, joint_weights.as_ref(),

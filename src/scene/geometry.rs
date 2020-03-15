@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::math::{Vec3, Vec4};
+use crate::math::{Vec2, Vec3, Vec4};
 
 use super::Material;
 
@@ -15,6 +15,8 @@ pub struct Geometry {
     pub positions: Vec<Vec3>,
     /// The normal of each vertex of the geometry
     pub normals: Vec<Vec3>,
+    /// The texture coordinates of each vertex of the geometry
+    pub tex_coords: Option<Vec<Vec2>>,
     /// The joint indexes (up to 4) that affect each vertex of the geometry.
     /// These indexes map into the `joints` array in the `Skin` data applied to this geometry.
     ///
@@ -46,6 +48,7 @@ impl Geometry {
             indices: mesh.indices,
             positions: mesh.positions.chunks(3).map(|sl| Vec3::from_slice(sl)).collect(),
             normals: mesh.normals.chunks(3).map(|sl| Vec3::from_slice(sl)).collect(),
+            tex_coords: None,
             joint_influences: None,
             joint_weights: None,
             material: mesh.material_id.map(|id| materials[id].clone()).unwrap_or_default(),
@@ -75,6 +78,9 @@ impl Geometry {
             .expect("Unable to read vertex normals from glTF geometry")
             .map(Vec3::from)
             .collect();
+        // We only support TEXCOORD_0
+        let tex_coords: Option<Vec<_>> = reader.read_tex_coords(0)
+            .map(|tex_coords| tex_coords.into_f32().map(Vec2::from).collect());
 
         // We only support JOINTS_0 and WEIGHTS_0 (implies max 4 joint influences per vertex)
         let into_u32 = |[a, b, c, d]: [u16; 4]| [a as u32, b as u32, c as u32, d as u32];
@@ -108,6 +114,6 @@ impl Geometry {
             (None, None) => {},
         }
 
-        Self {name, indices, positions, normals, joint_influences, joint_weights, material}
+        Self {name, indices, positions, normals, tex_coords, joint_influences, joint_weights, material}
     }
 }

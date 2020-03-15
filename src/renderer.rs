@@ -88,6 +88,7 @@ impl<'a> Renderer<'a> {
             indices,
             positions,
             normals,
+            tex_coords,
             joint_influences,
             joint_weights,
             joint_matrices,
@@ -109,7 +110,7 @@ impl<'a> Renderer<'a> {
             material,
         });
 
-        self.target.draw((positions, normals, joint_influences, joint_weights), indices,
+        self.target.draw((positions, normals, tex_coords, joint_influences, joint_weights), indices,
             &self.shaders.cel, &cel_uniforms, &cel_params)?;
 
         let outline_uniforms = shader::outline::Outline::from(OutlineUniforms {

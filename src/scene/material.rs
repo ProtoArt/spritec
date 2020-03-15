@@ -36,8 +36,10 @@ impl Material {
         let [r, g, b, a] = pbr.base_color_factor();
         Self {
             diffuse_color: Rgba {r, g, b, a},
-            texture: pbr.base_color_texture()
-                .map(|info| textures[info.texture().index()].clone()),
+            texture: pbr.base_color_texture().map(|info| {
+                assert_eq!(info.tex_coord(), 0, "Only TEXCOORD_0 is supported in glTF files");
+                textures[info.texture().index()].clone()
+            }),
         }
     }
 }
