@@ -3,8 +3,7 @@ use std::sync::Arc;
 use glium::uniforms::{Uniforms, UniformValue};
 
 use crate::math::{Mat4, Rgb};
-use crate::scene::Material;
-use crate::renderer::{Light, JointMatrixTexture};
+use crate::renderer::{Light, JointMatrixTexture, ShaderMaterial};
 
 use super::nested_uniforms::NestedUniforms;
 use super::light_uniform::LightUniform;
@@ -22,7 +21,7 @@ pub struct CelUniforms<'a> {
     pub joint_matrices: &'a JointMatrixTexture,
     pub lights: &'a [Arc<Light>],
     pub ambient_light: Rgb,
-    pub material: &'a Material,
+    pub material: &'a ShaderMaterial,
 }
 
 /// This struct must match the uniforms in the cel shaders
@@ -34,7 +33,7 @@ pub struct Cel<'a> {
     num_lights: UniformValue<'static>,
     lights: Vec<LightUniform>,
     ambient_light: UniformValue<'static>,
-    material: MaterialUniform,
+    material: MaterialUniform<'a>,
 }
 
 impl<'b> Uniforms for Cel<'b> {

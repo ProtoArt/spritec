@@ -1,4 +1,5 @@
 mod thread_render_context;
+mod shader_material;
 mod shader_geometry;
 mod joint_matrices_texture;
 mod render_node;
@@ -12,6 +13,7 @@ mod shader;
 mod imageops;
 
 pub use thread_render_context::*;
+pub use shader_material::*;
 pub use shader_geometry::*;
 pub use joint_matrices_texture::*;
 pub use render_node::*;
@@ -96,8 +98,6 @@ impl<'a> Renderer<'a> {
         let model_transform = *model_transform;
         let mvp = projection * view * model_transform;
         let model_inverse_transpose = model_transform.inverted().transposed();
-
-        let material = &*material;
 
         let cel_uniforms = shader::cel::Cel::from(CelUniforms {
             mvp,

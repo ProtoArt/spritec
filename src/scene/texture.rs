@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use gltf::image::Data as ImageData;
+use glium::uniforms;
 
 // NOTE: Normally, we would want to use encapsulation to protect this ID and make sure that
 // it is valid. In this case though, it's tough to do that in a meaningful way because we
@@ -32,6 +33,15 @@ impl From<gltf::texture::MagFilter> for MagFilter {
     }
 }
 
+impl From<MagFilter> for uniforms::MagnifySamplerFilter {
+    fn from(mode: MagFilter) -> Self {
+        match mode {
+            MagFilter::Nearest => uniforms::MagnifySamplerFilter::Nearest,
+            MagFilter::Linear => uniforms::MagnifySamplerFilter::Linear,
+        }
+    }
+}
+
 /// Minification filter
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum MinFilter {
@@ -56,6 +66,19 @@ impl From<gltf::texture::MinFilter> for MinFilter {
     }
 }
 
+impl From<MinFilter> for uniforms::MinifySamplerFilter {
+    fn from(mode: MinFilter) -> Self {
+        match mode {
+            MinFilter::Nearest => uniforms::MinifySamplerFilter::Nearest,
+            MinFilter::Linear => uniforms::MinifySamplerFilter::Linear,
+            MinFilter::NearestMipmapNearest => uniforms::MinifySamplerFilter::NearestMipmapNearest,
+            MinFilter::LinearMipmapNearest => uniforms::MinifySamplerFilter::LinearMipmapNearest,
+            MinFilter::NearestMipmapLinear => uniforms::MinifySamplerFilter::NearestMipmapLinear,
+            MinFilter::LinearMipmapLinear => uniforms::MinifySamplerFilter::LinearMipmapLinear,
+        }
+    }
+}
+
 /// Texture coordinate wrapping mode
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum WrappingMode {
@@ -70,6 +93,16 @@ impl From<gltf::texture::WrappingMode> for WrappingMode {
             gltf::texture::WrappingMode::ClampToEdge => WrappingMode::ClampToEdge,
             gltf::texture::WrappingMode::MirroredRepeat => WrappingMode::MirroredRepeat,
             gltf::texture::WrappingMode::Repeat => WrappingMode::Repeat,
+        }
+    }
+}
+
+impl From<WrappingMode> for uniforms::SamplerWrapFunction {
+    fn from(mode: WrappingMode) -> Self {
+        match mode {
+            WrappingMode::ClampToEdge => uniforms::SamplerWrapFunction::Clamp,
+            WrappingMode::MirroredRepeat => uniforms::SamplerWrapFunction::Mirror,
+            WrappingMode::Repeat => uniforms::SamplerWrapFunction::Repeat,
         }
     }
 }

@@ -5,20 +5,23 @@ use glium::{
     VertexBuffer,
     IndexBuffer,
     VertexFormat,
+    Texture2d,
+    texture::TextureCreationError,
     index::{self, PrimitiveType},
     vertex::{self, AttributeType},
 };
 use thiserror::Error;
 
 use crate::math::{Vec3, Vec4, Mat4};
-use crate::scene::{Geometry, Material};
-use crate::renderer::{Display, JointMatrixTexture};
+use crate::scene::{Geometry, TexImage};
+use crate::renderer::{Display, ShaderMaterial, JointMatrixTexture};
 
 #[derive(Debug, Error)]
 #[error(transparent)]
 pub enum ShaderGeometryError {
     IndexBufferCreationError(#[from] index::BufferCreationError),
     VertexBufferCreationError(#[from] vertex::BufferCreationError),
+    TextureCreationError(#[from] TextureCreationError),
 }
 
 /// Geometry stored on the GPU
@@ -31,17 +34,19 @@ pub struct ShaderGeometry {
     pub joint_weights: VertexBuffer<Vec4>,
 
     pub joint_matrices: Arc<JointMatrixTexture>,
-    pub material: Arc<Material>,
+    pub material: ShaderMaterial,
     /// The world transform of this geometry
     pub model_transform: Mat4,
 }
 
 impl ShaderGeometry {
+    /// Uploads the given geometry to the GPU
     pub fn new(
         display: &Display,
         geo: &Geometry,
         joint_matrices: &Arc<JointMatrixTexture>,
         model_transform: Mat4,
+        image_lookup: impl FnMut(&TexImage) -> Result<&Arc<Texture2d>, TextureCreationError>,
     ) -> Result<Self, ShaderGeometryError> {
         const POSITION_ATTR_TYPE: AttributeType = AttributeType::F32F32F32;
         let position_bindings: VertexFormat = Cow::Borrowed(&[
@@ -87,6 +92,8 @@ impl ShaderGeometry {
             _ => unreachable!("Did not expect geometry to only have either joint influences or joint weights"),
         };
 
+        let material = ShaderMaterial::new(material, image_lookup)?;
+
         // NOTE: By using `immutable`, we are guranteeing that the data in these buffers will
         //   *never* change.
         // See: https://docs.rs/glium/0.26.0/glium/buffer/enum.BufferMode.html
@@ -111,7 +118,7 @@ impl ShaderGeometry {
                 joint_weights_bindings, JOINT_WEIGHTS_ATTR_TYPE.get_size_bytes())? },
 
             joint_matrices: joint_matrices.clone(),
-            material: material.clone(),
+            material,
             model_transform,
         })
     }
