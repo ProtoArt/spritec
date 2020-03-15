@@ -1,6 +1,7 @@
 mod camera_type;
 mod geometry;
 mod light_type;
+mod texture;
 mod material;
 mod mesh;
 mod node_tree;
@@ -10,6 +11,7 @@ mod skin;
 pub use camera_type::*;
 pub use geometry::*;
 pub use light_type::*;
+pub use texture::*;
 pub use material::*;
 pub use mesh::*;
 pub use node_tree::*;
