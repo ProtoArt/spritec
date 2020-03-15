@@ -56,6 +56,8 @@ struct Light {
 
 struct Material {
     vec4 diffuse_color;
+    bool use_texture;
+    sampler2D tex;
 };
 
 // Light parameters
@@ -70,8 +72,19 @@ uniform Material material;
 // This is assumed to be normalized
 in vec3 v_normal;
 in vec3 v_position;
+in vec2 v_tex_coord;
 
 out vec4 frag_color;
+
+vec3 mat_diffuse_color() {
+    if (material.use_texture) {
+        // Discards the texture alpha component
+        return vec3(texture(tex, v_tex_coord));
+    } else {
+        // Discards the material alpha component
+        return vec3(material.diffuse_color);
+    }
+}
 
 // https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/a18868cfe652bab4c084c751c80a6cfb55ae0f2f/src/shaders/metallic-roughness.frag#L199-L208
 float range_attenuation(float distance, float range) {
@@ -133,8 +146,7 @@ vec3 apply_light(Light light, vec3 position, vec3 normal) {
     // diffuse lighting
     float light_intensity = diffuse_intensity;
     light_intensity *= attenuation;
-    // Discards the material alpha component
-    vec3 color = vec3(material.diffuse_color) * light.color;
+    vec3 color = mat_diffuse_color() * light.color;
 
     // A Cel/Toon shader implementation
     // Discretises the color to produce a "toon" effect
@@ -158,8 +170,7 @@ vec3 apply_light(Light light, vec3 position, vec3 normal) {
 }
 
 void main() {
-    // Discards the material alpha component
-    vec3 final_color = vec3(material.diffuse_color) * ambient_light;
+    vec3 final_color = mat_diffuse_color() * ambient_light;
     for (int i = 0; i < num_lights; i++) {
         Light light = lights[i];
         final_color += apply_light(light, v_position, v_normal);

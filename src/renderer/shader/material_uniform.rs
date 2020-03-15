@@ -5,15 +5,18 @@ use crate::renderer::{ShaderMaterial, ShaderTexture};
 /// This struct must match the `Material` struct in our shaders
 pub struct MaterialUniform<'a> {
     diffuse_color: UniformValue<'static>,
-    sampler: Option<UniformValue<'a>>,
+    tex: Option<UniformValue<'a>>,
 }
 
 impl<'b> Uniforms for MaterialUniform<'b> {
     fn visit_values<'a, F: FnMut(&str, UniformValue<'a>)>(&'a self, mut visit: F) {
-        let &Self {diffuse_color, sampler} = self;
+        let &Self {diffuse_color, tex} = self;
         visit("diffuse_color", diffuse_color);
-        if let Some(sampler) = sampler {
-            visit("sampler", sampler);
+        if let Some(tex) = tex {
+            visit("use_texture", UniformValue::Bool(true));
+            visit("tex", tex);
+        } else {
+            visit("use_texture", UniformValue::Bool(false));
         }
     }
 }
@@ -22,7 +25,7 @@ impl<'a> MaterialUniform<'a> {
     pub fn new(material: &'a ShaderMaterial) -> Self {
         let &ShaderMaterial {diffuse_color, ref texture} = material;
 
-        let sampler = texture.as_ref().map(|texture| {
+        let tex = texture.as_ref().map(|texture| {
             let &ShaderTexture {ref image, magnify_filter, minify_filter, wrap_s, wrap_t} = texture;
 
             let mut behavior = SamplerBehavior::default();
@@ -40,7 +43,7 @@ impl<'a> MaterialUniform<'a> {
 
         Self {
             diffuse_color: UniformValue::Vec4(diffuse_color.into_array()),
-            sampler,
+            tex,
         }
     }
 }
