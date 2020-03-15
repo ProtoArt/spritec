@@ -73,7 +73,8 @@ impl QueryBackend for ObjFile {
 
                     let scene_geometry = Arc::new(self.mesh.geometry.iter()
                         .map(|geo| {
-                            ShaderGeometry::new(display, geo, &joint_matrices_tex, Mat4::identity()).map(Arc::new)
+                            ShaderGeometry::new(display, geo, &joint_matrices_tex, Mat4::identity(),
+                                |_| panic!("bug: textures are not supported for OBJ files")).map(Arc::new)
                         })
                         .collect::<Result<Vec<_>, _>>()?);
 

@@ -230,6 +230,7 @@ fn upload_geometry<'a>(
                     geo,
                     &joint_matrices_tex,
                     model_transform,
+                    |_| todo!(),
                 )?;
 
                 scene_geo.push(Arc::new(geo));
