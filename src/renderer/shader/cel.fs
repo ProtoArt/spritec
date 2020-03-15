@@ -79,7 +79,7 @@ out vec4 frag_color;
 vec3 mat_diffuse_color() {
     if (material.use_texture) {
         // Discards the texture alpha component
-        return vec3(texture(tex, v_tex_coord));
+        return vec3(texture(material.tex, v_tex_coord));
     } else {
         // Discards the material alpha component
         return vec3(material.diffuse_color);
