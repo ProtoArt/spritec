@@ -1,4 +1,4 @@
-use glium::uniforms::{Uniforms, UniformValue, Sampler};
+use glium::uniforms::{Uniforms, UniformValue, SamplerBehavior};
 
 use crate::renderer::{ShaderMaterial, ShaderTexture};
 
@@ -23,17 +23,19 @@ impl<'a> MaterialUniform<'a> {
         let &ShaderMaterial {diffuse_color, ref texture} = material;
 
         let sampler = texture.as_ref().map(|texture| {
-            let &ShaderTexture {ref image, magnify_filter, minify_filter, wrap_function} = texture;
+            let &ShaderTexture {ref image, magnify_filter, minify_filter, wrap_s, wrap_t} = texture;
 
-            let sampler = image.sampled();
-            let sampler = magnify_filter.map(|filter| sampler.magnify_filter(filter))
-                .unwrap_or(sampler);
-            let sampler = minify_filter.map(|filter| sampler.minify_filter(filter))
-                .unwrap_or(sampler);
-            let sampler = sampler.wrap_function(wrap_function);
+            let mut behavior = SamplerBehavior::default();
+            if let Some(magnify_filter) = magnify_filter {
+                behavior.magnify_filter = magnify_filter;
+            }
+            if let Some(minify_filter) = minify_filter {
+                behavior.minify_filter = minify_filter;
+            }
+            behavior.wrap_function.0 = wrap_s;
+            behavior.wrap_function.1 = wrap_t;
 
-            let Sampler(_, behaviour) = sampler;
-            UniformValue::Texture2d(image, Some(behaviour))
+            UniformValue::Texture2d(image, Some(behavior))
         });
 
         Self {

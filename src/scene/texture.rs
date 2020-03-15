@@ -112,20 +112,22 @@ pub struct Texture {
     pub image: Arc<TexImage>,
     pub magnify_filter: Option<MagFilter>,
     pub minify_filter: Option<MinFilter>,
-    pub wrap_function: WrappingMode,
+    /// The wrap function for the s/x/u-coordinate
+    pub wrap_s: WrappingMode,
+    /// The wrap function for the t/y/v-coordinate
+    pub wrap_t: WrappingMode,
 }
 
 impl Texture {
     pub fn from_gltf(tex: gltf::Texture, images: &[Arc<TexImage>]) -> Self {
         let sampler = tex.sampler();
-        assert_eq!(sampler.wrap_s(), sampler.wrap_t(),
-            "bug: separate s and t wrap functions are not supported in glTF models");
 
         Self {
             image: images[tex.source().index()].clone(),
             magnify_filter: sampler.mag_filter().map(|f| f.into()),
             minify_filter: sampler.min_filter().map(|f| f.into()),
-            wrap_function: sampler.wrap_s().into(),
+            wrap_s: sampler.wrap_s().into(),
+            wrap_t: sampler.wrap_t().into(),
         }
     }
 }

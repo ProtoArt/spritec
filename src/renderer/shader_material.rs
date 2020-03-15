@@ -36,7 +36,8 @@ pub struct ShaderTexture {
     pub image: Arc<Texture2d>,
     pub magnify_filter: Option<MagnifySamplerFilter>,
     pub minify_filter: Option<MinifySamplerFilter>,
-    pub wrap_function: SamplerWrapFunction,
+    pub wrap_s: SamplerWrapFunction,
+    pub wrap_t: SamplerWrapFunction,
 }
 
 impl ShaderTexture {
@@ -44,13 +45,14 @@ impl ShaderTexture {
         texture: &Texture,
         mut image_lookup: impl FnMut(&TexImage) -> Result<Arc<Texture2d>, TextureCreationError>,
     ) -> Result<Self, TextureCreationError> {
-        let &Texture {ref image, magnify_filter, minify_filter, wrap_function} = texture;
+        let &Texture {ref image, magnify_filter, minify_filter, wrap_s, wrap_t} = texture;
 
         Ok(Self {
             image: image_lookup(image)?,
             magnify_filter: magnify_filter.map(|filter| filter.into()),
             minify_filter: minify_filter.map(|filter| filter.into()),
-            wrap_function: wrap_function.into(),
+            wrap_s: wrap_s.into(),
+            wrap_t: wrap_t.into(),
         })
     }
 }
