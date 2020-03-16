@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 
 use crate::query3d::{File, FileError};
@@ -11,7 +11,11 @@ use crate::query3d::{File, FileError};
 /// that files are dropped in a timely manner, even if this cache is accidentally left around.
 #[derive(Debug, Default)]
 pub struct WeakFileCache {
-    cache: HashMap<PathBuf, Weak<Mutex<File>>>,
+    // HACK: Turns out that dropping large amounts of vertex buffers is enormously expensive. This
+    //   should be storing `Weak<Mutex<File>>`, not `Arc<Mutex<File>>`.
+    // TODO: See if we can fix the glium bug that led to this hack. Check this back to `Weak` and
+    //   generate a flamegraph. You'll see exactly where the slowness occurs.
+    cache: HashMap<PathBuf, Arc<Mutex<File>>>,
 }
 
 impl WeakFileCache {
@@ -19,7 +23,9 @@ impl WeakFileCache {
     ///
     /// Returns None if the file was never opened or if it has since been closed
     pub fn get(&self, path: &Path) -> Option<Arc<Mutex<File>>> {
-        self.cache.get(path).and_then(|f| f.upgrade())
+        // HACK: Restore this to being the following line:
+        //self.cache.get(path).and_then(|f| f.upgrade())
+        self.cache.get(path).cloned()
     }
 
     /// Opens a 3D file based on its extension
@@ -41,7 +47,9 @@ impl WeakFileCache {
             Some(file) => Ok(file),
             None => {
                 let file = Arc::new(Mutex::new(open(path)?));
-                self.cache.insert(path.to_path_buf(), Arc::downgrade(&file));
+                // HACK: Restore this to being the following line:
+                //self.cache.insert(path.to_path_buf(), Arc::downgrade(&file));
+                self.cache.insert(path.to_path_buf(), file.clone());
                 Ok(file)
             },
         }

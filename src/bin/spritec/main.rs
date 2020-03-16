@@ -32,7 +32,10 @@ fn main() -> Result<(), Terminator> {
     let TaskConfig {spritesheets, poses} = args.load_config()?;
     let base_dir = args.base_directory()?;
 
-    let tasks = create_tasks(spritesheets, poses, &base_dir)?;
+    // HACK: File cache should be created *within* create_tasks so it can be dropped before
+    //   tasks run. See HACK notes in `file_cache.rs`
+    let mut file_cache = WeakFileCache::default();
+    let tasks = create_tasks(&mut file_cache, spritesheets, poses, &base_dir)?;
 
     let mut ctx = ThreadRenderContext::new()?;
     // This loop should not be parallelised. Rendering is done in parallel on the
@@ -46,18 +49,17 @@ fn main() -> Result<(), Terminator> {
 }
 
 fn create_tasks(
+    file_cache: &mut WeakFileCache,
     spritesheets: Vec<Spritesheet>,
     poses: Vec<Pose>,
     base_dir: &Path,
 ) -> Result<Vec<Task>, FileError> {
-    let mut file_cache = WeakFileCache::default();
-
     let mut tasks = Vec::new();
     for sheet in spritesheets {
-        tasks.push(tasks::generate_spritesheet_task(sheet, base_dir, &mut file_cache)?);
+        tasks.push(tasks::generate_spritesheet_task(sheet, base_dir, file_cache)?);
     }
     for pose in poses {
-        tasks.push(tasks::generate_pose_task(pose, base_dir, &mut file_cache)?);
+        tasks.push(tasks::generate_pose_task(pose, base_dir, file_cache)?);
     }
 
     Ok(tasks)
