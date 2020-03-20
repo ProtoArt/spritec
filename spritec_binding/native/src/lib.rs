@@ -13,6 +13,7 @@ use spritec::math::{
 use spritec::query3d::{
     AnimationPosition,
     AnimationQuery,
+    CameraQuery,
     File,
     GeometryFilter,
     GeometryQuery,
@@ -89,7 +90,7 @@ declare_types! {
                     file.clone(),
                     width,
                     height,
-                    camera.clone(),
+                    RenderCamera::Camera(camera.clone()),
                     lights.clone(),
                     &animation_name,
                     animation_total_steps,
@@ -107,6 +108,71 @@ declare_types! {
                         height: NonZeroU32::new(height).unwrap(),
                     },
                     cells: vec![sprites],
+                })),
+            };
+            let image = cx.borrow_mut(&mut this, |mut spritec| {
+                job.execute(&mut spritec.ctx).expect("Spritesheet creation failed")
+            });
+            image.save(Path::new(&path_out)).expect("Unable to save spritesheet");
+
+            Ok(cx.undefined().upcast())
+        }
+
+        method saveDemo(mut cx) {
+            let mut this = cx.this();
+
+            let file = cx.borrow(&this, |spritec| {
+                spritec.file.as_ref().expect("No file to render").clone()
+            });
+
+            // Arguments from JavaScript
+            let path_out = cx.argument::<JsString>(0)?.value();
+            let width = cx.argument::<JsNumber>(1)?.value() as u32;
+            let height = cx.argument::<JsNumber>(2)?.value() as u32;
+            let scale = cx.argument::<JsNumber>(3)?.value() as u32;
+            let cameras = cx.argument::<JsArray>(4)?.to_vec(&mut cx)?;
+            let (animation_name, _) = parse_animation_arg(&mut cx, 5);
+            let animation_total_steps = cx.argument::<JsNumber>(6)?.value() as u32;
+            let (lights, _i) = parse_light_args(&mut cx, 7);
+
+            let cameras: Vec<String> = cameras.iter().map(|camera| {
+                camera.downcast::<JsString>().unwrap().value()
+            }).collect();
+
+            let mut rows = Vec::with_capacity(cameras.len());
+            for camera in cameras {
+                let mut sprites = Vec::with_capacity(animation_total_steps as usize);
+                for animation_cur_step in 0..animation_total_steps {
+                    sprites.push(GridLayoutCell::single(RenderNode::RenderedImage(describe_sprite(
+                        file.clone(),
+                        width,
+                        height,
+                        RenderCamera::Query(FileQuery {
+                            query: CameraQuery::Named {
+                                name: camera.clone(),
+                                scene: None,
+                            },
+                            file: file.clone(),
+                        }),
+                        lights.clone(),
+                        &animation_name,
+                        animation_total_steps,
+                        animation_cur_step,
+                    ))));
+                }
+                rows.push(sprites);
+            }
+
+            let job = RenderJob {
+                scale: NonZeroU32::new(scale).expect("Scale to be a positive integer"),
+                root: RenderNode::Layout(RenderLayout::Grid(GridLayout {
+                    rows: NonZeroU32::new(rows.len() as u32).unwrap(),
+                    cols: NonZeroU32::new(animation_total_steps).unwrap(),
+                    cell_size: Size {
+                        width: NonZeroU32::new(width).unwrap(),
+                        height: NonZeroU32::new(height).unwrap(),
+                    },
+                    cells: rows
                 })),
             };
             let image = cx.borrow_mut(&mut this, |mut spritec| {
@@ -147,7 +213,7 @@ declare_types! {
                                 file.clone(),
                                 width,
                                 height,
-                                camera.clone(),
+                                RenderCamera::Camera(camera.clone()),
                                 lights.clone(),
                                 &animation_name,
                                 animation_total_steps,
@@ -219,7 +285,7 @@ declare_types! {
                                 file.clone(),
                                 width,
                                 height,
-                                camera.clone(),
+                                RenderCamera::Camera(camera.clone()),
                                 lights.clone(),
                                 &animation_name,
                                 animation_total_steps,
@@ -281,7 +347,7 @@ declare_types! {
                 file,
                 width,
                 height,
-                Arc::new(camera),
+                RenderCamera::Camera(Arc::new(camera)),
                 lights,
                 &animation_name,
                 animation_total_steps,
@@ -318,7 +384,7 @@ fn describe_sprite(
     file: Arc<Mutex<File>>,
     width: u32,
     height: u32,
-    camera: Arc<Camera>,
+    camera: RenderCamera,
     lights: Arc<Vec<Arc<Light>>>,
     animation_name: &Option<String>,
     animation_total_steps: u32,
@@ -335,18 +401,19 @@ fn describe_sprite(
             b: 0.0,
             a: 0.0,
         },
-        camera: RenderCamera::Camera(camera),
+        camera,
         lights: RenderLights::Lights(lights),
         ambient_light: Rgb::white() * 0.5,
         geometry: FileQuery {
             query: GeometryQuery {
                 models: GeometryFilter::all_in_default_scene(),
-                animation: animation_name.as_ref().map(|name| AnimationQuery {
-                    name: Some(name.to_string()),
+                // TODO: breaks for models that don't have any animation in them
+                animation: Some(AnimationQuery {
+                    name: animation_name.clone(),
                     position: AnimationPosition::RelativeTime {
                         start_time: Milliseconds::from_sec(0.0),
                         weight: get_weight(animation_cur_step, animation_total_steps),
-                    },
+                    }
                 }),
             },
             file,
@@ -444,12 +511,13 @@ fn parse_animation_arg(cx: &mut CallContext<JsSpritec>, index: i32) -> (Option<S
             let name = obj
                 .get(cx, "name")
                 .expect("'name' property not found in animation")
-                .downcast::<JsString>().unwrap().value();
+                .downcast::<JsString>()
+                .map_or(None, |name| Some(name.value()));
             let duration = obj
                 .get(cx, "duration")
                 .expect("'duration' property not found in animation")
                 .downcast::<JsNumber>().unwrap().value() as f32;
-            (Some(name), duration)
+            (name, duration)
         })
 }
 

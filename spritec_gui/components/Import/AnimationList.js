@@ -38,7 +38,7 @@ class AnimationList extends Component {
     const playGroup = document.createElement('optgroup');
     playGroup.label = 'Play';
     animations.forEach(({name}, index) => playGroup.appendChild(new Option(
-      name, // text
+      name === null ? 'Default' : name, // text
       index, // value
       false,  // default selected
       selectedAnimation && selectedAnimation.name === name // selected

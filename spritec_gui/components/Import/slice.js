@@ -13,7 +13,7 @@ const initialSelectedState = {
     scale: [1, 1, 1],
     aspect_ratio: 1,
     near_z: 0.1,
-    far_z: 2000,
+    far_z: 8000,
     fov: 50, // field of view (from bottom to top, in degrees)
   },
   light_rotation: [-0.5, 0, 0, 1], // quaternion

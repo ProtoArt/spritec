@@ -3,7 +3,47 @@ const path = require('path');
 const {dialog, shell} = require('electron').remote;
 const spritec = require('../../spritec_binding');
 const {actions} = require('../Import/slice');
+const {loadCameraNames} = require('../Import/actions');
 const {hex_to_rgb} = require('../../lib/color');
+
+const demo = async (element, getState) => {
+  const name = element.querySelector('#export-name').value;
+  const scale = Number(element.querySelector('#export-scale').value);
+
+  const {
+    import: {selected: {
+      path,
+      cameras,
+      animation,
+      animation_total_steps,
+      light_rotation,
+      light_color,
+      light_intensity,
+      width,
+      height
+    }}
+  } = getState();
+
+  const {canceled, filePath} = await dialog.showSaveDialog({
+    defaultPath: `${name}.png`
+  });
+
+  if (!canceled) {
+    spritec.saveDemo(
+      filePath,
+      width,
+      height,
+      scale,
+      await loadCameraNames(path),
+      animation,
+      (animation ? animation_total_steps : 1),
+      hex_to_rgb(light_color).buffer,
+      light_intensity,
+      new Float32Array(light_rotation).buffer,
+    );
+    shell.openItem(filePath);
+  }
+};
 
 const exportSprites = (element) => async (dispatch, getState) => {
   dispatch(actions.startSubmit());
@@ -15,6 +55,12 @@ const exportSprites = (element) => async (dispatch, getState) => {
     const pngFormat = element.querySelector('input[name="png-format"]:checked').value;
     // gif or png
     const imageFormat = element.querySelector('.uk-tab>.uk-active').textContent;
+
+    if (pngFormat === 'spritesheet-demo') {
+      await demo(element, getState);
+      dispatch(actions.endSubmit());
+      return;
+    }
 
     const {
       import: {selected: {
@@ -72,7 +118,7 @@ const prepareExport = async (name, imageFormat, pngFormat) => {
     if (canceled) return null;
     return {
       filePath,
-      saveFn: spritec.saveGif.bind(spritec), 
+      saveFn: spritec.saveGif.bind(spritec),
         openFn: shell.openItem,
     };
   }

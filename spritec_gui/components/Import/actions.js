@@ -12,6 +12,19 @@ let position = new THREE.Vector3();
 let rotation = new THREE.Quaternion();
 let scale = new THREE.Vector3();
 
+const loadCameraNames = path => {
+  const loader = new THREE.GLTFLoader();
+  return new Promise((resolve, reject) => {
+    loader.load(path,
+      (gltf) => {
+        resolve(gltf.cameras.map(camera => camera.name));
+      },
+      null,
+      reject,
+    );
+  });
+}
+
 const loadGLTF = path => dispatch => {
   const loader = new THREE.GLTFLoader();
   loader.load(path,
@@ -30,7 +43,7 @@ const loadGLTF = path => dispatch => {
       }
 
       const animations = gltf.animations.map(animation => ({
-        name: animation.name,
+        name: animation.name === 'animation_0' ? null : animation.name,
         duration: animation.duration,
       }));
       if (animations.length > 0) {
@@ -93,4 +106,5 @@ const parseCameraName = cameraObj => {
 module.exports = {
   loadGLTF,
   loadCamera,
+  loadCameraNames,
 };
