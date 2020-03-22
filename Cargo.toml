@@ -7,7 +7,19 @@ authors = [
   "Bill Chen <bchen.tcu@gmail.com>",
   "Mara Gagiu <mara.gagiu@gmail.com>",
 ]
+description = "The sprite compiler - generates 2D pixel art from 3D models"
+readme = "README.md"
+# crates.io/category_slugs
+categories = ["rendering", "rendering::graphics-api", "rendering::engine", "games"]
+license = "MPL-2.0"
+repository = "https://github.com/ProtoArt/spritec"
+homepage = "https://github.com/ProtoArt/spritec"
 edition = "2018"
+
+exclude = ["*.py", "*.yml", "samples", "spritec_binding", "spritec_gui", "pipelines"]
+
+[badges]
+maintenance = { status = "as-is" }
 
 [workspace]
 members = [
