@@ -1,5 +1,6 @@
 #version 150
 
+in vec2 v_texcoords;
 out vec4 color;
 
 uniform sampler2D tex;
@@ -63,7 +64,7 @@ void main() {
 
    // intensity magnitude = sqrt(Gx^2 + Gy^2)
    float magnitude = sqrt(edge_sum_x * edge_sum_x + edge_sum_y * edge_sum_y);
-    if(magnitude >= 2.3)
+    if(magnitude >= 4.3)
     {
       color = vec4(0.0,0.0,0.0,1.0);
     } else {

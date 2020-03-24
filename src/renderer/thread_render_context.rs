@@ -157,7 +157,6 @@ impl ThreadRenderContext {
         let outline_shader = Program::from_source(
             &display,
             include_str!("shader/screen_triangle.vs"),
-            // include_str!("shader/cel.vs"),
             include_str!("shader/sobel.fs"),
             None,
         )?;
@@ -279,6 +278,24 @@ impl ThreadRenderContext {
         for geo in &*geos {
             renderer.render(&*geo, &lights, ambient_light, view, projection, &outline, &data.color_texture, &data.depth_texture)?;
         }
+
+use glium::{Surface, framebuffer::SimpleFrameBuffer, texture::{Texture2d, DepthTexture2d}};
+        // do outlines here
+         let sobel_uniforms = uniform! {
+             tex: data.color_texture.sampled().minify_filter(glium::uniforms::MinifySamplerFilter::Nearest),
+             depth_tex:data.depth_texture.sampled().minify_filter(glium::uniforms::MinifySamplerFilter::Nearest),
+             near_plane: 0.1f32,
+             far_plane: 1000.0f32,
+         };
+
+        let screen_triangle_indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
+        renderer.target.draw(
+            glium::vertex::EmptyVertexAttributes{len: 3},
+            &screen_triangle_indices,
+            &renderer.shaders.outline,
+            &sobel_uniforms,
+            &Default::default())?;
+
 
         let RenderId(id) = render_id;
         let data = self.render_data.remove(id);
