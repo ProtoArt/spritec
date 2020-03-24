@@ -24,7 +24,7 @@ pub use camera::*;
 
 use std::sync::Arc;
 
-use glium::{Surface, framebuffer::SimpleFrameBuffer};
+use glium::{Surface, framebuffer::SimpleFrameBuffer, texture::{Texture2d, DepthTexture2d}};
 
 use crate::math::{Rgba, Rgb, Mat4};
 
@@ -59,6 +59,8 @@ impl<'a> Renderer<'a> {
         view: Mat4,
         projection: Mat4,
         outline: &Outline,
+        color_texture: &Texture2d,
+        depth_texture: &DepthTexture2d,
     ) -> Result<(), glium::DrawError> {
         let cel_params = glium::DrawParameters {
             depth: glium::Depth {
@@ -80,7 +82,7 @@ impl<'a> Renderer<'a> {
             // Enabling backface culling, but flipping the test so that *only* the back faces will
             // be rendered. Without this, the slightly larger outline mesh would always render over
             // the regular cel shaded mesh.
-            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullCounterClockwise,
+            // backface_culling: glium::draw_parameters::BackfaceCullingMode::CullCounterClockwise,
             ..Default::default()
         };
 
@@ -113,15 +115,26 @@ impl<'a> Renderer<'a> {
         self.target.draw((positions, normals, tex_coords, joint_influences, joint_weights), indices,
             &self.shaders.cel, &cel_uniforms, &cel_params)?;
 
-        let outline_uniforms = shader::outline::Outline::from(OutlineUniforms {
-            mvp,
-            joint_matrices,
-            outline_thickness: outline.thickness,
-            outline_color: outline.color,
-        });
+         let outline_uniforms = glium::uniform! {
+             tex: color_texture.sampled().minify_filter(glium::uniforms::MinifySamplerFilter::Nearest),
+             depth_tex:depth_texture.sampled().minify_filter(glium::uniforms::MinifySamplerFilter::Nearest),
+             // TODO: hard code for now, only works for bigboi
+             near_plane: 0.1 as f32,
+             far_plane: 1000.0 as f32,
+         };
 
-        self.target.draw((positions, normals, joint_influences, joint_weights), indices,
-            &self.shaders.outline, &outline_uniforms, &outline_params)?;
+        // Screen Triangle
+        // No need to use vertices, just pass in a null layout and specifying the number of vertices
+        // it represents. It's a cool graphics trick that saves performance
+        let screen_triangle_indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
+
+        // self.target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0),1.0);
+        self.target.draw(
+            glium::vertex::EmptyVertexAttributes { len: 3 },
+            &screen_triangle_indices,
+            &self.shaders.outline,
+            &outline_uniforms,
+            &Default::default())?;
 
         Ok(())
     }

@@ -156,8 +156,9 @@ impl ThreadRenderContext {
 
         let outline_shader = Program::from_source(
             &display,
-            include_str!("shader/outline.vs"),
-            include_str!("shader/outline.fs"),
+            include_str!("shader/screen_triangle.vs"),
+            // include_str!("shader/cel.vs"),
+            include_str!("shader/sobel.fs"),
             None,
         )?;
 
@@ -197,49 +198,6 @@ impl ThreadRenderContext {
             .with_inner_size(size);
 
         Ok(Display::new(win_builder, ctx_builder, &event_loop)?)
-    }
-
-    /// Returns a new renderer that can be used for drawing
-    pub fn begin_render(&mut self, size: Size) -> Result<(RenderId, Renderer), BeginRenderError> {
-        let Size {width, height} = size;
-        let width = width.get();
-        let height = height.get();
-
-        let color_texture = Texture2d::empty_with_format(&self.display,
-            UncompressedFloatFormat::F32F32F32F32, MipmapsOption::NoMipmap, width, height)?;
-        let depth_texture = DepthTexture2d::empty_with_format(&self.display, DepthFormat::F32,
-            MipmapsOption::NoMipmap, width, height)?;
-
-        self.render_data.push(RenderData {
-            color_texture,
-            depth_texture,
-        });
-        // This unwrap() will never panic because we just pushed data into the Vec
-        let data = &self.render_data.last().unwrap();
-
-        let target = SimpleFrameBuffer::with_depth_buffer(&self.display, &data.color_texture,
-            &data.depth_texture)?;
-
-        let render_id = RenderId(self.render_data.len() - 1);
-        Ok((render_id, Renderer {
-            display: &self.display,
-            shaders: &self.shaders,
-            target,
-        }))
-    }
-
-    /// Returns the image that was rendered
-    pub fn finish_render(&mut self, render_id: RenderId) -> Result<RgbaImage, glium::ReadError> {
-        let RenderId(id) = render_id;
-        let data = self.render_data.remove(id);
-        // This stops and performs the read synchronously. For max parallelism, we'd probably want
-        // read_to_pixel_buffer().
-        let image: RawImage2d<u8> = data.color_texture.read();
-        let mut image = RgbaImage::from_raw(image.width, image.height, image.data.into_owned())
-            .expect("bug: image data buffer did not match expected size for width and height");
-        flip_vertical_in_place(&mut image);
-
-        Ok(image)
     }
 
     /// Scales the given image up, with no anti-aliasing or other interpolation of any kind.
@@ -288,16 +246,49 @@ impl ThreadRenderContext {
         let Camera {view, projection} = *camera.fetch_camera()?;
         let lights = lights.fetch_lights()?;
 
-        let (render_id, mut renderer) = self.begin_render(size)?;
+        let Size {width, height} = size;
+        let width = width.get();
+        let height = height.get();
+
+        let color_texture = Texture2d::empty(&self.display,
+            width, height).unwrap();
+        let depth_texture = DepthTexture2d::empty_with_format(&self.display, DepthFormat::F32,
+            MipmapsOption::NoMipmap, width, height).unwrap();
+
+        self.render_data.push(RenderData {
+            color_texture,
+            depth_texture,
+        });
+        // This unwrap() will never panic because we just pushed data into the Vec
+        let data = &self.render_data.last().unwrap();
+
+        let target = SimpleFrameBuffer::with_depth_buffer(&self.display, &data.color_texture,
+            &data.depth_texture).unwrap();
+
+        let render_id = RenderId(self.render_data.len() - 1);
+        let mut renderer = Renderer {
+            display: &self.display,
+            shaders: &self.shaders,
+            target,
+        };
+
         renderer.clear(background);
 
         let mut file = file.lock().expect("bug: file lock was poisoned");
         let geos = file.query_geometry(&query, renderer.display())?;
         for geo in &*geos {
-            renderer.render(&*geo, &lights, ambient_light, view, projection, &outline)?;
+            renderer.render(&*geo, &lights, ambient_light, view, projection, &outline, &data.color_texture, &data.depth_texture)?;
         }
 
-        let image = self.finish_render(render_id)?;
+        let RenderId(id) = render_id;
+        let data = self.render_data.remove(id);
+        // This stops and performs the read synchronously. For max parallelism, we'd probably want
+        // read_to_pixel_buffer().
+        let image: RawImage2d<u8> = data.color_texture.read();
+        let mut image = RgbaImage::from_raw(image.width, image.height, image.data.into_owned())
+            .expect("bug: image data buffer did not match expected size for width and height");
+        flip_vertical_in_place(&mut image);
+
         Ok(image)
     }
 }
