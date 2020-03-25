@@ -7,6 +7,7 @@ uniform sampler2D tex;
 uniform sampler2D depth_tex;
 uniform float near_plane;
 uniform float far_plane;
+uniform float tolerance;
 
 // GX:
 // -1 0 1
@@ -64,9 +65,13 @@ void main() {
 
    // intensity magnitude = sqrt(Gx^2 + Gy^2)
    float magnitude = sqrt(edge_sum_x * edge_sum_x + edge_sum_y * edge_sum_y);
-    if(magnitude >= 4.3)
+    // 4.3 is good for bigboi
+    // 8.3 worked well for big girl (512x512)
+    if(magnitude >= tolerance)
     {
-      color = vec4(0.0,0.0,0.0,1.0);
+      vec3 darker = vec3(color);
+      darker = darker * 0.3;
+      color = vec4(darker, 1.0);
     } else {
       //TODO: Get inner edges working from normal information
         // vec3 normal = texelFetch(normal_tex, ivec2(gl_FragCoord), 0).xyz;

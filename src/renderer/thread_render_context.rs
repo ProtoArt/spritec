@@ -36,7 +36,6 @@ use glium::{
     texture::{
         RawImage2d,
         Texture2d,
-        UncompressedFloatFormat,
         MipmapsOption,
         DepthTexture2d,
         DepthFormat,
@@ -279,22 +278,25 @@ impl ThreadRenderContext {
             renderer.render(&*geo, &lights, ambient_light, view, projection, &outline, &data.color_texture, &data.depth_texture)?;
         }
 
-use glium::{Surface, framebuffer::SimpleFrameBuffer, texture::{Texture2d, DepthTexture2d}};
-        // do outlines here
-         let sobel_uniforms = uniform! {
-             tex: data.color_texture.sampled().minify_filter(glium::uniforms::MinifySamplerFilter::Nearest),
-             depth_tex:data.depth_texture.sampled().minify_filter(glium::uniforms::MinifySamplerFilter::Nearest),
-             near_plane: 0.1f32,
-             far_plane: 1000.0f32,
-         };
+        if outline.thickness > 0f32 {
+            use glium::Surface;
+            // do outlines here
+            let sobel_uniforms = uniform! {
+                tex: data.color_texture.sampled().minify_filter(glium::uniforms::MinifySamplerFilter::Nearest),
+                depth_tex:data.depth_texture.sampled().minify_filter(glium::uniforms::MinifySamplerFilter::Nearest),
+                near_plane: 0.1f32,
+                far_plane: 1000.0f32,
+                tolerance: outline.thickness,
+            };
 
-        let screen_triangle_indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
-        renderer.target.draw(
-            glium::vertex::EmptyVertexAttributes{len: 3},
-            &screen_triangle_indices,
-            &renderer.shaders.outline,
-            &sobel_uniforms,
-            &Default::default())?;
+            let screen_triangle_indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
+            renderer.target.draw(
+                glium::vertex::EmptyVertexAttributes{len: 3},
+                &screen_triangle_indices,
+                &renderer.shaders.outline,
+                &sobel_uniforms,
+                &Default::default())?;
+        }
 
 
         let RenderId(id) = render_id;

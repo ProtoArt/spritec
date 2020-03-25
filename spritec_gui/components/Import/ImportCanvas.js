@@ -39,6 +39,7 @@ class ImportCanvas extends Component {
       light_rotation: state => state.import.selected.light_rotation,
       light_color: state => state.import.selected.light_color,
       light_intensity: state => state.import.selected.light_intensity,
+      outline_tolerance: state => state.import.selected.outline_tolerance,
     };
   }
 
@@ -66,6 +67,7 @@ class ImportCanvas extends Component {
       light_color,
       light_intensity,
       light_rotation,
+      outline_tolerance,
     } = this.props;
 
     const time = (timestamp - startTime) / 1000;
@@ -106,6 +108,7 @@ class ImportCanvas extends Component {
         hex_to_rgb(light_color).buffer,
         light_intensity,
         new Float32Array(light_rotation).buffer,
+        outline_tolerance,
       ));
 
       let imageData = new ImageData(imageBuffer, width);

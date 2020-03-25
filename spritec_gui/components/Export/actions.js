@@ -56,7 +56,7 @@ const exportSprites = (element) => async (dispatch, getState) => {
     // gif or png
     const imageFormat = element.querySelector('.uk-tab>.uk-active').textContent;
 
-    if (pngFormat === 'spritesheet-demo') {
+    if (imageFormat === 'png' && pngFormat === 'spritesheet-demo') {
       await demo(element, getState);
       dispatch(actions.endSubmit());
       return;

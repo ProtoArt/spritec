@@ -13,9 +13,10 @@ const initialSelectedState = {
     scale: [1, 1, 1],
     aspect_ratio: 1,
     near_z: 0.1,
-    far_z: 8000,
+    far_z: 1000,
     fov: 50, // field of view (from bottom to top, in degrees)
   },
+  outline_tolerance: 0,
   light_rotation: [-0.5, 0, 0, 1], // quaternion
   light_color: '#ffffff',
   light_intensity: 1.0, // scale from [0, 1]
@@ -34,6 +35,7 @@ const importSlice = createSlice({
     submitting: false,
   },
   reducers: {
+    setOutline(state, action) {state.selected.outline_tolerance = action.payload},
     stopAnimation(state, _) {state.selected.animation = null},
     setAnimation(state, action) {state.selected.animation = action.payload},
     setWidth(state, action) {state.selected.width = action.payload},

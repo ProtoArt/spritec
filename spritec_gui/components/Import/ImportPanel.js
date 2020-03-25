@@ -7,6 +7,7 @@ class ImportPanel extends Component {
       inputWidth: element.querySelector('#input-width'),
       inputHeight: element.querySelector('#input-height'),
       inputSteps: element.querySelector('#input-steps'),
+      outlineSlider: element.querySelector('#outline-tolerance'),
       buttonExport: element.querySelector('#button-export'),
     }
     this.state.inputWidth.onchange = (event) => {
@@ -17,6 +18,9 @@ class ImportPanel extends Component {
     }
     this.state.inputSteps.oninput = (event) => {
       this.dispatch(actions.setAnimationSteps(Number(event.target.value)));
+    }
+    this.state.outlineSlider.oninput = (event) => {
+      this.dispatch(actions.setOutline(Number(event.target.value)));
     }
   }
 

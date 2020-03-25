@@ -95,6 +95,7 @@ declare_types! {
                     &animation_name,
                     animation_total_steps,
                     animation_cur_step,
+                    0.0,
                 ))));
             }
 
@@ -158,6 +159,7 @@ declare_types! {
                         &animation_name,
                         animation_total_steps,
                         animation_cur_step,
+                        0.0,
                     ))));
                 }
                 rows.push(sprites);
@@ -218,6 +220,7 @@ declare_types! {
                                 &animation_name,
                                 animation_total_steps,
                                 animation_cur_step,
+                                0.0,
                         ))
                     });
                 }
@@ -290,6 +293,7 @@ declare_types! {
                                 &animation_name,
                                 animation_total_steps,
                                 animation_cur_step,
+                                0.0,
                         )),
                     };
                     let image = job.execute(&mut spritec.ctx).expect("Sprite creation failed");
@@ -340,7 +344,8 @@ declare_types! {
                 .map_or(None, |name| Some(name.value()));
             let animation_total_steps = cx.argument::<JsNumber>(i+1)?.value() as u32;
             let animation_cur_step = cx.argument::<JsNumber>(i+2)?.value() as u32;
-            let (lights, _i) = parse_light_args(&mut cx, i+3);
+            let (lights, i) = parse_light_args(&mut cx, i+3);
+            let outline_tolerance = cx.argument::<JsNumber>(i)?.value() as f32;
 
             // Create the sprite
             let sprite = describe_sprite(
@@ -352,6 +357,7 @@ declare_types! {
                 &animation_name,
                 animation_total_steps,
                 animation_cur_step,
+                outline_tolerance,
             );
             let image = cx.borrow_mut(&mut this, |mut spritec| {
                 RenderJob {
@@ -389,6 +395,7 @@ fn describe_sprite(
     animation_name: &Option<String>,
     animation_total_steps: u32,
     animation_cur_step: u32,
+    outline_tolerance: f32,
 ) -> RenderedImage {
     RenderedImage {
         size: Size {
@@ -419,7 +426,7 @@ fn describe_sprite(
             file,
         },
         outline: Outline {
-            thickness: 0.0,
+            thickness: outline_tolerance,
             color: Rgba::black(),
         },
     }
